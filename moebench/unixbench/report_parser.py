@@ -1,0 +1,144 @@
+"""Parse UnixBench plain-text report produced by `Run` (summarizeRun / logResults)."""
+
+from __future__ import annotations
+
+import re
+from typing import Any
+
+from moebench.unixbench.experts import _TEST_TITLES
+
+
+# Dhrystone 2 using register variables             12345.0 lps   (10.5 s, 9 samples)
+_SCORE_LINE = re.compile(
+    r"^(.+?)\s+(\d+(?:\.\d+)?)\s+(\S+)\s+\((\d+(?:\.\d+)?) s, (\d+) samples\)\s*$"
+)
+
+def _parse_index_row(line: str) -> tuple[str, float, float, float] | None:
+    """Parse index table row: <title> baseline result index (last three tokens are floats)."""
+    parts = line.split()
+    if len(parts) < 4:
+        return None
+    try:
+        idx = float(parts[-1])
+        res = float(parts[-2])
+        base = float(parts[-3])
+    except ValueError:
+        return None
+    title = " ".join(parts[:-3]).strip()
+    return title, base, res, idx
+
+
+def _title_to_test_id(title: str) -> str | None:
+    t = title.strip()
+    for tid, msg in _TEST_TITLES.items():
+        if msg.strip() == t:
+            return tid
+    return None
+
+
+def _split_benchmark_blocks(text: str) -> list[str]:
+    parts = re.split(r"(?=Benchmark Run:)", text, flags=re.MULTILINE)
+    blocks = [p.strip() for p in parts if "Benchmark Run:" in p]
+    if not blocks and "Benchmark Run:" in text:
+        return [text.strip()]
+    return blocks
+
+
+def parse_report_text(report_text: str) -> dict[str, Any]:
+    blocks = _split_benchmark_blocks(report_text)
+    runs: list[dict[str, Any]] = []
+    for raw in blocks:
+        run = _parse_single_block(raw)
+        if run:
+            runs.append(run)
+    return {"runs": runs}
+
+
+def _parse_single_block(block: str) -> dict[str, Any] | None:
+    if "Benchmark Run:" not in block:
+        return None
+
+    m_copies = re.search(r"running\s+(\d+)\s+parallel\s+copies", block)
+    parallel_copies = int(m_copies.group(1)) if m_copies else None
+
+    scores_by_title: dict[str, dict[str, Any]] = {}
+    for line in block.splitlines():
+        m = _SCORE_LINE.match(line.rstrip())
+        if not m:
+            continue
+        title, score, unit, t_s, samples = m.groups()
+        title = title.strip()
+        scores_by_title[title] = {
+            "score": float(score),
+            "score_unit": unit,
+            "time_s": float(t_s),
+            "pass_samples": int(samples),
+        }
+
+    index_by_title: dict[str, dict[str, float]] = {}
+    in_index = False
+    for line in block.splitlines():
+        if "System Benchmarks Index Values" in line or "System Benchmarks Partial Index" in line:
+            in_index = True
+            continue
+        if in_index:
+            if not line.strip():
+                continue
+            if "Index Score" in line and "System Benchmarks" in line:
+                break
+            if "BASELINE" in line and "RESULT" in line:
+                continue
+            parsed = _parse_index_row(line.rstrip())
+            if parsed:
+                title, base, res, idx = parsed
+                index_by_title[title] = {
+                    "baseline_score": base,
+                    "result_score": res,
+                    "index": idx,
+                }
+
+    cat_index: float | None = None
+    for line in block.splitlines():
+        if "System Benchmarks Index Score" in line:
+            parts = line.split()
+            if parts:
+                try:
+                    cat_index = float(parts[-1])
+                except ValueError:
+                    pass
+            if cat_index is not None:
+                break
+
+    tests: dict[str, Any] = {}
+    for title, sc in scores_by_title.items():
+        tid = _title_to_test_id(title)
+        if tid is None:
+            tid = f"unmapped:{title[:48]}"
+        entry = {"title": title, **sc}
+        if title in index_by_title:
+            entry["index_detail"] = index_by_title[title]
+        tests[tid] = entry
+
+    return {
+        "parallel_copies": parallel_copies,
+        "tests": tests,
+        "system_benchmarks_index_score": cat_index,
+        "index_rows": index_by_title,
+    }
+
+
+def build_ti_from_runs(runs: list[dict[str, Any]]) -> dict[str, Any]:
+    """ti: per-subtest wall time (seconds) keyed by test_id and parallel_copies."""
+    by_test: dict[str, dict[str, float]] = {}
+    for run in runs:
+        copies = run.get("parallel_copies")
+        if copies is None:
+            continue
+        key = str(copies)
+        for tid, tinfo in run.get("tests", {}).items():
+            if tid.startswith("unmapped:"):
+                continue
+            if tid not in by_test:
+                by_test[tid] = {}
+            by_test[tid][key] = float(tinfo.get("time_s", 0.0))
+    return {"by_test_id": by_test, "unit": "seconds", "description": "Wall time per sub-benchmark from UnixBench Run report"}
