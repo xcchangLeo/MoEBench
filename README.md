@@ -43,6 +43,8 @@ cd /path/to/MoEBench
 ```bash
 cd /path/to/MoEBench
 python3 -m moebench all -o moebench-features.json
+# 需要更高权限采集动态特征时
+python3 -m moebench --sudo all -o moebench-features.json
 ```
 
 不写 `-o` 时，JSON 会输出到**标准输出**；使用 `-o` 时默认只写文件，并在**标准错误**打印一行 `Wrote <路径>`。
@@ -151,6 +153,8 @@ python3 -m moebench.unixbench -o /tmp/once.json
 
 # 五轮：dataset/<session>/run-01.json … run-05.json + manifest.json
 python3 -m moebench.unixbench -n 5
+# 若要以 sudo 权限采集每轮 xi
+python3 -m moebench.unixbench --sudo -n 5
 
 # 五轮 + 自定义会话文件夹名
 python3 -m moebench.unixbench -n 5 --session my_i9_exp_20260322
@@ -174,3 +178,60 @@ python3 -m moebench.unixbench -n 1 -- -v -i 3
 ## 许可证
 
 各子目录可能自带许可证（如 UnixBench、PTS）；`moebench` 包请与项目整体约定保持一致。
+
+## UnixBench 路由器建模（Router）
+
+目标：输入 `xi`，输出每个 expert 的选择概率；根据概率选择 `Top-K` 个 expert 运行 UnixBench 子集，并把选择/执行结果写入 JSON。
+
+### 训练
+
+```bash
+cd /home/cxc/MoEBench
+
+# 方式 1：LightGBM Ranker（推荐）
+python3 scripts/router_train.py \
+  --dataset-root dataset \
+  --glob-pattern '*/run-*.json' \
+  --model-type lightgbm \
+  --model-out dataset/unixbench_router/router_model.pkl \
+  --auto-install
+
+# 方式 2：小型 MLP
+python3 scripts/router_train.py \
+  --dataset-root dataset \
+  --glob-pattern '*/run-*.json' \
+  --model-type mlp \
+  --model-out dataset/unixbench_router/router_model.pt \
+  --auto-install
+```
+
+### 运行（推断 + 执行 Top-K 子测试）
+
+```bash
+cd /home/cxc/MoEBench
+python3 scripts/router_run_unixbench.py \
+  --model dataset/unixbench_router/router_model.pkl \
+  --top-k 3
+# 若需要 sudo 权限采集 xi
+python3 scripts/router_run_unixbench.py --sudo \
+  --model dataset/unixbench_router/router_model.pkl \
+  --top-k 3
+```
+
+输出：会在 `dataset/unixbench_router/<session>/` 下生成 router-run 的 JSON，并且 UnixBench 的标准输出会直接显示在终端。
+
+> 建议：在 miniconda 环境中运行，不要用 `sudo python ...`，否则会切到系统 Python 导致 `ModuleNotFoundError: lightgbm`。
+
+### 可选：安装 Python ML 依赖
+
+如果你已使用 miniconda：
+
+```bash
+conda activate <your_env>
+./scripts/install_ml_python_deps.sh --no-torch
+```
+
+```bash
+cd /home/cxc/MoEBench
+./scripts/install_ml_python_deps.sh
+```

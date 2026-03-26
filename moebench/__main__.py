@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import subprocess
 import sys
 from datetime import datetime, timezone
 
@@ -30,6 +32,11 @@ def _unified_payload(mode: str, raw: dict) -> dict:
 
 def main() -> int:
     p = argparse.ArgumentParser(description="MoEBench system feature collection")
+    p.add_argument(
+        "--sudo",
+        action="store_true",
+        help="Re-run this command with sudo -E (recommended when perf/bpftrace needs elevated permissions)",
+    )
     p.add_argument(
         "mode",
         nargs="?",
@@ -64,6 +71,11 @@ def main() -> int:
         help="Write only raw collector output (no meta envelope); for -o or stdout",
     )
     args = p.parse_args()
+
+    if args.sudo and os.geteuid() != 0:
+        forwarded = [a for a in sys.argv[1:] if a != "--sudo"]
+        cmd = ["sudo", "-E", sys.executable, "-m", "moebench"] + forwarded
+        raise SystemExit(subprocess.call(cmd))
 
     if args.mode == "static":
         raw = collect_static()

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -28,6 +30,11 @@ def main() -> int:
 
     p = argparse.ArgumentParser(
         description="MoEBench UnixBench dataset: features (xi) + full Run (yi, ti) + expert metadata",
+    )
+    p.add_argument(
+        "--sudo",
+        action="store_true",
+        help="Re-run this command with sudo -E for privileged feature collection",
     )
     p.add_argument(
         "-o",
@@ -78,6 +85,11 @@ def main() -> int:
         help="Only write expert catalog E (no benchmark run, no xi)",
     )
     args = p.parse_args()
+
+    if args.sudo and os.geteuid() != 0:
+        forwarded = [a for a in sys.argv[1:] if a != "--sudo"]
+        cmd = ["sudo", "-E", sys.executable, "-m", "moebench.unixbench"] + forwarded
+        raise SystemExit(subprocess.call(cmd))
 
     ds_root = Path(args.dataset_root).resolve() if args.dataset_root else default_dataset_root()
     session_resolved = safe_session_tag(args.session or default_session_tag())
