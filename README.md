@@ -222,6 +222,102 @@ python3 scripts/router_run_unixbench.py --sudo \
 
 > 建议：在 miniconda 环境中运行，不要用 `sudo python ...`，否则会切到系统 Python 导致 `ModuleNotFoundError: lightgbm`。
 
+## 结果重建（Reconstruction）
+
+目标：输入 **系统特征 `xi` + 已执行子测试结果**（由 Router 选出的子项），预测 **完整 12 个子测试 Index + 完整 suite 总分**（`system_benchmarks_index_score`）。
+
+### 交叉验证评估（MAE / RMSE / Spearman / Kendall）
+
+```bash
+cd /home/cxc/MoEBench
+python3 scripts/reconstruct_train_eval.py \
+  --dataset-root dataset \
+  --model-type lightgbm \
+  --folds 5 \
+  --eval-partial-k 3 \
+  --train-aug 10 \
+  --report-json dataset/reconstruct_cv.json
+```
+
+输出 JSON 会包含：
+
+- `oof_metrics.mae_suite_index` / `rmse_suite_index`
+- `oof_metrics.spearman_suite` / `kendall_tau_suite`
+- `time_savings.mean_fraction_wall_time_saved_vs_full_suite`（基于 `ti` 的模拟节省比例）
+
+### 导出可推理的重建模型
+
+```bash
+cd /home/cxc/MoEBench
+python3 scripts/reconstruct_train_eval.py \
+  --dataset-root dataset \
+  --skip-cv \
+  --model-type lightgbm \
+  --export-model dataset/models/reconstruct_lgbm.pkl
+```
+
+如果使用 MLP，可改为：
+
+```bash
+python3 scripts/reconstruct_train_eval.py \
+  --dataset-root dataset \
+  --skip-cv \
+  --model-type mlp \
+  --export-model dataset/models/reconstruct_mlp.pt
+```
+
+## 完整实验：Router + Reconstruction vs Full
+
+目标：一次实验同时得到：
+
+1. Router 子集执行时间与重建预测总分；
+2. 全量 UnixBench 执行时间与真实总分；
+3. 两者时间差与总分误差。
+
+```bash
+cd /home/cxc/MoEBench
+python3 scripts/experiment_router_reconstruct_vs_full.py \
+  --router-model dataset/unixbench_router/router_model.pkl \
+  --reconstruct-model dataset/models/reconstruct_lgbm.pkl \
+  --top-k 3 \
+  --sudo
+```
+
+输出文件：`dataset/experiments/<session>/experiment_router_reconstruct_vs_full.json`
+
+重点字段说明：
+
+- `timing_seconds.partial_unixbench`：Router 子集 benchmark 时间
+- `timing_seconds.full_unixbench`：全量 benchmark 时间
+- `scores.predicted_full_suite_benchmarks_index`：重建预测总分
+- `scores.actual_full_suite_benchmarks_index`：全量真实总分
+- `comparison.suite_absolute_error` / `suite_relative_error`：总分误差
+- `comparison.benchmark_time_saved_seconds_vs_full`：相对全量节省的 benchmark 秒数
+
+## 常见问题（FAQ）
+
+### 1) `FileNotFoundError: /path/to/router_model.pkl`
+
+这是占位路径，不是实际文件。请改成真实模型路径（通常是）：
+
+```text
+dataset/unixbench_router/router_model.pkl
+```
+
+可先确认文件是否存在：
+
+```bash
+ls dataset/unixbench_router/
+```
+
+### 2) 没有 `reconstruct_lgbm.pkl`
+
+先执行“导出可推理的重建模型”命令，生成：
+
+```text
+dataset/models/reconstruct_lgbm.pkl
+```
+
 ### 可选：安装 Python ML 依赖
 
 如果你已使用 miniconda：

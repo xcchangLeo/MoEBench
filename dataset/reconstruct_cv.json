@@ -1,0 +1,138 @@
+{
+  "model_type": "lightgbm",
+  "n_samples": 50,
+  "cv_folds": 5,
+  "eval_partial_k": 3,
+  "train_aug_per_sample": 10,
+  "train_k_range": [
+    2,
+    6
+  ],
+  "log1p_partial_index": false,
+  "oof_metrics": {
+    "mae_all_targets": 747.4199893540386,
+    "rmse_all_targets": 1280.4256148588227,
+    "mae_subtest_index_only": 771.2227011937956,
+    "rmse_subtest_index_only": 1319.195939944211,
+    "mae_suite_index": 461.78744727695613,
+    "rmse_suite_index": 655.7680091634911,
+    "spearman_suite": 0.45046818727490995,
+    "kendall_tau_suite": 0.3224489795918367,
+    "mean_spearman_subtest_index_across_samples": 0.2864745898359344,
+    "mean_kendall_tau_subtest_index_across_samples": 0.19245865012671737,
+    "per_subtest_spearman_with_true_index": {
+      "dhry2reg": 0.329171668667467,
+      "whetstone-double": 0.2293877551020408,
+      "execl": 0.4286674669867947,
+      "fstime": 0.19154861944777912,
+      "fsbuffer": 0.24993997599039616,
+      "fsdisk": 0.3452100840336134,
+      "pipe": 0.1020408163265306,
+      "context1": 0.39783913565426166,
+      "spawn": 0.45344537815126046,
+      "syscall": 0.16139255702280914,
+      "shell1": 0.2772148859543817,
+      "shell8": 0.27183673469387754
+    },
+    "per_subtest_kendall_tau_with_true_index": {
+      "dhry2reg": 0.21959183673469387,
+      "whetstone-double": 0.16081632653061226,
+      "execl": 0.30612244897959184,
+      "fstime": 0.1346938775510204,
+      "fsbuffer": 0.1673469387755102,
+      "fsdisk": 0.24244897959183673,
+      "pipe": 0.06448979591836734,
+      "context1": 0.28489795918367344,
+      "spawn": 0.3028571428571429,
+      "syscall": 0.10530612244897959,
+      "shell1": 0.17877551020408164,
+      "shell8": 0.14215686274509803
+    }
+  },
+  "per_fold_metrics": [
+    {
+      "mae_all_targets": 530.9639971461681,
+      "rmse_all_targets": 860.74277471849,
+      "mae_subtest_index_only": 552.8277968274699,
+      "rmse_subtest_index_only": 891.2954727081911,
+      "mae_suite_index": 268.59840097054587,
+      "rmse_suite_index": 313.885614435727,
+      "spearman_suite": 0.7575757575757575,
+      "kendall_tau_suite": 0.6,
+      "fold": 0,
+      "n_val": 10
+    },
+    {
+      "mae_all_targets": 866.4913345480378,
+      "rmse_all_targets": 1373.1728593111432,
+      "mae_subtest_index_only": 884.4989371415703,
+      "rmse_subtest_index_only": 1404.4728445174228,
+      "mae_suite_index": 650.4001034256474,
+      "rmse_suite_index": 917.7801851703391,
+      "spearman_suite": 0.29696969696969694,
+      "kendall_tau_suite": 0.28888888888888886,
+      "fold": 1,
+      "n_val": 10
+    },
+    {
+      "mae_all_targets": 970.0133424035358,
+      "rmse_all_targets": 1614.0158979559026,
+      "mae_subtest_index_only": 998.1858413659172,
+      "rmse_subtest_index_only": 1662.3379313531966,
+      "mae_suite_index": 631.9433548549601,
+      "rmse_suite_index": 839.7656630987462,
+      "spearman_suite": 0.28484848484848485,
+      "kendall_tau_suite": 0.28888888888888886,
+      "fold": 2,
+      "n_val": 10
+    },
+    {
+      "mae_all_targets": 800.7575420507909,
+      "rmse_all_targets": 1461.0119615567687,
+      "mae_subtest_index_only": 838.756498303632,
+      "rmse_subtest_index_only": 1513.1936916238942,
+      "mae_suite_index": 344.7700670166989,
+      "rmse_suite_index": 521.694923409513,
+      "spearman_suite": -0.006060606060606061,
+      "kendall_tau_suite": 0.06666666666666667,
+      "fold": 3,
+      "n_val": 10
+    },
+    {
+      "mae_all_targets": 568.8737306216608,
+      "rmse_all_targets": 911.7914671062625,
+      "mae_subtest_index_only": 581.8444323303886,
+      "rmse_subtest_index_only": 938.7840554587073,
+      "mae_suite_index": 413.2253101169284,
+      "rmse_suite_index": 481.6033637126219,
+      "spearman_suite": 0.5878787878787878,
+      "kendall_tau_suite": 0.37777777777777777,
+      "fold": 4,
+      "n_val": 10
+    }
+  ],
+  "time_savings": {
+    "mean_fraction_wall_time_saved_vs_full_suite": 0.7591260907241875,
+    "description": "Mean (T_full - T_partial) / T_full over validation rows; T from ti.by_test_id for parallel key 32."
+  },
+  "targets_layout": {
+    "y_dim": 13,
+    "first_dims_subtest_index_order": [
+      "dhry2reg",
+      "whetstone-double",
+      "execl",
+      "fstime",
+      "fsbuffer",
+      "fsdisk",
+      "pipe",
+      "context1",
+      "spawn",
+      "syscall",
+      "shell1",
+      "shell8"
+    ],
+    "last_dim": "system_benchmarks_index_score"
+  },
+  "exported_model": "/home/cxc/MoEBench/dataset/models/reconstruct_lgbm.pkl",
+  "export_train_rows": 500
+}
