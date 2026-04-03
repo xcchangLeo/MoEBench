@@ -1,6 +1,11 @@
 """Reconstruct full UnixBench results from partial subtest runs + system features (xi)."""
 
-from moebench.reconstruct.inference import load_reconstruction_bundle, predict_from_partial
+from moebench.reconstruct.inference import (
+    SCHEMA_V2,
+    bundle_has_uncertainty,
+    load_reconstruction_bundle,
+    predict_from_partial,
+)
 
 from moebench.reconstruct.data import (
     build_partial_feature_row,
@@ -14,6 +19,8 @@ from moebench.reconstruct.data import (
 )
 
 __all__ = [
+    "SCHEMA_V2",
+    "bundle_has_uncertainty",
     "load_reconstruction_bundle",
     "predict_from_partial",
     "build_partial_feature_row",

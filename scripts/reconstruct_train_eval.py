@@ -40,7 +40,7 @@ from moebench.reconstruct.data import (
     full_suite_wall_seconds,
     partial_wall_seconds,
 )
-from moebench.reconstruct.inference import SCHEMA_V1
+from moebench.reconstruct.inference import SCHEMA_V1, SCHEMA_V2
 from moebench.router.feature_vectorizer import XiVectorizer
 from moebench.unixbench.experts import INDEX_SUITE_TEST_IDS
 
@@ -102,14 +102,17 @@ def _sklearn_base_estimator(
     auto_install: bool,
     lgbm_estimators: int,
     xgb_estimators: int,
+    n_estimators_override: int | None = None,
 ) -> Any:
+    ne_l = int(n_estimators_override) if n_estimators_override is not None else int(lgbm_estimators)
+    ne_x = int(n_estimators_override) if n_estimators_override is not None else int(xgb_estimators)
     if model_name == "lightgbm":
         _maybe_auto_install(auto_install, ["lightgbm"])
         _ensure_import("lightgbm")
         import lightgbm as lgb
 
         return lgb.LGBMRegressor(
-            n_estimators=int(lgbm_estimators),
+            n_estimators=ne_l,
             learning_rate=0.05,
             num_leaves=31,
             min_child_samples=8,
@@ -124,7 +127,7 @@ def _sklearn_base_estimator(
         from xgboost import XGBRegressor
 
         return XGBRegressor(
-            n_estimators=int(xgb_estimators),
+            n_estimators=ne_x,
             learning_rate=0.05,
             max_depth=8,
             subsample=0.85,
@@ -143,6 +146,7 @@ def fit_sklearn_multioutput(
     auto_install: bool,
     lgbm_estimators: int,
     xgb_estimators: int,
+    n_estimators_override: int | None = None,
 ) -> Any:
     _ensure_import("sklearn")
     from sklearn.multioutput import MultiOutputRegressor
@@ -152,10 +156,37 @@ def fit_sklearn_multioutput(
         auto_install=auto_install,
         lgbm_estimators=lgbm_estimators,
         xgb_estimators=xgb_estimators,
+        n_estimators_override=n_estimators_override,
     )
     mor = MultiOutputRegressor(base)
     mor.fit(x_train, y_train)
     return mor
+
+
+def fit_sklearn_uncertainty_estimator(
+    model_name: str,
+    x_train: np.ndarray,
+    y_train: np.ndarray,
+    mor_main: Any,
+    *,
+    auto_install: bool,
+    lgbm_estimators: int,
+    xgb_estimators: int,
+) -> Any:
+    """Predict per-target expected |residual| (proxy σ) for active sampling / confidence."""
+    pred = mor_main.predict(x_train)
+    resid = np.abs(y_train.astype(np.float64) - pred.astype(np.float64))
+    resid = np.maximum(resid, 1e-6)
+    n_unc = max(64, (lgbm_estimators if model_name == "lightgbm" else xgb_estimators) // 2)
+    return fit_sklearn_multioutput(
+        model_name,
+        x_train,
+        resid,
+        auto_install=auto_install,
+        lgbm_estimators=lgbm_estimators,
+        xgb_estimators=xgb_estimators,
+        n_estimators_override=n_unc,
+    )
 
 
 def fit_predict_sklearn_multioutput(
@@ -175,6 +206,7 @@ def fit_predict_sklearn_multioutput(
         auto_install=auto_install,
         lgbm_estimators=lgbm_estimators,
         xgb_estimators=xgb_estimators,
+        n_estimators_override=None,
     )
     return mor.predict(x_val).astype(np.float64)
 
@@ -268,6 +300,72 @@ def train_mlp_export_bundle(
     }
 
 
+def train_mlp_heteroscedastic_export_bundle(
+    x_train: np.ndarray,
+    y_train: np.ndarray,
+    *,
+    hidden: int,
+    epochs: int,
+    lr: float,
+    auto_install: bool,
+    log1p_partial_index: bool,
+    test_ids: list[str],
+) -> dict[str, Any]:
+    """MLP with Gaussian NLL (mean + log-variance heads) for per-target uncertainty."""
+    _maybe_auto_install(auto_install, ["torch"])
+    import math
+
+    import torch
+    import torch.nn as nn
+
+    device = torch.device("cpu")
+    x_t = torch.from_numpy(x_train.astype(np.float32)).to(device)
+    y_t = torch.from_numpy(y_train.astype(np.float32)).to(device)
+    n_in = x_train.shape[1]
+    n_out = y_train.shape[1]
+    log_2pi = math.log(2.0 * math.pi)
+
+    class Het(nn.Module):
+        def __init__(self) -> None:
+            super().__init__()
+            self.body = nn.Sequential(
+                nn.Linear(n_in, hidden),
+                nn.ReLU(),
+                nn.Linear(hidden, hidden),
+                nn.ReLU(),
+            )
+            self.head_mean = nn.Linear(hidden, n_out)
+            self.head_logvar = nn.Linear(hidden, n_out)
+
+        def forward(self, z: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+            h = self.body(z)
+            return self.head_mean(h), self.head_logvar(h)
+
+    model = Het().to(device)
+    opt = torch.optim.Adam(model.parameters(), lr=lr)
+    model.train()
+    for _ in range(epochs):
+        opt.zero_grad()
+        mean, logvar = model(x_t)
+        lv = logvar.clamp(-10.0, 10.0)
+        inv = torch.exp(-lv)
+        nll = 0.5 * torch.mean(inv * (y_t - mean) ** 2 + lv + log_2pi)
+        nll.backward()
+        opt.step()
+
+    return {
+        "schema": SCHEMA_V2,
+        "model_type": "mlp",
+        "heteroscedastic": True,
+        "state_dict": model.state_dict(),
+        "mlp_hidden": hidden,
+        "in_dim": n_in,
+        "out_dim": n_out,
+        "log1p_partial_index": log1p_partial_index,
+        "test_ids": list(test_ids),
+    }
+
+
 def save_reconstruction_bundle(path: Path, bundle: dict[str, Any]) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -290,6 +388,7 @@ def sklearn_export_bundle(
     xgb_estimators: int,
     log1p_partial_index: bool,
     test_ids: list[str],
+    with_uncertainty: bool = True,
 ) -> dict[str, Any]:
     mor = fit_sklearn_multioutput(
         model_name,
@@ -298,15 +397,28 @@ def sklearn_export_bundle(
         auto_install=auto_install,
         lgbm_estimators=lgbm_estimators,
         xgb_estimators=xgb_estimators,
+        n_estimators_override=None,
     )
-    return {
-        "schema": SCHEMA_V1,
+    schema = SCHEMA_V2 if with_uncertainty else SCHEMA_V1
+    bundle: dict[str, Any] = {
+        "schema": schema,
         "model_type": model_name,
         "estimator": mor,
         "log1p_partial_index": log1p_partial_index,
         "test_ids": list(test_ids),
         "out_dim": int(y_train.shape[1]),
     }
+    if with_uncertainty:
+        bundle["uncertainty_estimator"] = fit_sklearn_uncertainty_estimator(
+            model_name,
+            x_train,
+            y_train,
+            mor,
+            auto_install=auto_install,
+            lgbm_estimators=lgbm_estimators,
+            xgb_estimators=xgb_estimators,
+        )
+    return bundle
 
 
 def fit_predict_mlp(
@@ -415,11 +527,17 @@ def main() -> int:
         help="After training, save reconstruction model for inference (use .pkl for trees, .pt for mlp)",
     )
     ap.add_argument(
+        "--no-uncertainty",
+        action="store_true",
+        help="Export v1 (no σ head): homoscedastic MLP or trees without residual-calibrator",
+    )
+    ap.add_argument(
         "--skip-cv",
         action="store_true",
         help="Skip cross-validation; only fit on all samples and write --export-model",
     )
     args = ap.parse_args()
+    with_uncertainty = not args.no_uncertainty
 
     test_ids = list(INDEX_SUITE_TEST_IDS)
     n_test = len(test_ids)
@@ -476,16 +594,28 @@ def main() -> int:
         )
         outp = Path(args.export_model)
         if args.model_type == "mlp":
-            bundle = train_mlp_export_bundle(
-                xt,
-                yt,
-                hidden=args.mlp_hidden,
-                epochs=args.mlp_epochs,
-                lr=args.mlp_lr,
-                auto_install=args.auto_install,
-                log1p_partial_index=args.log1p_partial_index,
-                test_ids=test_ids,
-            )
+            if with_uncertainty:
+                bundle = train_mlp_heteroscedastic_export_bundle(
+                    xt,
+                    yt,
+                    hidden=args.mlp_hidden,
+                    epochs=args.mlp_epochs,
+                    lr=args.mlp_lr,
+                    auto_install=args.auto_install,
+                    log1p_partial_index=args.log1p_partial_index,
+                    test_ids=test_ids,
+                )
+            else:
+                bundle = train_mlp_export_bundle(
+                    xt,
+                    yt,
+                    hidden=args.mlp_hidden,
+                    epochs=args.mlp_epochs,
+                    lr=args.mlp_lr,
+                    auto_install=args.auto_install,
+                    log1p_partial_index=args.log1p_partial_index,
+                    test_ids=test_ids,
+                )
         else:
             bundle = sklearn_export_bundle(
                 args.model_type,
@@ -496,6 +626,7 @@ def main() -> int:
                 xgb_estimators=args.xgb_estimators,
                 log1p_partial_index=args.log1p_partial_index,
                 test_ids=test_ids,
+                with_uncertainty=with_uncertainty,
             )
         save_reconstruction_bundle(outp, bundle)
         summary = {
@@ -503,6 +634,8 @@ def main() -> int:
             "export_model": str(outp.resolve()),
             "train_rows": int(len(xt)),
             "model_type": args.model_type,
+            "uncertainty": with_uncertainty,
+            "schema": bundle.get("schema"),
         }
         print(json.dumps(summary, indent=2, ensure_ascii=False))
         return 0
@@ -685,16 +818,28 @@ def main() -> int:
         )
         outp = Path(args.export_model)
         if args.model_type == "mlp" or outp.suffix in (".pt", ".pth"):
-            bundle = train_mlp_export_bundle(
-                xt,
-                yt,
-                hidden=args.mlp_hidden,
-                epochs=args.mlp_epochs,
-                lr=args.mlp_lr,
-                auto_install=args.auto_install,
-                log1p_partial_index=args.log1p_partial_index,
-                test_ids=test_ids,
-            )
+            if with_uncertainty:
+                bundle = train_mlp_heteroscedastic_export_bundle(
+                    xt,
+                    yt,
+                    hidden=args.mlp_hidden,
+                    epochs=args.mlp_epochs,
+                    lr=args.mlp_lr,
+                    auto_install=args.auto_install,
+                    log1p_partial_index=args.log1p_partial_index,
+                    test_ids=test_ids,
+                )
+            else:
+                bundle = train_mlp_export_bundle(
+                    xt,
+                    yt,
+                    hidden=args.mlp_hidden,
+                    epochs=args.mlp_epochs,
+                    lr=args.mlp_lr,
+                    auto_install=args.auto_install,
+                    log1p_partial_index=args.log1p_partial_index,
+                    test_ids=test_ids,
+                )
             if outp.suffix not in (".pt", ".pth"):
                 outp = outp.with_suffix(".pt")
         else:
@@ -707,6 +852,7 @@ def main() -> int:
                 xgb_estimators=args.xgb_estimators,
                 log1p_partial_index=args.log1p_partial_index,
                 test_ids=test_ids,
+                with_uncertainty=with_uncertainty,
             )
         save_reconstruction_bundle(outp, bundle)
         report["exported_model"] = str(outp.resolve())

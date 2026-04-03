@@ -203,7 +203,69 @@ python3 scripts/router_train.py \
   --model-type mlp \
   --model-out dataset/unixbench_router/router_model.pt \
   --auto-install
+
+# 方式 3：Subset selection network（仅 xi → 各 expert 的 logits；按 relevance 分布做软交叉熵）
+python3 scripts/router_train.py \
+  --dataset-root dataset \
+  --glob-pattern '*/run-*.json' \
+  --model-type subset_sel \
+  --model-out dataset/unixbench_router/router_subset.pt \
+  --auto-install
+
+# 方式 4：简单 Expert GNN（固定全连接邻接 + 2 层消息传递；无 torch_geometric 依赖）
+python3 scripts/router_train.py \
+  --dataset-root dataset \
+  --glob-pattern '*/run-*.json' \
+  --model-type gnn_expert \
+  --model-out dataset/unixbench_router/router_gnn.pt \
+  --gnn-emb-dim 12 \
+  --auto-install
 ```
+
+说明：
+
+- **`lightgbm`**：`xi || expert_onehot`，`LGBMRanker(lambdarank)`。
+- **`mlp`**：逐样本回归 relevance（与旧版一致）。
+- **`subset_sel` / `gnn_expert`**：对每个系统把 12 个 expert 的 relevance 归一化为目标分布，对 `softmax(logits)` 做交叉熵式训练（列表项级别、无外部 GNN 库）。
+
+### 一次性训练 + 完整实验对比（推荐）
+
+在**同一台机器、同一重建模型**下，依次训练多种 Router 并各跑一遍「Router + Reconstruction vs Full」，汇总到 `ablation_summary.json`：
+
+```bash
+cd /home/cxc/MoEBench
+
+# 先导出重建模型（若还没有）
+python3 scripts/reconstruct_train_eval.py \
+  --dataset-root dataset \
+  --skip-cv \
+  --export-model dataset/models/reconstruct_lgbm.pkl \
+  --model-type lightgbm
+
+# 训练 lightgbm / mlp / subset_sel / gnn_expert 并各跑完整实验（可加 sudo）
+# 推荐：整行复制（避免续行符断行导致 `--auto-install` 被当成 shell 命令）
+python3 scripts/run_router_model_ablation.py --dataset-root dataset --reconstruct-model dataset/models/reconstruct_lgbm.pkl --sudo --auto-install
+
+# 多行时：每行末尾必须是 \ 且后面不能有空格；下一行要紧贴接上，不要单独一行只写 --auto-install
+python3 scripts/run_router_model_ablation.py \
+  --dataset-root dataset \
+  --reconstruct-model dataset/models/reconstruct_lgbm.pkl \
+  --sudo \
+  --auto-install
+```
+
+常用参数：
+
+- **`--skip-train`**：跳过训练，仅对已存在的 `dataset/router_models/<时间戳>/` 下检查点跑实验。
+- **`--sudo`**：把 `--sudo` 传给完整实验脚本（采集 `xi` 需要 root 时用）。不要写裸的 `--experiment-extra --sudo`（后者会被 argparse 拆错）；若必须用 `--experiment-extra`，请写成 `--experiment-extra='--sudo'` 或 `--experiment-extra "--sudo"`。
+- **`--models lightgbm,mlp`**：只跑子集。
+- **`--models-dir path`**：指定模型输出目录（默认 `dataset/router_models/<UTC时间戳>/`）。
+- **`--experiments-parent`**：实验输出放在 `<dataset-root>/<该子目录>/router_ablation_<UTC>/`（默认 `experiments`）。若该目录曾被 `sudo` 写成 root 所有导致无法创建子目录，脚本会自动改写到 `dataset/ablation_runs/router_ablation_<UTC>/`，或你可先执行 `sudo chown -R $USER:$USER dataset/experiments` 恢复权限。
+
+产物：
+
+- 各模型一份完整实验 JSON：`dataset/experiments/router_ablation_<UTC>/experiment_<model>.json`（若触发回退则为 `dataset/ablation_runs/router_ablation_<UTC>/…`）
+- 汇总：同目录下的 `ablation_summary.json`（含各模型的 `suite_abs_err`、`partial_ub_s`、`full_ub_s` 等）
 
 ### 运行（推断 + 执行 Top-K 子测试）
 
@@ -256,6 +318,8 @@ python3 scripts/reconstruct_train_eval.py \
   --export-model dataset/models/reconstruct_lgbm.pkl
 ```
 
+默认会导出 **v2**（带不确定性：树模型为各目标训练 `expected |残差|` 估计器，MLP 为均值+log-var 双头）。主动补跑实验需要 v2；若只要旧版 v1，请加 **`--no-uncertainty`**。
+
 如果使用 MLP，可改为：
 
 ```bash
@@ -284,6 +348,43 @@ python3 scripts/experiment_router_reconstruct_vs_full.py \
 ```
 
 输出文件：`dataset/experiments/<session>/experiment_router_reconstruct_vs_full.json`
+
+### 三种重建模型对比 + GNN 路由 + 低置信度补跑子测试
+
+使用 **GNN 路由**（需先训练 `router_gnn.pt`）与三种 **v2 重建模型**（LightGBM / XGBoost / MLP）。共享一次部分跑与一次全量跑得到真值；各重建模型在相同初始子集上按 **预测 σ 最大** 的未执行子测试依次补跑、重预测，统计额外时间与总分误差下降。
+
+```bash
+cd /home/cxc/MoEBench
+# 可选：先训练 GNN 路由
+python3 scripts/router_train.py --dataset-root dataset --model-type gnn_expert \
+  --model-out dataset/unixbench_router/router_gnn.pt --auto-install
+
+python3 scripts/experiment_reconstruct_active_compare.py \
+  --dataset-root dataset \
+  --router-model dataset/router_models/20260402T045114Z/router_gnn.pt \
+  --train-reconstruct-models \
+  --no-auto-install \
+  --sudo
+```
+
+`--train-reconstruct-models` 会导出 `dataset/models/reconstruct_{lgbm,xgb}_v2.pkl` 与 `reconstruct_mlp_v2.pt`，**默认**对子进程开启 `pip install`（缺 xgboost 等时会自动装）；若环境离线或禁止联网，请加 **`--no-auto-install`** 并事先装好依赖。若已导出可去掉 `--train-reconstruct-models` 并用 `--reconstruct-lightgbm` 等指定路径。汇总 JSON：`dataset/experiments/reconstruct_active_<session>/reconstruct_active_three.json`，查看 `per_model.*` 的 `suite_absolute_error_initial` / `final`、`suite_error_reduction`、`extra_subtests_wall_seconds`。
+
+### Top-K 扫描（GNN 路由 + XGBoost 重建）
+
+固定一次 `xi` 和一次 full UnixBench（作为共享真值），对多个 `K` 分别跑 partial + reconstruct，输出每个 K 的误差与节省时间，并给出推荐 K。
+
+```bash
+cd /home/cxc/MoEBench
+python3 scripts/experiment_topk_sweep.py \
+  --dataset-root dataset \
+  --router-model dataset/router_models/20260402T045114Z/router_gnn.pt \
+  --reconstruct-model dataset/models/reconstruct_xgb_v2.pkl \
+  --k-values 1,2,3,4,5,6 \
+  --objective balanced \
+  --sudo
+```
+
+输出：`dataset/experiments/topk_sweep_<session>/topk_sweep.json`，重点看 `per_k` 与 `recommended.k`。
 
 重点字段说明：
 

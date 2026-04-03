@@ -266,11 +266,17 @@ def collect_dynamic(
         result["perf"] = perf_res
         from moebench import proc_metrics
 
+        # Keys must match ``proc_fallback`` and ``XiVectorizer``: training data is mostly from
+        # degraded (no perf) runs; using ``vmstat_faults_sample`` left page-fault features at 0
+        # whenever perf succeeded (common under sudo), hurting router/reconstruct parity.
         result["proc"] = {
             "source": "supplement_after_warmup",
             "cpu_utilization": proc_metrics.sample_cpu_utilization(proc_sample_s),
             "loadavg": proc_metrics.read_loadavg(),
-            "vmstat_faults_sample": proc_metrics.sample_vmstat_faults(proc_sample_s),
+            "vmstat_faults": proc_metrics.sample_vmstat_faults(proc_sample_s),
+            "memory_bandwidth_proxy": proc_metrics.memory_bandwidth_proxy_mb_s(
+                duration_s=min(0.5, float(proc_sample_s))
+            ),
         }
 
     if enable_ebpf:

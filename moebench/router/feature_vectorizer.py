@@ -165,7 +165,7 @@ class XiVectorizer:
         cpu_util = proc.get("cpu_utilization") or {}
         cpu_util_ratio = _safe_float(cpu_util.get("cpu_utilization_ratio")) or 0.0
         iowait_ratio = _safe_float(cpu_util.get("iowait_ratio")) or 0.0
-        vm = proc.get("vmstat_faults") or {}
+        vm = proc.get("vmstat_faults") or proc.get("vmstat_faults_sample") or {}
         pf = _safe_float(vm.get("page_faults_per_sec")) or 0.0
         maj = _safe_float(vm.get("major_faults_per_sec")) or 0.0
         minf = _safe_float(vm.get("minor_faults_per_sec")) or 0.0
@@ -191,13 +191,6 @@ class XiVectorizer:
         perf_pf = _safe_float(perf_derived.get("page_faults_per_sec")) or 0.0
 
         # static
-        perf_event_paranoid = _safe_float(
-            static.get("scheduler_sysctl", {}).get("perf_event_paranoid_file")
-        )
-        # ^ stored separately by static_features, but may not exist
-        if perf_event_paranoid is None:
-            pefp = static.get("scheduler_sysctl", {}).get("kernel.sched_latency_ns")
-
         perf_event_paranoid = _safe_float(static.get("scheduler_sysctl", {}).get("perf_event_paranoid_file")) or _safe_float(
             (static.get("scheduler_sysctl", {}) or {}).get("kernel.perf_event_paranoid")
         ) or 0.0

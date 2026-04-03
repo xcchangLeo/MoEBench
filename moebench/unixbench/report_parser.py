@@ -142,3 +142,52 @@ def build_ti_from_runs(runs: list[dict[str, Any]]) -> dict[str, Any]:
                 by_test[tid] = {}
             by_test[tid][key] = float(tinfo.get("time_s", 0.0))
     return {"by_test_id": by_test, "unit": "seconds", "description": "Wall time per sub-benchmark from UnixBench Run report"}
+
+
+def pick_preferred_run_block(parsed: dict[str, Any]) -> dict[str, Any]:
+    """Prefer parallel_copies==32, else largest int, for experiment / reconstruction."""
+    runs = parsed.get("runs") or []
+
+    def key(rb: dict[str, Any]) -> tuple[int, int]:
+        pc = rb.get("parallel_copies")
+        if pc == 32:
+            return (0, 0)
+        if isinstance(pc, int):
+            return (1, pc)
+        if pc is None:
+            return (2, 10**9)
+        return (3, 10**9)
+
+    return sorted(runs, key=key)[0] if runs else {}
+
+
+def parse_executed_tests_from_report(
+    report_txt: str, selected_test_ids: list[str]
+) -> tuple[list[dict[str, Any]], float | None]:
+    """Build ``executed_tests`` list + composite suite index for selected subtests."""
+    parsed = parse_report_text(report_txt)
+    parsed_run = pick_preferred_run_block(parsed)
+    tests_map = parsed_run.get("tests") or {}
+    executed: list[dict[str, Any]] = []
+    for tid in selected_test_ids:
+        tinfo = tests_map.get(tid)
+        if not tinfo:
+            executed.append({"test_id": tid, "missing": True})
+            continue
+        executed.append(
+            {
+                "test_id": tid,
+                "title": tinfo.get("title"),
+                "score": tinfo.get("score"),
+                "score_unit": tinfo.get("score_unit"),
+                "time_s": tinfo.get("time_s"),
+                "pass_samples": tinfo.get("pass_samples"),
+                "index_detail": tinfo.get("index_detail"),
+            }
+        )
+    suite = parsed_run.get("system_benchmarks_index_score")
+    try:
+        suite_f = float(suite) if suite is not None else None
+    except (TypeError, ValueError):
+        suite_f = None
+    return executed, suite_f

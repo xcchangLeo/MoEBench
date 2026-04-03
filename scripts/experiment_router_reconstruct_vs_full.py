@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import os
 import pickle
 import subprocess
@@ -25,22 +24,8 @@ if str(REPO_ROOT) not in sys.path:
 
 from moebench import collect_all
 from moebench.reconstruct.inference import load_reconstruction_bundle, predict_from_partial
-from moebench.router.feature_vectorizer import XiVectorizer
-from moebench.unixbench.report_parser import parse_report_text
-
-
-def _softmax(scores: list[float]) -> list[float]:
-    m = max(scores)
-    exps = [math.exp(s - m) for s in scores]
-    z = sum(exps) or 1.0
-    return [e / z for e in exps]
-
-
-def _ensure_module(module_name: str) -> None:
-    try:
-        __import__(module_name)
-    except ImportError as e:
-        raise ImportError(f"Missing dependency '{module_name}'.") from e
+from moebench.router.inference import predict_expert_scores, select_top_k_from_probs
+from moebench.unixbench.report_parser import parse_report_text, parse_executed_tests_from_report
 
 
 def _maybe_auto_install(module_name: str, auto_install: bool) -> None:
@@ -69,108 +54,17 @@ def load_router_meta(model_fp: Path, auto_install: bool) -> dict[str, Any]:
         return torch.load(model_fp, map_location="cpu")
 
 
-def router_scores(
-    router_meta: dict[str, Any], xi: dict[str, Any]
-) -> tuple[list[float], list[float], list[str], list[str]]:
-    vec = XiVectorizer()
-    xi_vec = vec.transform(xi)
-    xi_dim = len(vec.feature_names)
-    expert_ids = router_meta["expert_ids"]
-    expert_test_ids = router_meta["expert_test_ids"]
-    n_experts = len(expert_ids)
-    model_type = router_meta.get("model_type")
-
-    X_rows = []
-    for ei in range(n_experts):
-        onehot = [0.0] * n_experts
-        onehot[ei] = 1.0
-        X_rows.append(list(xi_vec) + onehot)
-
-    scores: list[float] = []
-    if model_type == "lightgbm":
-        import numpy as np
-
-        ranker = router_meta["ranker"]
-        scores = [float(x) for x in ranker.predict(np.asarray(X_rows, dtype=np.float32))]
-    elif model_type == "mlp":
-        import numpy as np
-        import torch
-        import torch.nn as nn
-
-        hidden = int(router_meta.get("mlp_hidden", 64))
-        in_dim = xi_dim + n_experts
-        net = nn.Sequential(
-            nn.Linear(in_dim, hidden),
-            nn.ReLU(),
-            nn.Linear(hidden, hidden),
-            nn.ReLU(),
-            nn.Linear(hidden, 1),
-        )
-        net.load_state_dict(router_meta["state_dict"])
-        net.eval()
-        with torch.no_grad():
-            out = net(torch.from_numpy(np.asarray(X_rows, dtype=np.float32))).view(-1).tolist()
-        scores = [float(v) for v in out]
-    else:
-        raise RuntimeError(f"Unknown router model_type: {model_type}")
-
-    probs = _softmax(scores)
-    return scores, probs, expert_ids, expert_test_ids
-
-
-def select_top_k(
-    probs: list[float],
-    expert_ids: list[str],
-    expert_test_ids: list[str],
-    top_k: int,
-) -> tuple[list[str], list[str]]:
-    n = len(expert_ids)
-    top_k = max(1, min(int(top_k), n))
-    ranked_idx = sorted(range(n), key=lambda i: probs[i], reverse=True)[:top_k]
-    return [expert_ids[i] for i in ranked_idx], [expert_test_ids[i] for i in ranked_idx]
-
-
 def _pick_parsed_run(parsed: dict[str, Any]) -> dict[str, Any]:
-    runs = parsed.get("runs") or []
+    from moebench.unixbench.report_parser import pick_preferred_run_block
 
-    def key(rb: dict[str, Any]) -> tuple[int, int]:
-        pc = rb.get("parallel_copies")
-        if pc == 32:
-            return (0, 0)
-        if isinstance(pc, int):
-            return (1, pc)
-        if pc is None:
-            return (2, 10**9)
-        return (3, 10**9)
-
-    return sorted(runs, key=key)[0] if runs else {}
+    return pick_preferred_run_block(parsed)
 
 
 def parse_executed_from_report(
     report_txt: str, selected_test_ids: list[str]
 ) -> tuple[list[dict[str, Any]], float | None]:
-    parsed = parse_report_text(report_txt)
-    parsed_run = _pick_parsed_run(parsed)
-    tests_map = parsed_run.get("tests") or {}
-    executed: list[dict[str, Any]] = []
-    for tid in selected_test_ids:
-        tinfo = tests_map.get(tid)
-        if not tinfo:
-            executed.append({"test_id": tid, "missing": True})
-            continue
-        executed.append(
-            {
-                "test_id": tid,
-                "title": tinfo.get("title"),
-                "score": tinfo.get("score"),
-                "score_unit": tinfo.get("score_unit"),
-                "time_s": tinfo.get("time_s"),
-                "pass_samples": tinfo.get("pass_samples"),
-                "index_detail": tinfo.get("index_detail"),
-            }
-        )
-    suite = parsed_run.get("system_benchmarks_index_score")
-    return executed, _safe_float(suite)
+    executed, suite_f = parse_executed_tests_from_report(report_txt, selected_test_ids)
+    return executed, suite_f
 
 
 def _safe_float(x: Any) -> float | None:
@@ -280,8 +174,8 @@ def main() -> int:
     stored_k = int(router_meta.get("top_k", 3))
     top_k = int(args.top_k) if args.top_k is not None else stored_k
 
-    scores, probs, expert_ids, expert_test_ids = router_scores(router_meta, xi)
-    selected_experts, selected_test_ids = select_top_k(probs, expert_ids, expert_test_ids, top_k)
+    scores, probs, expert_ids, expert_test_ids = predict_expert_scores(router_meta, xi)
+    selected_experts, selected_test_ids = select_top_k_from_probs(probs, expert_ids, expert_test_ids, top_k)
 
     cpu_count = os.cpu_count() or 1
     copies = args.copies if args.copies and args.copies > 0 else min(32, int(cpu_count))
@@ -347,6 +241,7 @@ def main() -> int:
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
         "session_tag": session_tag,
         "router_model": str(router_fp),
+        "router_model_type": router_meta.get("model_type"),
         "reconstruct_model": str(reconstruct_fp),
         "unixbench_root": str(unixbench_root),
         "copies_parallel": copies,

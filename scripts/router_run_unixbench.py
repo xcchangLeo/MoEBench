@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import os
 import pickle
 import subprocess
@@ -28,7 +27,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from moebench import collect_all
-from moebench.router.feature_vectorizer import XiVectorizer
+from moebench.router.inference import predict_expert_scores, select_top_k_from_probs
 from moebench.unixbench.report_parser import parse_report_text
 
 
@@ -43,13 +42,6 @@ def _maybe_auto_install(module_name: str, auto_install: bool) -> None:
     if not auto_install:
         return
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", module_name])
-
-
-def _softmax(scores: list[float]) -> list[float]:
-    m = max(scores)
-    exps = [math.exp(s - m) for s in scores]
-    z = sum(exps) or 1.0
-    return [e / z for e in exps]
 
 
 def main() -> int:
@@ -150,7 +142,10 @@ def main() -> int:
         try:
             import torch
 
-            router_meta = torch.load(model_fp, map_location="cpu")
+            try:
+                router_meta = torch.load(model_fp, map_location="cpu", weights_only=False)
+            except TypeError:
+                router_meta = torch.load(model_fp, map_location="cpu")
             model_type = router_meta.get("model_type")
         except Exception as e:
             raise RuntimeError(f"Failed to load model checkpoint: {model_fp}. {e}") from e
@@ -163,56 +158,9 @@ def main() -> int:
 
     label_transform = args.label_transform or router_meta.get("label_transform") or "none"
 
-    # 3) vectorize xi
-    vec = XiVectorizer()
-    xi_vec = vec.transform(xi)
-    xi_dim = len(vec.feature_names)
-    n_experts = len(expert_ids)
-
-    X_rows = []
-    for ei in range(n_experts):
-        onehot = [0.0] * n_experts
-        onehot[ei] = 1.0
-        X_rows.append(list(xi_vec) + onehot)
-
-    # 4) predict per expert
-    scores: list[float] = []
-    if model_type == "lightgbm":
-        import numpy as np
-
-        X_np = np.asarray(X_rows, dtype=np.float32)
-        ranker = router_meta["ranker"]
-        preds = ranker.predict(X_np)
-        scores = [float(x) for x in preds]
-    elif model_type == "mlp":
-        import numpy as np
-        import torch
-        import torch.nn as nn
-
-        in_dim = xi_dim + n_experts
-        hidden = int(router_meta.get("mlp_hidden", 64))
-        net = nn.Sequential(
-            nn.Linear(in_dim, hidden),
-            nn.ReLU(),
-            nn.Linear(hidden, hidden),
-            nn.ReLU(),
-            nn.Linear(hidden, 1),
-        )
-        net.load_state_dict(router_meta["state_dict"])
-        net.eval()
-        with torch.no_grad():
-            x_t = torch.from_numpy(np.asarray(X_rows, dtype=np.float32))
-            out = net(x_t).view(-1).tolist()
-        scores = [float(v) for v in out]
-    else:
-        raise RuntimeError(f"Unknown model_type: {model_type}")
-
-    probs = _softmax(scores)
-
-    # 5) select Top-K
-    ranked_idx = sorted(range(n_experts), key=lambda i: probs[i], reverse=True)[:top_k]
-    selected_experts = [expert_ids[i] for i in ranked_idx]
-    selected_test_ids = [expert_test_ids[i] for i in ranked_idx]
+    # 3–5) scores + Top-K
+    scores, probs, expert_ids, expert_test_ids = predict_expert_scores(router_meta, xi)
+    selected_experts, selected_test_ids = select_top_k_from_probs(probs, expert_ids, expert_test_ids, top_k)
 
     # 6) run UnixBench subset; keep terminal output visible
     # Fix UB report name for parsing
