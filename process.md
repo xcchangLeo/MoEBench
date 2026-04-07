@@ -30,7 +30,7 @@ subset selection network：准确率：+0.0001248773433189
 GNN：准确率：+0.01417759360080956 
 #### 结果重建模型效果：
 LightGBM：baseline
-xgboost：准确率：+0.0218165498156836 
+xgboost：准确率：+0.0118165498156836 
 MLP：效果很差
 
 ### 2.对结果重建模型加入 uncertainty head 预测置信度
