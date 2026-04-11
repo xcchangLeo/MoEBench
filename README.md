@@ -171,6 +171,48 @@ python3 -m moebench.unixbench -n 1 -- -v -i 3
 
 输出 JSON 含 `schema: moebench.unixbench.dataset.v1` 字段：`xi`、`yi`、`ti`、`experts`、`session`（`tag` / `round_index` / `xi_reused_from_previous_round`）、`unixbench.result_files`（报告 / `.log` / `.html` 路径）。多轮结果可在会话目录内批量做 **方差与相关** 分析。
 
+## Phoronix Test Suite 实验流水线（xi / yi / ti）
+
+需已安装 **Phoronix Test Suite**（可在仓库旁克隆 `phoronix-test-suite/`，或系统 PATH 中有 `phoronix-test-suite`）。首次无人值守批量测试前建议执行一次 **`phoronix-test-suite batch-setup`** 完成交互配置。
+
+1. 采集 **xi**：`collect_all()`（`--no-features` 可跳过）。
+2. 运行套件：默认 **`phoronix-test-suite batch-run <suite>`**（使用套件内默认选项，不逐项提问）；若需与命令行一致使用 **`phoronix-test-suite run cpu`**，请指定 **`--pts-mode run --suite cpu`**。
+3. 通过环境变量 **`TEST_RESULTS_NAME`** 固定保存的结果文件名，便于后续导出。
+4. 调用 **`phoronix-test-suite result-file-to-json <结果名>`** 得到结构化结果，写入 **`yi.pts_export`**；**`ti`** 由各 profile 结果缓冲中的 **`test_run_times`**（秒）汇总得到；**`experts`** 由导出结果中的各测试 profile 生成。
+
+### 命令
+
+```bash
+cd /path/to/MoEBench
+
+# 推荐：batch-run + cpu 套件，单轮数据 → dataset/<session>/run-01.json（另存同目录 run-01_pts_raw.json）
+python3 -m moebench.phoronix --suite cpu --pts-mode batch-run
+
+# 与「phoronix-test-suite run cpu」等价
+python3 -m moebench.phoronix --suite cpu --pts-mode run
+
+# 需要 root/完整 perf 等时（MoEBench 会把 dataset 会话目录 chown 给 SUDO_USER，便于 PTS 以该用户写导出 JSON）
+python3 -m moebench.phoronix --suite cpu --pts-mode batch-run --sudo
+
+# 指定本机 PTS 可执行文件路径
+python3 -m moebench.phoronix --pts-bin /opt/phoronix-test-suite/phoronix-test-suite --suite cpu
+
+# 多轮：dataset/<session>/run-01.json … run-NN.json + manifest.json（勿与 -o 同用）
+python3 -m moebench.phoronix --suite cpu --pts-mode batch-run -n 5
+
+# 多轮且仅第 1 轮采 xi，后续轮复用（更快）
+python3 -m moebench.phoronix --suite cpu --pts-mode batch-run -n 5 --reuse-xi
+
+# 自定义会话目录名
+python3 -m moebench.phoronix --session my_pts_exp --suite cpu -n 3
+
+# 快速单测（默认只跑 pts/ctx-clock，覆盖 --suite；可先 install 该 profile）
+python3 -m moebench.phoronix --pts-smoke --pts-mode run
+python3 -m moebench.phoronix --pts-smoke --pts-smoke-suite pts/smallpt --pts-mode run
+```
+
+输出 JSON 含 `schema: moebench.phoronix.dataset.v1`：`xi`、`yi`（含 `pts_export`）、`ti`、`experts`、`phoronix`（命令、结果文件名、`result-file-to-json` 原始导出路径）。多轮时另有 `schema: moebench.phoronix.batch_manifest.v1` 的 `manifest.json`。
+
 ## 关于 `perf` 与权限
 
 若 `kernel.perf_event_paranoid` 较高（如 `4`），普通用户可能无法使用 `perf` 的 PMU 计数，动态特征会退化为 **`/proc` 等代理指标**，并在 `dynamic` 中给出 `perf_degraded` 说明。需要完整 PMU 时，请按系统策略调整该参数或使用具备 **`CAP_PERFMON`** 的方式运行采集进程（参见内核文档 [Perf events and tool security](https://www.kernel.org/doc/html/latest/admin-guide/perf-security.html)）。
