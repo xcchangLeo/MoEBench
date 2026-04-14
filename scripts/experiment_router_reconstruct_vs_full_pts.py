@@ -1,0 +1,231 @@
+#!/usr/bin/env python3
+"""PTS experiment: xi → router Top-K partial run → reconstruct suite mean → full ``run cpu`` baseline.
+
+Runs **without sudo** except optional ``--sudo-for-xi`` (re-execs only for feature collection).
+If you run the whole script under ``sudo`` (e.g. for xi), PTS is still executed as
+``SUDO_USER`` with ``HOME`` set to that user's home so installed tests under
+``~/.phoronix-test-suite`` are found (same as ``moebench.phoronix`` pipeline).
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import subprocess
+import sys
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from moebench import collect_all
+from moebench.phoronix.pipeline import (
+    _export_result_json,
+    _pts_argv_as_installing_user,
+    _which_pts,
+    default_pts_install_root,
+    pts_clean_save_name,
+    pts_subprocess_env,
+    safe_session_tag,
+)
+from moebench.phoronix.training_data import (
+    extract_targets_from_pts_dataset,
+    primary_time_from_pts_export,
+    primary_value_from_export,
+)
+from moebench.reconstruct.inference import load_reconstruction_bundle, predict_from_partial
+from moebench.router.inference import predict_expert_scores, select_top_k_from_probs
+
+
+def _load_router(path: Path, auto_install: bool) -> dict[str, Any]:
+    import pickle
+
+    if path.suffix in (".pkl", ".pickle"):
+        return pickle.load(open(path, "rb"))
+    import torch
+
+    try:
+        return torch.load(path, map_location="cpu", weights_only=False)
+    except TypeError:
+        return torch.load(path, map_location="cpu")
+
+
+def _maybe_pip(mod: str, auto_install: bool) -> None:
+    if auto_install:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", mod])
+
+
+def executed_rows_from_export(export: dict[str, Any], test_ids: list[str]) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for tid in test_ids:
+        v = primary_value_from_export(export, tid)
+        ts = primary_time_from_pts_export(export, tid)
+        if v is None or ts is None:
+            raise RuntimeError(f"Missing value/time in partial export for {tid!r}")
+        out.append({"test_id": tid, "value": float(v), "time_s": float(ts)})
+    return out
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument(
+        "--sudo-for-xi",
+        action="store_true",
+        help="Re-run script with sudo -E **only** for collect_all (then drops root for PTS)",
+    )
+    ap.add_argument("--router-model", type=str, default="dataset/pts_router/router_gnn.pt")
+    ap.add_argument("--reconstruct-model", type=str, default="dataset/pts_models/reconstruct_xgb.pkl")
+    ap.add_argument("--top-k", type=int, default=None)
+    ap.add_argument("--pts-bin", type=str, default=None)
+    ap.add_argument("--pts-root", type=str, default=None)
+    ap.add_argument("--pts-mode", type=str, default="run", choices=("run", "batch-run"))
+    ap.add_argument("--suite-full", type=str, default="cpu", help="Full baseline suite (e.g. cpu)")
+    ap.add_argument("--warmup-s", type=float, default=3.0)
+    ap.add_argument("--proc-sample-s", type=float, default=0.5)
+    ap.add_argument("--mem-mb", type=int, default=64)
+    ap.add_argument("--no-ebpf", action="store_true", default=True, help="Skip eBPF (default on; no root)")
+    ap.add_argument("--dataset-root", type=str, default="dataset")
+    ap.add_argument("--session", type=str, default=None)
+    ap.add_argument("-o", "--output", type=str, default="")
+    ap.add_argument("--auto-install", action="store_true")
+    args = ap.parse_args()
+
+    if args.sudo_for_xi and os.geteuid() != 0:
+        forwarded = [a for a in sys.argv[1:] if a != "--sudo-for-xi"]
+        cmd = ["sudo", "-E", sys.executable, str(Path(__file__).resolve())] + forwarded
+        return subprocess.call(cmd)
+
+    repo = REPO_ROOT
+    router_fp = (repo / args.router_model).resolve() if not Path(args.router_model).is_absolute() else Path(args.router_model)
+    recon_fp = (repo / args.reconstruct_model).resolve() if not Path(args.reconstruct_model).is_absolute() else Path(args.reconstruct_model)
+    if not router_fp.is_file():
+        print(f"Router not found: {router_fp}", file=sys.stderr)
+        return 2
+    if not recon_fp.is_file():
+        print(f"Reconstruction bundle not found: {recon_fp}", file=sys.stderr)
+        return 2
+
+    pts_root = Path(args.pts_root).resolve() if args.pts_root else default_pts_install_root()
+    pts_exe = _which_pts(args.pts_bin, pts_root if pts_root.is_dir() else None)
+
+    session = args.session or safe_session_tag(
+        f"{os.uname().nodename.split('.')[0]}_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
+    )
+    out_dir = Path(args.dataset_root).resolve() / "experiments" / f"pts_{session}"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_json = Path(args.output) if args.output else out_dir / "experiment_pts_router_reconstruct_vs_full.json"
+
+    # ---- xi (no root after optional sudo re-exec)
+    t0 = time.perf_counter()
+    xi = collect_all(
+        warmup_s=args.warmup_s,
+        proc_sample_s=args.proc_sample_s,
+        enable_ebpf=False,
+        mem_mb=args.mem_mb,
+    )
+    t_xi = time.perf_counter() - t0
+
+    router_meta = _load_router(router_fp, args.auto_install)
+    if router_meta.get("benchmark") != "phoronix":
+        print("Warning: router meta benchmark is not 'phoronix'; expert ids may mismatch.", file=sys.stderr)
+    top_k = int(args.top_k) if args.top_k is not None else int(router_meta.get("top_k", 3))
+    scores, probs, expert_ids, expert_test_ids = predict_expert_scores(router_meta, xi)
+    _, selected_test_ids = select_top_k_from_probs(probs, expert_ids, expert_test_ids, top_k)
+
+    recon = load_reconstruction_bundle(recon_fp)
+    test_ids = list(recon.get("test_ids") or [])
+    if not test_ids:
+        print("Reconstruction bundle missing test_ids", file=sys.stderr)
+        return 2
+
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    raw_partial = f"moebench_pts_exp_partial_{session}_{stamp}"
+    name_partial = pts_clean_save_name(safe_session_tag(raw_partial))
+    env_p = pts_subprocess_env()
+    env_p["TEST_RESULTS_NAME"] = name_partial
+    env_p["TEST_RESULTS_IDENTIFIER"] = name_partial
+    env_p["TEST_RESULTS_DESCRIPTION"] = f"MoEBench partial Top-{top_k}"
+
+    cmd_partial = _pts_argv_as_installing_user(pts_exe, [args.pts_mode, *selected_test_ids])
+    print("+", " ".join(cmd_partial), file=sys.stderr)
+    t1 = time.perf_counter()
+    rc = subprocess.call(cmd_partial, env=env_p)
+    t_partial = time.perf_counter() - t1
+    if rc != 0:
+        print(f"Partial PTS failed rc={rc}", file=sys.stderr)
+        return rc
+
+    raw_path = out_dir / "partial_export_pts.json"
+    partial_export = _export_result_json(pts_exe, name_partial, raw_path)
+
+    executed = executed_rows_from_export(partial_export, list(selected_test_ids))
+    pred = predict_from_partial(recon, xi, executed, return_uncertainty=False)
+
+    raw_full = f"moebench_pts_exp_full_{session}_{stamp}"
+    name_full = pts_clean_save_name(safe_session_tag(raw_full))
+    env_f = pts_subprocess_env()
+    env_f["TEST_RESULTS_NAME"] = name_full
+    env_f["TEST_RESULTS_IDENTIFIER"] = name_full
+    env_f["TEST_RESULTS_DESCRIPTION"] = "MoEBench full cpu baseline"
+    cmd_full = _pts_argv_as_installing_user(pts_exe, [args.pts_mode, args.suite_full])
+    print("+", " ".join(cmd_full), file=sys.stderr)
+    t2 = time.perf_counter()
+    rc2 = subprocess.call(cmd_full, env=env_f)
+    t_full = time.perf_counter() - t2
+    if rc2 != 0:
+        print(f"Full PTS failed rc={rc2}", file=sys.stderr)
+        return rc2
+
+    full_path = out_dir / "full_export_pts.json"
+    full_export = _export_result_json(pts_exe, name_full, full_path)
+
+    ds_syn = {
+        "xi": xi,
+        "yi": {"pts_export": full_export},
+        "ti": {},  # not needed for targets helper
+    }
+    tgt = extract_targets_from_pts_dataset(ds_syn, tuple(test_ids))
+    if tgt is None:
+        print("Could not extract targets from full export", file=sys.stderr)
+        return 2
+    _vals, suite_true = tgt
+    suite_pred = float(pred["suite_index"])
+    err = abs(suite_pred - suite_true)
+    rel = err / max(abs(suite_true), 1e-9)
+
+    report: dict[str, Any] = {
+        "schema": "moebench.phoronix.experiment_router_reconstruct.v1",
+        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "session": session,
+        "router_model": str(router_fp),
+        "reconstruct_model": str(recon_fp),
+        "top_k": top_k,
+        "selected_test_ids": list(selected_test_ids),
+        "times_s": {
+            "xi": t_xi,
+            "pts_partial": t_partial,
+            "pts_full": t_full,
+            "pts_partial_plus_full": t_partial + t_full,
+        },
+        "suite_mean": {"predicted_from_partial": suite_pred, "ground_truth_full": suite_true, "abs_error": err, "relative_error": rel},
+        "predicted_subtests": pred.get("subtest_index"),
+        "pts_result_ids": {"partial": name_partial, "full": name_full},
+        "notes": "With --sudo-for-xi, only xi used root; PTS uses SUDO_USER. If the whole script runs as root, PTS still delegates to SUDO_USER with correct HOME.",
+    }
+
+    out_json.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_json, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, ensure_ascii=False)
+        f.write("\n")
+    print(json.dumps(report, indent=2, ensure_ascii=False))
+    print(f"Wrote {out_json}", file=sys.stderr)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

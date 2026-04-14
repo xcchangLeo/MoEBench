@@ -213,6 +213,76 @@ python3 -m moebench.phoronix --pts-smoke --pts-smoke-suite pts/smallpt --pts-mod
 
 输出 JSON 含 `schema: moebench.phoronix.dataset.v1`：`xi`、`yi`（含 `pts_export`）、`ti`、`experts`、`phoronix`（命令、结果文件名、`result-file-to-json` 原始导出路径）。多轮时另有 `schema: moebench.phoronix.batch_manifest.v1` 的 `manifest.json`。
 
+### PTS 全套实验（与 UnixBench 流程对齐：专家 → GNN 路由 → XGBoost 重建 → 对比）
+
+**数据**：仅使用 **PTS** 会话目录（本仓库示例为 `dataset/aces-*`，且每个会话至少 `run-01.json`）。**不要**把 UnixBench 会话混进来（例如 `aces-System-Product-Name_20260324T043804Z` 仅 UnixBench）；加载器默认会排除该目录名。训练时请用 **`aces-*/run-01.json`** 这类 glob，避免扫到无关 JSON。
+
+**权限**：**只有采集系统特征（xi）需要 `sudo` 时**再使用 `python3 -m moebench.phoronix ... --sudo` 或 `python3 -m moebench ... --sudo`。下面的分析、训练、对比实验均在**普通用户**下执行即可（与 Phoronix 安装在用户目录一致，也避免权限问题）。
+
+#### 1）专家建模（相关 / 冗余分析）
+
+```bash
+cd /home/cxc/MoEBench
+
+python3 scripts/phoronix_expert_analyze.py \
+  --dataset-root dataset \
+  --glob-pattern 'aces-*/run-01.json'
+```
+
+生成 `phoronix_expert_model_global.json`、相关系数 CSV 等（输出在 `dataset/` 或 `--out-dir`）。
+
+#### 2）路由模型（Expert GNN）
+
+```bash
+mkdir -p dataset/pts_router
+
+python3 scripts/router_train.py \
+  --benchmark phoronix \
+  --dataset-root dataset \
+  --glob-pattern 'aces-*/run-01.json' \
+  --model-type gnn_expert \
+  --model-out dataset/pts_router/router_gnn.pt \
+  --gnn-emb-dim 16 \
+  --mlp-epochs 200 \
+  --auto-install
+```
+
+#### 3）结果重建模型（XGBoost，无补测 / 主动采样）
+
+```bash
+mkdir -p dataset/pts_models
+
+python3 scripts/reconstruct_train_eval.py \
+  --benchmark phoronix \
+  --dataset-root dataset \
+  --glob-pattern 'aces-*/run-01.json' \
+  --model-type xgboost \
+  --skip-cv \
+  --no-uncertainty \
+  --export-model dataset/pts_models/reconstruct_xgb.pkl \
+  --train-aug 20 \
+  --train-k-min 2 \
+  --train-k-max 12 \
+  --auto-install
+```
+
+（`--train-k-max` 勿大于当前 cpu 套件中 profile 个数；若报维度错误可调小。）
+
+#### 4）完整实验：Top-K 子集 + 重建 vs 全量 `run cpu`
+
+```bash
+# 默认不启用 eBPF、不以 root 跑 PTS；若需与采集时相同权限采 xi，再加 --sudo-for-xi
+python3 scripts/experiment_router_reconstruct_vs_full_pts.py \
+  --router-model dataset/pts_router/router_gnn.pt \
+  --reconstruct-model dataset/pts_models/reconstruct_xgb.pkl \
+  --top-k 5 \
+  --pts-mode run \
+  --suite-full cpu \
+  --dataset-root dataset
+```
+
+输出 JSON 含 **部分运行时间**、**全量 `cpu` 时间**、**suite 均值（各子项主 `value` 的算术平均）** 的预测误差等。全量 `run cpu` 耗时较长，请预留时间。
+
 ## 关于 `perf` 与权限
 
 若 `kernel.perf_event_paranoid` 较高（如 `4`），普通用户可能无法使用 `perf` 的 PMU 计数，动态特征会退化为 **`/proc` 等代理指标**，并在 `dynamic` 中给出 `perf_degraded` 说明。需要完整 PMU 时，请按系统策略调整该参数或使用具备 **`CAP_PERFMON`** 的方式运行采集进程（参见内核文档 [Perf events and tool security](https://www.kernel.org/doc/html/latest/admin-guide/perf-security.html)）。

@@ -111,8 +111,9 @@ _BATCH_MODE_NOT_CONFIGURED = re.compile(
 def _pts_argv_as_installing_user(pts_exe: str, pts_subargs: list[str]) -> list[str]:
     """
     If MoEBench is running as root after ``sudo``, run PTS as ``SUDO_USER`` so it uses
-    that user's ``~/.phoronix-test-suite`` (PTS resolves home via ``posix_getuid()``,
-    not ``$HOME`` alone — root would otherwise only see root's installs).
+    that user's ``~/.phoronix-test-suite``.  Pair with :func:`pts_subprocess_env` so
+    ``HOME`` in the subprocess environment is not left as ``/root`` (PTS consults
+    both the real uid and ``$HOME`` when resolving install paths).
     """
     if os.geteuid() != 0:
         return [pts_exe, *pts_subargs]
@@ -140,6 +141,35 @@ def _sudo_target_home() -> str | None:
         return pwd.getpwnam(su).pw_dir
     except (ImportError, KeyError):
         return None
+
+
+def pts_subprocess_env(base: dict[str, str] | None = None) -> dict[str, str]:
+    """
+    Environment for PTS subprocesses when MoEBench runs as root after ``sudo``.
+
+    Passing ``env=...`` to ``subprocess`` replaces the whole environment. Root
+    sessions often retain ``HOME=/root``, so Phoronix looks for tests under
+    ``~root/.phoronix-test-suite`` and reports profiles as not installed even when
+    ``sudo -u <SUDO_USER>`` is used.  Copy the base env and set ``HOME`` / ``USER`` /
+    ``LOGNAME`` to the invoking login user (``SUDO_USER``) so PTS matches a normal
+    ``phoronix-test-suite install`` as your user.
+    """
+    env = dict(base if base is not None else os.environ)
+    if os.geteuid() != 0:
+        return env
+    su = os.environ.get("SUDO_USER")
+    if not su:
+        return env
+    try:
+        import pwd
+
+        pw = pwd.getpwnam(su)
+    except (ImportError, KeyError):
+        return env
+    env["HOME"] = pw.pw_dir
+    env["USER"] = su
+    env["LOGNAME"] = su
+    return env
 
 
 def _mkdir_chown_output_dir_for_sudo_user(dir_path: Path) -> None:
@@ -242,7 +272,7 @@ def _export_result_json(pts_exe: str, result_file_name: str, out_path: Path) -> 
     od = str(out_path.parent)
     of = str(out_path)
     cmd = _pts_argv_result_file_to_json(pts_exe, save_id, output_dir=od, output_file=of)
-    env = os.environ.copy()
+    env = pts_subprocess_env()
     env["OUTPUT_DIR"] = od
     env["OUTPUT_FILE"] = of
     p = subprocess.run(
@@ -359,7 +389,7 @@ def run_pts_dataset(
             mem_mb=mem_mb,
         )
 
-    env = os.environ.copy()
+    env = pts_subprocess_env()
     env["TEST_RESULTS_NAME"] = result_file_name
     env["TEST_RESULTS_IDENTIFIER"] = result_file_name
     desc = f"MoEBench PTS {suite} ({pts_mode})"

@@ -33,6 +33,13 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from moebench.phoronix.training_data import (
+    build_augmented_train_matrix_pts,
+    canonical_test_ids_from_runs,
+    collect_phoronix_run_paths,
+    extract_targets_from_pts_dataset,
+    full_suite_wall_seconds_pts,
+)
 from moebench.reconstruct.data import (
     build_partial_feature_row,
     collect_unixbench_run_paths,
@@ -254,6 +261,7 @@ def train_mlp_export_bundle(
     auto_install: bool,
     log1p_partial_index: bool,
     test_ids: list[str],
+    benchmark: str = "unixbench",
 ) -> dict[str, Any]:
     _maybe_auto_install(auto_install, ["torch"])
     import torch
@@ -297,6 +305,7 @@ def train_mlp_export_bundle(
         "out_dim": n_out,
         "log1p_partial_index": log1p_partial_index,
         "test_ids": list(test_ids),
+        "benchmark": benchmark,
     }
 
 
@@ -310,6 +319,7 @@ def train_mlp_heteroscedastic_export_bundle(
     auto_install: bool,
     log1p_partial_index: bool,
     test_ids: list[str],
+    benchmark: str = "unixbench",
 ) -> dict[str, Any]:
     """MLP with Gaussian NLL (mean + log-variance heads) for per-target uncertainty."""
     _maybe_auto_install(auto_install, ["torch"])
@@ -363,6 +373,7 @@ def train_mlp_heteroscedastic_export_bundle(
         "out_dim": n_out,
         "log1p_partial_index": log1p_partial_index,
         "test_ids": list(test_ids),
+        "benchmark": benchmark,
     }
 
 
@@ -389,6 +400,7 @@ def sklearn_export_bundle(
     log1p_partial_index: bool,
     test_ids: list[str],
     with_uncertainty: bool = True,
+    benchmark: str = "unixbench",
 ) -> dict[str, Any]:
     mor = fit_sklearn_multioutput(
         model_name,
@@ -407,6 +419,7 @@ def sklearn_export_bundle(
         "log1p_partial_index": log1p_partial_index,
         "test_ids": list(test_ids),
         "out_dim": int(y_train.shape[1]),
+        "benchmark": benchmark,
     }
     if with_uncertainty:
         bundle["uncertainty_estimator"] = fit_sklearn_uncertainty_estimator(
@@ -499,6 +512,13 @@ def aggregate_err(y_true: np.ndarray, y_pred: np.ndarray) -> dict[str, Any]:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dataset-root", type=str, default="dataset", help="Folder containing session subdirs")
+    ap.add_argument(
+        "--benchmark",
+        type=str,
+        choices=("unixbench", "phoronix"),
+        default="unixbench",
+        help="Dataset schema: unixbench (default) or phoronix (PTS cpu-style runs)",
+    )
     ap.add_argument("--glob-pattern", type=str, default="*/run-*.json")
     ap.add_argument("--model-type", type=str, choices=("xgboost", "lightgbm", "mlp"), default="lightgbm")
     ap.add_argument("--folds", type=int, default=5)
@@ -538,6 +558,111 @@ def main() -> int:
     )
     args = ap.parse_args()
     with_uncertainty = not args.no_uncertainty
+
+    if args.benchmark == "phoronix":
+        if not args.skip_cv or not args.export_model:
+            print(
+                "PTS mode: use --skip-cv --export-model <path> (few sessions; CV optional later).",
+                file=sys.stderr,
+            )
+            return 2
+        paths_pts = collect_phoronix_run_paths(
+            Path(args.dataset_root),
+            glob_pattern=args.glob_pattern,
+        )
+        test_ids = list(canonical_test_ids_from_runs(paths_pts))
+        n_test = len(test_ids)
+        if args.train_k_max > n_test or args.eval_partial_k > n_test:
+            print("train-k-max / eval-partial-k must be <= number of PTS profiles", file=sys.stderr)
+            return 2
+        vec = XiVectorizer()
+        rows_meta: list[dict[str, Any]] = []
+        for p in paths_pts:
+            with open(p, encoding="utf-8") as f:
+                ds = json.load(f)
+            t_full = full_suite_wall_seconds_pts(ds, test_ids=tuple(test_ids))
+            tgt = extract_targets_from_pts_dataset(ds, tuple(test_ids))
+            if t_full is None or tgt is None:
+                continue
+            indices, suite_mean = tgt
+            rows_meta.append(
+                {
+                    "path": str(p),
+                    "ds": ds,
+                    "y": np.asarray(indices + [suite_mean], dtype=np.float64),
+                    "t_full": float(t_full),
+                }
+            )
+        if not rows_meta:
+            print("No valid PTS samples after parsing", file=sys.stderr)
+            return 2
+        rng = np.random.RandomState(args.seed)
+        xt, yt = build_augmented_train_matrix_pts(
+            rows_meta,
+            vec,
+            test_ids,
+            rng,
+            args.train_aug,
+            args.train_k_min,
+            args.train_k_max,
+            args.log1p_partial_index,
+        )
+        outp = Path(args.export_model)
+        bm = "phoronix"
+        if args.model_type == "mlp":
+            if with_uncertainty:
+                bundle = train_mlp_heteroscedastic_export_bundle(
+                    xt,
+                    yt,
+                    hidden=args.mlp_hidden,
+                    epochs=args.mlp_epochs,
+                    lr=args.mlp_lr,
+                    auto_install=args.auto_install,
+                    log1p_partial_index=args.log1p_partial_index,
+                    test_ids=test_ids,
+                    benchmark=bm,
+                )
+            else:
+                bundle = train_mlp_export_bundle(
+                    xt,
+                    yt,
+                    hidden=args.mlp_hidden,
+                    epochs=args.mlp_epochs,
+                    lr=args.mlp_lr,
+                    auto_install=args.auto_install,
+                    log1p_partial_index=args.log1p_partial_index,
+                    test_ids=test_ids,
+                    benchmark=bm,
+                )
+        else:
+            bundle = sklearn_export_bundle(
+                args.model_type,
+                xt,
+                yt,
+                auto_install=args.auto_install,
+                lgbm_estimators=args.lgbm_estimators,
+                xgb_estimators=args.xgb_estimators,
+                log1p_partial_index=args.log1p_partial_index,
+                test_ids=test_ids,
+                with_uncertainty=with_uncertainty,
+                benchmark=bm,
+            )
+        save_reconstruction_bundle(outp, bundle)
+        print(
+            json.dumps(
+                {
+                    "export_only": True,
+                    "benchmark": "phoronix",
+                    "export_model": str(outp.resolve()),
+                    "train_rows": int(len(xt)),
+                    "model_type": args.model_type,
+                    "num_profiles": len(test_ids),
+                },
+                indent=2,
+                ensure_ascii=False,
+            )
+        )
+        return 0
 
     test_ids = list(INDEX_SUITE_TEST_IDS)
     n_test = len(test_ids)

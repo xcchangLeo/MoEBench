@@ -162,3 +162,89 @@ def load_unixbench_dataset_for_router(
         meta=meta,
     )
 
+
+def load_phoronix_dataset_for_router(
+    dataset_root: str | Path,
+    *,
+    glob_pattern: str = "aces-*/run-*.json",
+    exclude_session_names: frozenset[str] | None = None,
+    xi_vectorizer: XiVectorizer | None = None,
+) -> RouterDataset:
+    """PTS runs: relevance = primary result ``value`` per profile (``yi.pts_export``)."""
+    from moebench.phoronix.training_data import (
+        collect_phoronix_run_paths,
+        expert_test_ids_from_dataset,
+        primary_value_from_export,
+    )
+
+    root = Path(dataset_root).resolve()
+    files = collect_phoronix_run_paths(
+        root,
+        glob_pattern=glob_pattern,
+        exclude_session_names=exclude_session_names
+        or frozenset({"aces-System-Product-Name_20260324T043804Z"}),
+    )
+
+    vec = xi_vectorizer or XiVectorizer()
+    sample = json.load(open(files[0], "r", encoding="utf-8"))
+    base_ids = expert_test_ids_from_dataset(sample)
+    common: set[str] | None = None
+    for fp in files:
+        ds = json.load(open(fp, "r", encoding="utf-8"))
+        export = (ds.get("yi") or {}).get("pts_export") or {}
+        ok = {t for t in base_ids if primary_value_from_export(export, t) is not None}
+        common = ok if common is None else (common & ok)
+    if not common:
+        raise RuntimeError("No PTS profile has primary values in every run; check pts_export.")
+    ordered = [t for t in base_ids if t in common]
+    tid_to_eid = {e["test_id"]: e["expert_id"] for e in (sample.get("experts") or [])}
+    expert_test_ids = ordered
+    expert_ids = [tid_to_eid[t] for t in ordered]
+    n_experts = len(expert_ids)
+    if n_experts < 2:
+        raise RuntimeError("Need at least 2 experts for router training")
+
+    xi_dim = len(vec.feature_names)
+    X: list[list[float]] = []
+    y: list[float] = []
+    group: list[int] = []
+    query_ids: list[str] = []
+
+    for fp in files:
+        ds = json.load(open(fp, "r", encoding="utf-8"))
+        xi = ds.get("xi") or {}
+        xi_vec = vec.transform(xi)
+        export = (ds.get("yi") or {}).get("pts_export") or {}
+        qid = fp.parent.name
+        query_ids.append(qid)
+
+        for ei, tid in enumerate(expert_test_ids):
+            label = primary_value_from_export(export, tid) if export else None
+            if label is None:
+                label = 0.0
+            onehot = [0.0] * n_experts
+            onehot[ei] = 1.0
+            X.append(list(xi_vec) + onehot)
+            y.append(float(label))
+        group.append(n_experts)
+
+    feature_names = vec.feature_names + [f"expert_onehot_{eid}" for eid in expert_ids]
+    meta = {
+        "benchmark": "phoronix",
+        "num_files": len(files),
+        "num_queries": len(group),
+        "num_experts": n_experts,
+        "xi_dim": xi_dim,
+        "suite_relevance_source": "yi.pts_export primary buffer value per profile",
+    }
+    return RouterDataset(
+        feature_names=feature_names,
+        expert_ids=expert_ids,
+        expert_test_ids=expert_test_ids,
+        X=X,
+        y=y,
+        group=group,
+        query_ids=query_ids,
+        meta=meta,
+    )
+

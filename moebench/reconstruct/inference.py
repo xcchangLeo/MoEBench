@@ -11,6 +11,11 @@ import numpy as np
 from moebench.reconstruct.data import build_partial_feature_row_from_executed_tests
 from moebench.unixbench.experts import INDEX_SUITE_TEST_IDS
 
+try:
+    from moebench.phoronix.training_data import build_partial_feature_row_from_pts_executed
+except ImportError:
+    build_partial_feature_row_from_pts_executed = None  # type: ignore[misc, assignment]
+
 SCHEMA_V1 = "moebench.reconstruct.model.v1"
 SCHEMA_V2 = "moebench.reconstruct.model.v2"
 
@@ -134,12 +139,23 @@ def predict_from_partial(
     ``uncertainty_estimator``; v2 MLP: heteroscedastic heads). Missing uncertainty raises.
     """
     log1p = bool(bundle.get("log1p_partial_index", False))
-    row = build_partial_feature_row_from_executed_tests(
-        xi,
-        executed_tests,
-        test_ids=tuple(bundle.get("test_ids") or INDEX_SUITE_TEST_IDS),
-        log1p_index=log1p,
-    )
+    tids = tuple(bundle.get("test_ids") or INDEX_SUITE_TEST_IDS)
+    if bundle.get("benchmark") == "phoronix":
+        if build_partial_feature_row_from_pts_executed is None:
+            raise RuntimeError("PTS reconstruct helpers unavailable")
+        row = build_partial_feature_row_from_pts_executed(
+            xi,
+            executed_tests,
+            test_ids=tids,
+            log1p_value=log1p,
+        )
+    else:
+        row = build_partial_feature_row_from_executed_tests(
+            xi,
+            executed_tests,
+            test_ids=tids,
+            log1p_index=log1p,
+        )
     if row is None:
         raise ValueError("Could not build reconstruction feature row (missing index/time?).")
 

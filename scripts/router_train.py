@@ -26,7 +26,10 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from moebench.router.dataset_loader import load_unixbench_dataset_for_router
+from moebench.router.dataset_loader import (
+    load_phoronix_dataset_for_router,
+    load_unixbench_dataset_for_router,
+)
 from moebench.router.neural_routers import (
     train_expert_gnn,
     train_pointwise_mlp,
@@ -51,6 +54,13 @@ def _maybe_auto_install(auto_install: bool, pkgs: list[str]) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dataset-root", type=str, default="dataset", help="Path to dataset folder (with */run-*.json)")
+    ap.add_argument(
+        "--benchmark",
+        type=str,
+        choices=("unixbench", "phoronix"),
+        default="unixbench",
+        help="Training data: UnixBench runs or PTS (moebench.phoronix.dataset.v1)",
+    )
     ap.add_argument("--glob-pattern", type=str, default="*/run-*.json", help="Glob under dataset-root")
     ap.add_argument("--model-out", type=str, required=True, help="Where to save model checkpoint")
     ap.add_argument(
@@ -74,11 +84,18 @@ def main() -> int:
     ap.add_argument("--mlp-lr", type=float, default=1e-3)
     args = ap.parse_args()
 
-    ds = load_unixbench_dataset_for_router(
-        args.dataset_root,
-        glob_pattern=args.glob_pattern,
-        xi_vectorizer=None,
-    )
+    if args.benchmark == "phoronix":
+        ds = load_phoronix_dataset_for_router(
+            args.dataset_root,
+            glob_pattern=args.glob_pattern,
+            xi_vectorizer=None,
+        )
+    else:
+        ds = load_unixbench_dataset_for_router(
+            args.dataset_root,
+            glob_pattern=args.glob_pattern,
+            xi_vectorizer=None,
+        )
 
     out = Path(args.model_out)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -124,6 +141,7 @@ def main() -> int:
         model_obj: dict[str, Any] = {
             "schema": "moebench.router.model.v1",
             "model_type": "lightgbm",
+            "benchmark": args.benchmark,
             "feature_names": ds.feature_names,
             "expert_ids": ds.expert_ids,
             "expert_test_ids": ds.expert_test_ids,
@@ -176,6 +194,7 @@ def main() -> int:
 
     bundle["top_k"] = args.top_k
     bundle["label_transform"] = args.label_transform
+    bundle["benchmark"] = args.benchmark
 
     if out.suffix in (".pkl", ".pickle"):
         out = out.with_suffix(".pt")
