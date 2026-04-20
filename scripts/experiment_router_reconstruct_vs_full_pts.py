@@ -71,6 +71,65 @@ def executed_rows_from_export(export: dict[str, Any], test_ids: list[str]) -> li
     return out
 
 
+def _profile_family(test_id: str) -> str:
+    """
+    Normalize ``pts/<name>-<ver>`` into family key ``pts/<name>``.
+
+    This lets us align reconstruction-model test ids against newer/older profile
+    versions present in a full export (e.g. ``pts/openssl-3.6.0`` vs ``pts/openssl-4.0.0``).
+    """
+    tid = str(test_id or "")
+    if not tid:
+        return tid
+    if "/" in tid:
+        pfx, rest = tid.split("/", 1)
+    else:
+        pfx, rest = "", tid
+    if "-" not in rest:
+        return tid
+    family = rest.rsplit("-", 1)[0]
+    return f"{pfx}/{family}" if pfx else family
+
+
+def _available_ids_from_export(export: dict[str, Any]) -> list[str]:
+    ids: list[str] = []
+    for h, robj in (export.get("results") or {}).items():
+        tid = str(robj.get("identifier") or h)
+        if tid and tid not in ids:
+            ids.append(tid)
+    return ids
+
+
+def _align_recon_ids_to_export(recon_test_ids: list[str], export: dict[str, Any]) -> tuple[list[str], dict[str, str], list[str]]:
+    """
+    Return aligned ids for target extraction:
+    - exact id when present
+    - otherwise same family id in export when unique
+    """
+    available = _available_ids_from_export(export)
+    avail_set = set(available)
+    fam_to_ids: dict[str, list[str]] = {}
+    for tid in available:
+        fam_to_ids.setdefault(_profile_family(tid), []).append(tid)
+
+    aligned: list[str] = []
+    mapped: dict[str, str] = {}
+    missing: list[str] = []
+    for tid in recon_test_ids:
+        if tid in avail_set:
+            aligned.append(tid)
+            mapped[tid] = tid
+            continue
+        fam = _profile_family(tid)
+        cands = fam_to_ids.get(fam) or []
+        if len(cands) == 1:
+            aligned.append(cands[0])
+            mapped[tid] = cands[0]
+        else:
+            missing.append(tid)
+    return aligned, mapped, missing
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument(
@@ -184,14 +243,32 @@ def main() -> int:
     full_path = out_dir / "full_export_pts.json"
     full_export = _export_result_json(pts_exe, name_full, full_path)
 
+    aligned_ids, id_map, missing_ids = _align_recon_ids_to_export(test_ids, full_export)
+    if missing_ids:
+        print(
+            "Warning: some reconstruction test_ids are absent from full export and cannot be family-mapped: "
+            + ", ".join(missing_ids),
+            file=sys.stderr,
+        )
+    if len(aligned_ids) < 2:
+        print(
+            "Could not extract targets from full export: fewer than 2 aligned test ids after matching.",
+            file=sys.stderr,
+        )
+        return 2
+
     ds_syn = {
         "xi": xi,
         "yi": {"pts_export": full_export},
         "ti": {},  # not needed for targets helper
     }
-    tgt = extract_targets_from_pts_dataset(ds_syn, tuple(test_ids))
+    tgt = extract_targets_from_pts_dataset(ds_syn, tuple(aligned_ids))
     if tgt is None:
-        print("Could not extract targets from full export", file=sys.stderr)
+        print(
+            "Could not extract targets from full export even after id alignment; "
+            "check full_export_pts.json completeness.",
+            file=sys.stderr,
+        )
         return 2
     _vals, suite_true = tgt
     suite_pred = float(pred["suite_index"])
@@ -215,6 +292,12 @@ def main() -> int:
         "suite_mean": {"predicted_from_partial": suite_pred, "ground_truth_full": suite_true, "abs_error": err, "relative_error": rel},
         "predicted_subtests": pred.get("subtest_index"),
         "pts_result_ids": {"partial": name_partial, "full": name_full},
+        "target_alignment": {
+            "requested_test_ids": list(test_ids),
+            "aligned_test_ids_for_ground_truth": list(aligned_ids),
+            "id_map_requested_to_aligned": id_map,
+            "missing_unaligned_test_ids": missing_ids,
+        },
         "notes": "With --sudo-for-xi, only xi used root; PTS uses SUDO_USER. If the whole script runs as root, PTS still delegates to SUDO_USER with correct HOME.",
     }
 
