@@ -6,8 +6,10 @@ from typing import Any
 
 
 def infer_pts_category(test_id: str, title: str | None) -> str:
-    """Coarse category (CPU / memory / IO / compile / encode / crypto / …)."""
+    """Coarse category (CPU / GPU / memory / IO / compile / encode / crypto / …)."""
     blob = f"{title or ''} {test_id}".lower()
+    if any(x in blob for x in ("nvidia", "cuda", "rocm", "opencl", "vulkan", "-gpu-", "/gpu-", "gpu-compute")):
+        return "GPU"
     if any(x in blob for x in ("compile", "build-linux", "kernel", "gcc", "llvm")):
         return "compile"
     if any(x in blob for x in ("encode", "x264", "x265", "kvazaar", "vp9", "av1")):
@@ -26,6 +28,7 @@ def expert_template_pts(
     expert_index: int,
     *,
     title: str | None = None,
+    default_suite: str = "cpu",
 ) -> dict[str, Any]:
     """
     Static expert metadata (same field names / roles as ``unixbench.experts.expert_template``).
@@ -42,7 +45,7 @@ def expert_template_pts(
         "title": disp,
         "category": cat,
         "phoronix_profile_identifier": test_id,
-        "phoronix_default_suite": "cpu",
+        "phoronix_default_suite": default_suite,
         "historical_runtime_mean_s": None,
         "historical_runtime_variance": None,
         "suite_contribution_weight": None,

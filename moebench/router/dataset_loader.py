@@ -168,6 +168,7 @@ def load_phoronix_dataset_for_router(
     *,
     glob_pattern: str = "aces-*/run-*.json",
     exclude_session_names: frozenset[str] | None = None,
+    pts_suite: str | None = None,
     xi_vectorizer: XiVectorizer | None = None,
 ) -> RouterDataset:
     """PTS runs: relevance = primary result ``value`` per profile (``yi.pts_export``)."""
@@ -183,6 +184,7 @@ def load_phoronix_dataset_for_router(
         glob_pattern=glob_pattern,
         exclude_session_names=exclude_session_names
         or frozenset({"aces-System-Product-Name_20260324T043804Z"}),
+        pts_suite=pts_suite,
     )
 
     vec = xi_vectorizer or XiVectorizer()
@@ -231,6 +233,7 @@ def load_phoronix_dataset_for_router(
     feature_names = vec.feature_names + [f"expert_onehot_{eid}" for eid in expert_ids]
     meta = {
         "benchmark": "phoronix",
+        "pts_suite": pts_suite,
         "num_files": len(files),
         "num_queries": len(group),
         "num_experts": n_experts,

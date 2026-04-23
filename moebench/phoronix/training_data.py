@@ -25,8 +25,14 @@ def collect_phoronix_run_paths(
     *,
     glob_pattern: str = "aces-*/run-*.json",
     exclude_session_names: frozenset[str] | None = None,
+    pts_suite: str | None = None,
 ) -> list[Path]:
-    """Load PTS ``moebench.phoronix.dataset.v1`` run JSONs (excludes UnixBench sessions)."""
+    """Load PTS ``moebench.phoronix.dataset.v1`` run JSONs (excludes UnixBench sessions).
+
+    When ``pts_suite`` is set (must match ``yi.suite``, e.g. ``pts/nvidia-gpu-compute``),
+    only sessions collected for that PTS suite are returned so CPU and GPU runs can
+    coexist under the same ``dataset-root``.
+    """
     root = Path(dataset_root).resolve()
     paths = sorted(root.glob(glob_pattern))
     if not paths and (root / "dataset").is_dir():
@@ -43,10 +49,15 @@ def collect_phoronix_run_paths(
             continue
         if head.get("schema") != "moebench.phoronix.dataset.v1":
             continue
+        if pts_suite is not None:
+            yi = head.get("yi") or {}
+            if yi.get("suite") != pts_suite:
+                continue
         out.append(p)
     if not out:
+        hint = f" (yi.suite == {pts_suite!r})" if pts_suite else ""
         raise FileNotFoundError(
-            f"No PTS run JSON matched {root}/{glob_pattern} (schema moebench.phoronix.dataset.v1)"
+            f"No PTS run JSON matched {root}/{glob_pattern} (schema moebench.phoronix.dataset.v1){hint}"
         )
     return out
 

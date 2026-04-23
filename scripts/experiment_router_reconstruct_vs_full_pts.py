@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""PTS experiment: xi → router Top-K partial run → reconstruct suite mean → full ``run cpu`` baseline.
+"""PTS experiment: xi → router Top-K partial run → reconstruct suite mean → full suite baseline.
 
 Runs **without sudo** except optional ``--sudo-for-xi`` (re-execs only for feature collection).
 If you run the whole script under ``sudo`` (e.g. for xi), PTS is still executed as
@@ -40,6 +40,11 @@ from moebench.phoronix.training_data import (
 )
 from moebench.reconstruct.inference import load_reconstruction_bundle, predict_from_partial
 from moebench.router.inference import predict_expert_scores, select_top_k_from_probs
+
+
+def _suite_experiment_token(suite_full: str) -> str:
+    """Filesystem-safe token from e.g. ``pts/nvidia-gpu-compute``."""
+    return safe_session_tag(str(suite_full).replace("/", "_"))
 
 
 def _load_router(path: Path, auto_install: bool) -> dict[str, Any]:
@@ -143,7 +148,12 @@ def main() -> int:
     ap.add_argument("--pts-bin", type=str, default=None)
     ap.add_argument("--pts-root", type=str, default=None)
     ap.add_argument("--pts-mode", type=str, default="run", choices=("run", "batch-run"))
-    ap.add_argument("--suite-full", type=str, default="cpu", help="Full baseline suite (e.g. cpu)")
+    ap.add_argument(
+        "--suite-full",
+        type=str,
+        default="cpu",
+        help="Full baseline suite id for PTS (e.g. cpu, pts/nvidia-gpu-compute)",
+    )
     ap.add_argument("--warmup-s", type=float, default=3.0)
     ap.add_argument("--proc-sample-s", type=float, default=0.5)
     ap.add_argument("--mem-mb", type=int, default=64)
@@ -175,7 +185,8 @@ def main() -> int:
     session = args.session or safe_session_tag(
         f"{os.uname().nodename.split('.')[0]}_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
     )
-    out_dir = Path(args.dataset_root).resolve() / "experiments" / f"pts_{session}"
+    suite_tok = _suite_experiment_token(args.suite_full)
+    out_dir = Path(args.dataset_root).resolve() / "experiments" / f"pts_{suite_tok}_{session}"
     out_dir.mkdir(parents=True, exist_ok=True)
     out_json = Path(args.output) if args.output else out_dir / "experiment_pts_router_reconstruct_vs_full.json"
 
@@ -192,11 +203,23 @@ def main() -> int:
     router_meta = _load_router(router_fp, args.auto_install)
     if router_meta.get("benchmark") != "phoronix":
         print("Warning: router meta benchmark is not 'phoronix'; expert ids may mismatch.", file=sys.stderr)
+    r_ps = router_meta.get("pts_suite")
+    if r_ps and r_ps != args.suite_full:
+        print(
+            f"Warning: router pts_suite={r_ps!r} differs from this run --suite-full={args.suite_full!r}.",
+            file=sys.stderr,
+        )
     top_k = int(args.top_k) if args.top_k is not None else int(router_meta.get("top_k", 3))
     scores, probs, expert_ids, expert_test_ids = predict_expert_scores(router_meta, xi)
     _, selected_test_ids = select_top_k_from_probs(probs, expert_ids, expert_test_ids, top_k)
 
     recon = load_reconstruction_bundle(recon_fp)
+    b_ps = recon.get("pts_suite")
+    if b_ps and b_ps != args.suite_full:
+        print(
+            f"Warning: reconstruction bundle pts_suite={b_ps!r} differs from --suite-full={args.suite_full!r}.",
+            file=sys.stderr,
+        )
     test_ids = list(recon.get("test_ids") or [])
     if not test_ids:
         print("Reconstruction bundle missing test_ids", file=sys.stderr)
@@ -279,6 +302,8 @@ def main() -> int:
         "schema": "moebench.phoronix.experiment_router_reconstruct.v1",
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
         "session": session,
+        "pts_suite_full": args.suite_full,
+        "experiment_dir_token": suite_tok,
         "router_model": str(router_fp),
         "reconstruct_model": str(recon_fp),
         "top_k": top_k,

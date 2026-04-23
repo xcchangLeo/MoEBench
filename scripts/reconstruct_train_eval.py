@@ -556,6 +556,13 @@ def main() -> int:
         action="store_true",
         help="Skip cross-validation; only fit on all samples and write --export-model",
     )
+    ap.add_argument(
+        "--pts-suite",
+        type=str,
+        default=None,
+        metavar="ID",
+        help="With --benchmark phoronix: only use runs where yi.suite matches (e.g. pts/nvidia-gpu-compute)",
+    )
     args = ap.parse_args()
     with_uncertainty = not args.no_uncertainty
 
@@ -569,6 +576,7 @@ def main() -> int:
         paths_pts = collect_phoronix_run_paths(
             Path(args.dataset_root),
             glob_pattern=args.glob_pattern,
+            pts_suite=args.pts_suite,
         )
         test_ids = list(canonical_test_ids_from_runs(paths_pts))
         n_test = len(test_ids)
@@ -647,12 +655,15 @@ def main() -> int:
                 with_uncertainty=with_uncertainty,
                 benchmark=bm,
             )
+        if args.pts_suite:
+            bundle["pts_suite"] = args.pts_suite
         save_reconstruction_bundle(outp, bundle)
         print(
             json.dumps(
                 {
                     "export_only": True,
                     "benchmark": "phoronix",
+                    "pts_suite": args.pts_suite,
                     "export_model": str(outp.resolve()),
                     "train_rows": int(len(xt)),
                     "model_type": args.model_type,

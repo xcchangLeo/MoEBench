@@ -62,7 +62,11 @@ def extract_ti_from_pts_json(export: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def build_experts_from_pts_json(export: dict[str, Any]) -> list[dict[str, Any]]:
+def build_experts_from_pts_json(
+    export: dict[str, Any],
+    *,
+    default_suite: str = "cpu",
+) -> list[dict[str, Any]]:
     """One expert row per unique PTS profile ``identifier``, metadata aligned with UnixBench experts."""
     groups = _group_pts_results(export)
     out: list[dict[str, Any]] = []
@@ -93,7 +97,7 @@ def build_experts_from_pts_json(export: dict[str, Any]) -> list[dict[str, Any]]:
                 break
             if observed is not None:
                 break
-        base = expert_template_pts(tid, idx, title=title)
+        base = expert_template_pts(tid, idx, title=title, default_suite=default_suite)
         if observed is not None:
             base["observed"] = observed
         base["execution_cost"] = total_cost if total_cost > 0 else None

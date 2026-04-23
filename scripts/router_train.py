@@ -71,6 +71,13 @@ def main() -> int:
     )
     ap.add_argument("--label-transform", type=str, choices=("none", "log1p"), default="log1p")
     ap.add_argument("--auto-install", action="store_true", help="If deps missing, attempt pip install")
+    ap.add_argument(
+        "--pts-suite",
+        type=str,
+        default=None,
+        metavar="ID",
+        help="With --benchmark phoronix: only use runs where yi.suite matches (e.g. pts/nvidia-gpu-compute)",
+    )
 
     ap.add_argument("--top-k", type=int, default=3, help="For runtime selection output; stored in model")
     ap.add_argument("--lgbm-estimators", type=int, default=300)
@@ -88,6 +95,7 @@ def main() -> int:
         ds = load_phoronix_dataset_for_router(
             args.dataset_root,
             glob_pattern=args.glob_pattern,
+            pts_suite=args.pts_suite,
             xi_vectorizer=None,
         )
     else:
@@ -150,6 +158,8 @@ def main() -> int:
             "label_discretization": "per-group-rank-integers-0..g-1",
             "ranker": ranker,
         }
+        if args.benchmark == "phoronix" and args.pts_suite:
+            model_obj["pts_suite"] = args.pts_suite
         with open(out, "wb") as f:
             pickle.dump(model_obj, f)
         print(f"Wrote model: {out}")
@@ -195,6 +205,8 @@ def main() -> int:
     bundle["top_k"] = args.top_k
     bundle["label_transform"] = args.label_transform
     bundle["benchmark"] = args.benchmark
+    if args.benchmark == "phoronix" and args.pts_suite:
+        bundle["pts_suite"] = args.pts_suite
 
     if out.suffix in (".pkl", ".pickle"):
         out = out.with_suffix(".pt")

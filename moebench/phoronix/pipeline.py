@@ -80,9 +80,19 @@ def pts_clean_save_name(name: str) -> str:
     return s
 
 
-def default_session_tag() -> str:
+def default_session_tag(pts_suite: str | None = None) -> str:
+    """
+    Default dataset folder name under ``dataset/<session>/``.
+
+    When ``pts_suite`` is set (e.g. ``pts/nvidia-gpu-compute``), it is embedded in the
+    tag so CPU / GPU / other PTS runs are easy to tell apart without ``--session``.
+    """
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    return f"{host_slug()}_{stamp}"
+    host = host_slug()
+    if pts_suite:
+        token = safe_session_tag(pts_suite.replace("/", "_"))
+        return f"{host}_{token}_{stamp}"
+    return f"{host}_{stamp}"
 
 
 # Single fast PTS profile for ``--pts-smoke`` (install once: ``phoronix-test-suite install pts/ctx-clock``).
@@ -438,7 +448,7 @@ def run_pts_dataset(
         "pts_export": pts_export,
     }
     ti = extract_ti_from_pts_json(pts_export)
-    experts = build_experts_from_pts_json(pts_export)
+    experts = build_experts_from_pts_json(pts_export, default_suite=suite)
 
     dataset: dict[str, Any] = {
         "schema": "moebench.phoronix.dataset.v1",
@@ -515,7 +525,7 @@ def run_pts_batch(
 
     root_ds = Path(dataset_root) if dataset_root else default_dataset_root()
     root_ds = root_ds.resolve()
-    tag = safe_session_tag(session_tag or default_session_tag())
+    tag = safe_session_tag(session_tag or default_session_tag(suite))
     session_dir = root_ds / tag
     session_dir.mkdir(parents=True, exist_ok=True)
 

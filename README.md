@@ -283,6 +283,85 @@ python3 scripts/experiment_router_reconstruct_vs_full_pts.py \
 
 输出 JSON 含 **部分运行时间**、**全量 `cpu` 时间**、**suite 均值（各子项主 `value` 的算术平均）** 的预测误差等。全量 `run cpu` 耗时较长，请预留时间。
 
+输出目录形如 `dataset/experiments/pts_pts_nvidia-gpu-compute_<会话>/`，与不同 PTS 套件区分。
+
+### PTS `pts/nvidia-gpu-compute`（与 `run pts/nvidia-gpu-compute` / GPU 套件对齐）
+
+全流程与上文相同，区别在于 **套件 id**、**默认数据目录名带套件标记**（未指定 `--session` 时为 `<主机>_pts_nvidia-gpu-compute_<UTC>/`）、以及下游脚本用 **`--pts-suite pts/nvidia-gpu-compute`** 只读取该套件的会话（可与 `cpu` 数据混放在 `dataset/` 下）。
+
+**1）数据采集**（等价于 `phoronix-test-suite run pts/nvidia-gpu-compute`，交互式可选用 `--pts-mode run`）
+
+```bash
+python3 -m moebench.phoronix --suite pts/nvidia-gpu-compute --pts-mode run
+# 或 batch-run：
+# python3 -m moebench.phoronix --suite pts/nvidia-gpu-compute --pts-mode batch-run
+```
+
+多轮请将 `--suite` 固定为同上；会话目录名已含 `pts_nvidia-gpu-compute`，便于与 CPU 采集区分。
+
+**2）专家建模**
+
+```bash
+python3 scripts/phoronix_expert_analyze.py \
+  --dataset-root dataset \
+  --glob-pattern '*pts_nvidia-gpu-compute*/run-*.json' \
+  --pts-suite pts/nvidia-gpu-compute \
+  --out-dir dataset
+```
+
+生成 `dataset/phoronix_pts_nvidia-gpu-compute_expert_model_global.json` 及对应 CSV（文件名含套件标签）。
+
+**3）路由（GNN）**
+
+```bash
+mkdir -p dataset/pts_nvidia_gpu_router
+
+python3 scripts/router_train.py \
+  --benchmark phoronix \
+  --pts-suite pts/nvidia-gpu-compute \
+  --dataset-root dataset \
+  --glob-pattern '*pts_nvidia-gpu-compute*/run-*.json' \
+  --model-type gnn_expert \
+  --model-out dataset/pts_nvidia_gpu_router/router_gnn.pt \
+  --auto-install
+```
+
+**4）重建模型（XGBoost 示例）**
+
+```bash
+mkdir -p dataset/pts_nvidia_gpu_models
+
+python3 scripts/reconstruct_train_eval.py \
+  --benchmark phoronix \
+  --pts-suite pts/nvidia-gpu-compute \
+  --dataset-root dataset \
+  --glob-pattern '*pts_nvidia-gpu-compute*/run-*.json' \
+  --model-type xgboost \
+  --skip-cv \
+  --no-uncertainty \
+  --export-model dataset/pts_nvidia_gpu_models/reconstruct_xgb.pkl \
+  --train-aug 20 \
+  --train-k-min 2 \
+  --train-k-max 12 \
+  --auto-install
+```
+
+（`train-k-max` 勿大于当前套件 profile 个数。）
+
+**5）完整对比实验**
+
+```bash
+python3 scripts/experiment_router_reconstruct_vs_full_pts.py \
+  --router-model dataset/pts_nvidia_gpu_router/router_gnn.pt \
+  --reconstruct-model dataset/pts_nvidia_gpu_models/reconstruct_xgb.pkl \
+  --top-k 5 \
+  --pts-mode run \
+  --suite-full pts/nvidia-gpu-compute \
+  --dataset-root dataset
+```
+
+需已安装 **`pts/nvidia-gpu-compute`** 套件内测试与驱动/NVIDIA 依赖；仍以 **创建 PTS 数据集时的同一用户** 运行，勿 `sudo python3`（除非按前述文档仅为 xi 提权）。
+
 ## 关于 `perf` 与权限
 
 若 `kernel.perf_event_paranoid` 较高（如 `4`），普通用户可能无法使用 `perf` 的 PMU 计数，动态特征会退化为 **`/proc` 等代理指标**，并在 `dynamic` 中给出 `perf_degraded` 说明。需要完整 PMU 时，请按系统策略调整该参数或使用具备 **`CAP_PERFMON`** 的方式运行采集进程（参见内核文档 [Perf events and tool security](https://www.kernel.org/doc/html/latest/admin-guide/perf-security.html)）。

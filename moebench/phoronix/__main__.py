@@ -141,7 +141,7 @@ def main() -> int:
         raise SystemExit(subprocess.call(cmd))
 
     ds_root = Path(args.dataset_root).resolve() if args.dataset_root else default_dataset_root()
-    session_resolved = safe_session_tag(args.session or default_session_tag())
+    session_resolved = safe_session_tag(args.session or default_session_tag(suite))
     out_path = Path(args.output) if args.output else ds_root / session_resolved / "run-01.json"
 
     pts_root = Path(args.pts_root).resolve() if args.pts_root else default_pts_install_root()

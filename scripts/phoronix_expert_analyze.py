@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Analyze PTS (cpu-style) dataset sessions: per-profile primary values, correlations, redundancy.
+Analyze PTS dataset sessions: per-profile primary values, correlations, redundancy (cpu / gpu suites).
 
 Pure Python + stdlib JSON. Outputs under dataset/ by default.
 """
@@ -23,6 +23,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from moebench.phoronix.experts import expert_template_pts
+from moebench.phoronix.pipeline import safe_session_tag
 from moebench.phoronix.training_data import (
     collect_phoronix_run_paths,
     expert_test_ids_from_dataset,
@@ -64,7 +65,12 @@ def _expert_meta_from_sample(sample: dict[str, Any], test_id: str, expert_id: st
         idx = int(str(expert_id).split("_", 1)[1])
     except (IndexError, ValueError):
         idx = 1
-    tmpl = expert_template_pts(test_id, idx, title=raw.get("title"))
+    tmpl = expert_template_pts(
+        test_id,
+        idx,
+        title=raw.get("title"),
+        default_suite=str(raw.get("phoronix_default_suite") or "cpu"),
+    )
     return {**tmpl, **raw}
 
 
@@ -84,13 +90,24 @@ def main() -> int:
     ap.add_argument("--glob-pattern", type=str, default="aces-*/run-*.json")
     ap.add_argument("--out-dir", type=str, default=None)
     ap.add_argument("--redundancy-threshold", type=float, default=0.9)
+    ap.add_argument(
+        "--pts-suite",
+        type=str,
+        default=None,
+        metavar="ID",
+        help="Only use runs where yi.suite matches (e.g. pts/nvidia-gpu-compute); output filenames include this tag",
+    )
     args = ap.parse_args()
 
     repo = Path(__file__).resolve().parents[1]
     dataset_root = Path(args.dataset_root).resolve() if args.dataset_root else repo / "dataset"
     out_dir = Path(args.out_dir).resolve() if args.out_dir else dataset_root
 
-    paths = collect_phoronix_run_paths(dataset_root, glob_pattern=args.glob_pattern)
+    paths = collect_phoronix_run_paths(
+        dataset_root,
+        glob_pattern=args.glob_pattern,
+        pts_suite=args.pts_suite,
+    )
     sample = json.load(open(paths[0], encoding="utf-8"))
     base_ids = expert_test_ids_from_dataset(sample)
     # Intersect profiles that have a primary value in every run (some runs may omit a test).
@@ -188,24 +205,38 @@ def main() -> int:
         "created_at_utc": now,
         "dataset_root": str(dataset_root),
         "glob_pattern": args.glob_pattern,
+        "pts_suite": args.pts_suite,
         "num_runs": len(pv[0].values),
         "experts": experts_out,
         "correlation_matrix": {"order": [pv[i].expert_id for i in range(m)], "values": corr},
     }
-    out_json = out_dir / "phoronix_expert_model_global.json"
+    out_stem = (
+        f"phoronix_{safe_session_tag(args.pts_suite.replace('/', '_'))}_expert_model_global"
+        if args.pts_suite
+        else "phoronix_expert_model_global"
+    )
+    out_json = out_dir / f"{out_stem}.json"
     out_dir.mkdir(parents=True, exist_ok=True)
     with open(out_json, "w", encoding="utf-8") as f:
         json.dump(model, f, indent=2, ensure_ascii=False)
         f.write("\n")
 
-    csv_path = out_dir / "phoronix_expert_correlation_matrix.csv"
+    csv_path = out_dir / (
+        f"phoronix_{safe_session_tag(args.pts_suite.replace('/', '_'))}_correlation_matrix.csv"
+        if args.pts_suite
+        else "phoronix_expert_correlation_matrix.csv"
+    )
     with open(csv_path, "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
         w.writerow([""] + [pv[i].test_id for i in range(m)])
         for i in range(m):
             w.writerow([pv[i].test_id] + [f"{corr[i][j]:.6f}" for j in range(m)])
 
-    rp = out_dir / "phoronix_expert_redundant_pairs.csv"
+    rp = out_dir / (
+        f"phoronix_{safe_session_tag(args.pts_suite.replace('/', '_'))}_redundant_pairs.csv"
+        if args.pts_suite
+        else "phoronix_expert_redundant_pairs.csv"
+    )
     with open(rp, "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
         w.writerow(["test_id_a", "test_id_b", "pearson_r"])
