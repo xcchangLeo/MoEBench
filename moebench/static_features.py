@@ -11,6 +11,8 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+from moebench.gpu_features import collect_gpu_static
+
 
 def _run_text(cmd: list[str], timeout: int = 30) -> tuple[str, int, str]:
     try:
@@ -186,4 +188,5 @@ def collect_static() -> dict[str, Any]:
         "compilers": collect_compilers(),
         "cpufreq": collect_cpufreq_governors(),
         "scheduler_sysctl": collect_sched_sysctl(),
+        "gpu": collect_gpu_static(),
     }

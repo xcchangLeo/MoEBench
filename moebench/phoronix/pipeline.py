@@ -182,6 +182,65 @@ def pts_subprocess_env(base: dict[str, str] | None = None) -> dict[str, str]:
     return env
 
 
+def pts_warn_if_low_nvidia_vram_for_opencl_suite(
+    suite: str | None,
+    *,
+    min_free_mib: int = 2304,
+) -> None:
+    """
+    When discrete VRAM is almost full, OpenCL profiles such as ``pts/cl-mem`` (1 GiB
+    device buffer) and ``pts/clpeak`` often fail with error **-4**
+    (``CL_MEM_OBJECT_ALLOCATION_FAILURE``) or skip tests with no parseable result.
+
+    This does not change behavior; it prints a stderr hint so failures are not
+    mistaken for a broken PTS install or MoEBench bug.
+    """
+    if not suite:
+        return
+    sl = str(suite).lower()
+    if "nvidia-gpu-compute" not in sl:
+        return
+    try:
+        proc = subprocess.run(
+            [
+                "nvidia-smi",
+                "--query-gpu=memory.free",
+                "--format=csv,noheader,nounits",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=6,
+            check=False,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
+        return
+    if proc.returncode != 0 or not (proc.stdout or "").strip():
+        return
+    rows = [ln.strip() for ln in proc.stdout.strip().splitlines() if ln.strip()]
+    if not rows:
+        return
+    free_list: list[int] = []
+    for ln in rows:
+        cell = ln.split(",")[0].strip()
+        try:
+            free_list.append(int(float(cell)))
+        except ValueError:
+            return
+    if not free_list:
+        return
+    worst = min(free_list)
+    if worst >= min_free_mib:
+        return
+    print(
+        "Warning: NVIDIA GPU free VRAM looks tight "
+        f"(minimum free ~{worst} MiB across queried GPUs; "
+        f"OpenCL memory benchmarks often need roughly >= {min_free_mib} MiB headroom). "
+        "Tests such as pts/cl-mem and pts/clpeak may fail with OpenCL error -4 or "
+        "produce no numeric result. Free VRAM (close other GPU workloads) and re-run.\n",
+        file=sys.stderr,
+    )
+
+
 def _mkdir_chown_output_dir_for_sudo_user(dir_path: Path) -> None:
     """
     MoEBench often runs as root via ``sudo`` while ``result-file-to-json`` runs as
@@ -419,6 +478,8 @@ def run_pts_dataset(
             "tree (~root/.phoronix-test-suite). Installs under your login user are ignored.",
             file=sys.stderr,
         )
+
+    pts_warn_if_low_nvidia_vram_for_opencl_suite(suite)
 
     print("+", " ".join(cmd), file=sys.stderr)
     if inherit:

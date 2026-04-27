@@ -101,6 +101,30 @@ def _mean(xs: list[float]) -> float | None:
     return sum(xs) / len(xs)
 
 
+def _gpu_list_sorted(gpus: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def idx(g: dict[str, Any]) -> int:
+        try:
+            return int(g.get("index", 0))
+        except Exception:
+            return 0
+
+    return sorted(gpus, key=idx)
+
+
+def _compute_mode_code(s: str | None) -> float:
+    """Stable numeric encoding for ``nvidia-smi`` compute mode."""
+    sl = (s or "").strip().lower()
+    if not sl:
+        return 0.0
+    if "prohibited" in sl:
+        return 3.0
+    if "exclusive thread" in sl or "exclusive_thread" in sl:
+        return 2.0
+    if "exclusive process" in sl or "exclusive_process" in sl:
+        return 1.0
+    return 0.0
+
+
 class XiVectorizer:
     """Convert xi dict to numeric vector with fixed feature ordering."""
 
@@ -153,6 +177,32 @@ class XiVectorizer:
             "cpufreq_governor_hash_mean",
             "memtotal_kb",
             "num_cpus",
+            # GPU static + dynamic (nvidia-smi + clinfo; absent -> 0)
+            "gpu_nvidia_available",
+            "gpu_device_count",
+            "gpu0_memory_total_mib",
+            "gpu0_pcie_gen_max",
+            "gpu0_pcie_gen_current",
+            "gpu0_pcie_width_max",
+            "gpu0_pcie_width_current",
+            "gpu0_clock_max_sm_mhz",
+            "gpu0_clock_max_memory_mhz",
+            "gpu0_power_limit_w",
+            "gpu0_persistence_enabled",
+            "gpu0_compute_mode_code",
+            "gpu_driver_version_hash",
+            "opencl_available",
+            "opencl_platform_count",
+            "opencl_device_count",
+            "gpu0_utilization_gpu_pct",
+            "gpu0_utilization_memory_pct",
+            "gpu0_memory_free_mib",
+            "gpu0_memory_used_mib",
+            "gpu_min_memory_free_mib",
+            "gpu0_power_draw_w",
+            "gpu0_temperature_gpu_c",
+            "gpu0_clock_current_sm_mhz",
+            "gpu0_clock_current_memory_mhz",
         ]
 
     def transform(self, xi: dict[str, Any]) -> list[float]:
@@ -284,6 +334,68 @@ class XiVectorizer:
         cpuinfo_text = static.get("cpuinfo", {}).get("text") or ""
         num_cpus = float(_extract_num_cpus_from_cpuinfo(cpuinfo_text) or 0)
 
+        gpu_s = static.get("gpu") or {}
+        gpu_d = dynamic.get("gpu") or {}
+        nv_s = gpu_s.get("nvidia") or {}
+        nv_d = gpu_d.get("nvidia") or {}
+        oc = gpu_s.get("opencl") or {}
+
+        gpus_s = _gpu_list_sorted(list(nv_s.get("gpus") or []))
+        gpus_d = _gpu_list_sorted(list(nv_d.get("gpus") or []))
+
+        gpu_nvidia_available = 1.0 if nv_s.get("available") else 0.0
+        gpu_device_count = float(len(gpus_s))
+
+        gs0 = gpus_s[0] if gpus_s else {}
+        gd0: dict[str, Any] = {}
+        if gpus_d:
+            want_idx = gs0.get("index")
+            if want_idx is not None:
+                for cand in gpus_d:
+                    try:
+                        if int(cand.get("index")) == int(want_idx):
+                            gd0 = cand
+                            break
+                    except (TypeError, ValueError):
+                        continue
+            if not gd0:
+                gd0 = gpus_d[0]
+
+        gpu0_memory_total_mib = _safe_float(gs0.get("memory_total_mib")) or 0.0
+        gpu0_pcie_gen_max = _safe_float(gs0.get("pcie_gen_max")) or 0.0
+        gpu0_pcie_gen_current = _safe_float(gs0.get("pcie_gen_current")) or 0.0
+        gpu0_pcie_width_max = _safe_float(gs0.get("pcie_width_max")) or 0.0
+        gpu0_pcie_width_current = _safe_float(gs0.get("pcie_width_current")) or 0.0
+        gpu0_clock_max_sm_mhz = _safe_float(gs0.get("clock_max_sm_mhz")) or 0.0
+        gpu0_clock_max_memory_mhz = _safe_float(gs0.get("clock_max_memory_mhz")) or 0.0
+        gpu0_power_limit_w = _safe_float(gs0.get("power_limit_w")) or 0.0
+        pers = str(gs0.get("persistence_mode") or "")
+        gpu0_persistence_enabled = 1.0 if "enabled" in pers.lower() else 0.0
+        gpu0_compute_mode_code = _compute_mode_code(str(gs0.get("compute_mode")))
+        drv = str(gs0.get("driver_version") or "")
+        gpu_driver_version_hash = _hash_to_unit_float(drv, salt="gpu_driver")
+
+        opencl_available = 1.0 if oc.get("available") else 0.0
+        opencl_platform_count = float(oc.get("platform_count") or 0)
+        opencl_device_count = float(oc.get("device_count") or 0)
+
+        gpu0_utilization_gpu_pct = _safe_float(gd0.get("utilization_gpu_pct")) or 0.0
+        gpu0_utilization_memory_pct = _safe_float(gd0.get("utilization_mem_pct")) or 0.0
+        gpu0_memory_free_mib = _safe_float(gd0.get("memory_free_mib")) or 0.0
+        gpu0_memory_used_mib = _safe_float(gd0.get("memory_used_mib")) or 0.0
+
+        free_vals: list[float] = []
+        for g in gpus_d:
+            mf = _safe_float(g.get("memory_free_mib"))
+            if mf is not None:
+                free_vals.append(mf)
+        gpu_min_memory_free_mib = float(min(free_vals)) if free_vals else 0.0
+
+        gpu0_power_draw_w = _safe_float(gd0.get("power_draw_w")) or 0.0
+        gpu0_temperature_gpu_c = _safe_float(gd0.get("temperature_gpu_c")) or 0.0
+        gpu0_clock_current_sm_mhz = _safe_float(gd0.get("clock_current_sm_mhz")) or 0.0
+        gpu0_clock_current_memory_mhz = _safe_float(gd0.get("clock_current_memory_mhz")) or 0.0
+
         # pack in fixed order
         vec = [
             warmup_s,
@@ -325,6 +437,31 @@ class XiVectorizer:
             cpufreq_governor_hash_mean,
             memtotal_kb,
             num_cpus,
+            gpu_nvidia_available,
+            gpu_device_count,
+            gpu0_memory_total_mib,
+            gpu0_pcie_gen_max,
+            gpu0_pcie_gen_current,
+            gpu0_pcie_width_max,
+            gpu0_pcie_width_current,
+            gpu0_clock_max_sm_mhz,
+            gpu0_clock_max_memory_mhz,
+            gpu0_power_limit_w,
+            gpu0_persistence_enabled,
+            gpu0_compute_mode_code,
+            gpu_driver_version_hash,
+            opencl_available,
+            opencl_platform_count,
+            opencl_device_count,
+            gpu0_utilization_gpu_pct,
+            gpu0_utilization_memory_pct,
+            gpu0_memory_free_mib,
+            gpu0_memory_used_mib,
+            gpu_min_memory_free_mib,
+            gpu0_power_draw_w,
+            gpu0_temperature_gpu_c,
+            gpu0_clock_current_sm_mhz,
+            gpu0_clock_current_memory_mhz,
         ]
         # Ensure stable length
         if len(vec) != len(self.feature_names):

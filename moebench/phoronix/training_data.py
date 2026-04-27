@@ -77,7 +77,15 @@ def expert_test_ids_from_dataset(ds: dict[str, Any]) -> list[str]:
 
 
 def primary_value_from_export(export: dict[str, Any], test_id: str) -> float | None:
-    """First buffer ``value`` for profile ``test_id`` in PTS JSON export."""
+    """
+    Representative primary ``value`` for profile ``test_id`` in PTS JSON export.
+
+    PTS may emit multiple ``results`` blocks with the same ``identifier`` (e.g. hashcat
+    benchmarks like MD5/NTLM/SHA1). Returning the first seen value is order-dependent and
+    causes unstable labels across runs. We aggregate all available values for the profile
+    with log-mean (geometric-like mean in log1p space), robust to large scale differences.
+    """
+    vals: list[float] = []
     for _h, robj in (export.get("results") or {}).items():
         tid = str(robj.get("identifier") or _h)
         if tid != test_id:
@@ -85,8 +93,10 @@ def primary_value_from_export(export: dict[str, Any], test_id: str) -> float | N
         for buf in (robj.get("results") or {}).values():
             v = _safe_float(buf.get("value"))
             if v is not None:
-                return v
-    return None
+                vals.append(float(v))
+    if not vals:
+        return None
+    return float(math.expm1(sum(math.log1p(max(0.0, v)) for v in vals) / len(vals)))
 
 
 def primary_time_from_pts_export(export: dict[str, Any], test_id: str) -> float | None:

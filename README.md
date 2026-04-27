@@ -289,6 +289,8 @@ python3 scripts/experiment_router_reconstruct_vs_full_pts.py \
 
 全流程与上文相同，区别在于 **套件 id**、**默认数据目录名带套件标记**（未指定 `--session` 时为 `<主机>_pts_nvidia-gpu-compute_<UTC>/`）、以及下游脚本用 **`--pts-suite pts/nvidia-gpu-compute`** 只读取该套件的会话（可与 `cpu` 数据混放在 `dataset/` 下）。
 
+**xi 中的 GPU 相关采集**：与套件无关，`collect_all()` 在 **`xi.static.gpu`** 中记录 **每块 NVIDIA 显卡**的驱动/vBIOS、显存总量、PCIe 代数与位宽、最大 GPU/SM/显存频率、功耗墙、持久化与 compute mode，以及 **`clinfo -l`** 得到的 **OpenCL 平台/设备数量**（原文在 `opencl.text`）；在 **`xi.dynamic.gpu`** 中再采一次 **瞬时**显存占用、GPU/显存利用率、功耗、温度、当前频率等。PTS 跑分结果里的「Graphics / OpenCL 字符串」仍只在导出的 **`yi.pts_export`**（Phodevi）里，与上述 **可机读数值特征**互补。路由/重建用的 `XiVectorizer` 已将上述字段展开为 **`gpu_*` / `opencl_*` 数值列**；旧 JSON 缺少 `gpu` 时对应列为 0。**更换 `XiVectorizer` 后须重新训练**路由与重建模型。
+
 **1）数据采集**（等价于 `phoronix-test-suite run pts/nvidia-gpu-compute`，交互式可选用 `--pts-mode run`）
 
 ```bash
@@ -354,10 +356,11 @@ python3 scripts/reconstruct_train_eval.py \
 python3 scripts/experiment_router_reconstruct_vs_full_pts.py \
   --router-model dataset/pts_nvidia_gpu_router/router_gnn.pt \
   --reconstruct-model dataset/pts_nvidia_gpu_models/reconstruct_xgb.pkl \
-  --top-k 5 \
+  --top-k 3 \
   --pts-mode run \
   --suite-full pts/nvidia-gpu-compute \
-  --dataset-root dataset
+  --dataset-root dataset \
+  --sudo
 ```
 
 需已安装 **`pts/nvidia-gpu-compute`** 套件内测试与驱动/NVIDIA 依赖；仍以 **创建 PTS 数据集时的同一用户** 运行，勿 `sudo python3`（除非按前述文档仅为 xi 提权）。

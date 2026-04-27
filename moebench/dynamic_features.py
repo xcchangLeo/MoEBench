@@ -11,6 +11,7 @@ import tempfile
 import textwrap
 from typing import Any
 
+from moebench.gpu_features import collect_gpu_dynamic
 from moebench.perf_parser import derive_ipc_and_rates, parse_perf_stat
 
 # PMU / software events (kernel-dependent; perf will error on unknown names).
@@ -288,5 +289,7 @@ def collect_dynamic(
     except OSError:
         pass
     result["workload_script"] = None
+
+    result["gpu"] = collect_gpu_dynamic()
 
     return result

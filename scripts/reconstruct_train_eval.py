@@ -103,6 +103,16 @@ def stable_seed(parts: tuple[Any, ...]) -> int:
     return int.from_bytes(h[:8], "little", signed=False) % (2**31)
 
 
+def pts_suite_target_from_indices(indices: list[float], mode: str) -> float:
+    """Aggregate PTS per-profile primary values into one suite-level target."""
+    vals = [float(v) for v in indices]
+    if not vals:
+        return 0.0
+    if mode == "logmean":
+        return float(math.expm1(sum(math.log1p(max(0.0, v)) for v in vals) / len(vals)))
+    return float(sum(vals) / len(vals))
+
+
 def _sklearn_base_estimator(
     model_name: str,
     *,
@@ -524,6 +534,13 @@ def main() -> int:
     ap.add_argument("--folds", type=int, default=5)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--eval-partial-k", type=int, default=3, help="How many subtests are 'executed' at eval")
+    ap.add_argument(
+        "--pts-suite-target",
+        type=str,
+        choices=("arithmetic_mean", "logmean"),
+        default="logmean",
+        help="With --benchmark phoronix: suite target aggregation mode (default: logmean)",
+    )
     ap.add_argument("--train-aug", type=int, default=10, help="Random partial subsets per training sample")
     ap.add_argument("--train-k-min", type=int, default=2)
     ap.add_argument("--train-k-max", type=int, default=6)
@@ -580,8 +597,26 @@ def main() -> int:
         )
         test_ids = list(canonical_test_ids_from_runs(paths_pts))
         n_test = len(test_ids)
-        if args.train_k_max > n_test or args.eval_partial_k > n_test:
-            print("train-k-max / eval-partial-k must be <= number of PTS profiles", file=sys.stderr)
+        train_k_max = int(args.train_k_max)
+        eval_partial_k = int(args.eval_partial_k)
+        if train_k_max > n_test:
+            print(
+                f"[PTS] train-k-max={train_k_max} exceeds num_profiles={n_test}; clamping to {n_test}.",
+                file=sys.stderr,
+            )
+            train_k_max = n_test
+        if eval_partial_k > n_test:
+            print(
+                f"[PTS] eval-partial-k={eval_partial_k} exceeds num_profiles={n_test}; clamping to {n_test}.",
+                file=sys.stderr,
+            )
+            eval_partial_k = n_test
+        if args.train_k_min > train_k_max:
+            print(
+                f"[PTS] train-k-min={args.train_k_min} > effective train-k-max={train_k_max}; "
+                f"set --train-k-min <= {train_k_max}.",
+                file=sys.stderr,
+            )
             return 2
         vec = XiVectorizer()
         rows_meta: list[dict[str, Any]] = []
@@ -592,7 +627,8 @@ def main() -> int:
             tgt = extract_targets_from_pts_dataset(ds, tuple(test_ids))
             if t_full is None or tgt is None:
                 continue
-            indices, suite_mean = tgt
+            indices, _suite_mean_raw = tgt
+            suite_mean = pts_suite_target_from_indices(indices, args.pts_suite_target)
             rows_meta.append(
                 {
                     "path": str(p),
@@ -612,7 +648,7 @@ def main() -> int:
             rng,
             args.train_aug,
             args.train_k_min,
-            args.train_k_max,
+            train_k_max,
             args.log1p_partial_index,
         )
         outp = Path(args.export_model)
@@ -657,6 +693,7 @@ def main() -> int:
             )
         if args.pts_suite:
             bundle["pts_suite"] = args.pts_suite
+        bundle["pts_suite_target"] = args.pts_suite_target
         save_reconstruction_bundle(outp, bundle)
         print(
             json.dumps(
@@ -664,6 +701,7 @@ def main() -> int:
                     "export_only": True,
                     "benchmark": "phoronix",
                     "pts_suite": args.pts_suite,
+                    "pts_suite_target": args.pts_suite_target,
                     "export_model": str(outp.resolve()),
                     "train_rows": int(len(xt)),
                     "model_type": args.model_type,
