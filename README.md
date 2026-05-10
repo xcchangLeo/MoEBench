@@ -524,6 +524,92 @@ python3 scripts/reconstruct_train_eval.py \
   --export-model dataset/models/reconstruct_mlp.pt
 ```
 
+## 论文补充实验（离线 CV：UnixBench + PTS CPU + PTS GPU）
+
+面向投稿实证：`scripts/paper_reconstruct_cv_extras.py` 在**已有数据集 JSON**上做离线交叉验证（**不**重新跑 UnixBench / PTS）。默认 **`--suites unixbench,phoronix_cpu,phoronix_gpu`**，一次输出三套件的汇总 JSON（schema **`moebench.paper_reconstruct_cv_extras.v2`**，顶层 `suite_results[]` 每项对应一套 benchmark）。
+
+| 能力 | 说明 |
+|------|------|
+| **三套件** | **UnixBench**（`moebench.unixbench.dataset.v1`）；**PTS CPU**（`yi.suite == cpu`）；**PTS GPU**（`yi.suite == pts/nvidia-gpu-compute`）。各自可用独立 glob 收集 `run-*.json`。 |
+| **评估子集策略** | `random`、`fixed_first_k`、`fixed_cpu_mix` / `fixed_io_mix`（UnixBench 优先 CPU/IO 子项；PTS 上无匹配 id 时退化为「canonical profile 顺序前缀」）、`greedy_slowest` / `greedy_fastest`（UB：`ti` parallel 32；PTS：`ti.by_test_id.time_s_total`）、`router`（见下） |
+| **router** | 三套套件需 **分别** 训练路由：`--router-model-unixbench`、`--router-model-pts-cpu`、`--router-model-pts-gpu`。也可用 **`--router-model`**（仅等价于 UnixBench，兼容旧用法）。`policies` 含 `router` 时，**凡在本次 `--suites` 中选中的套件都必须提供对应 checkpoint**，否则会报错退出。 |
+| **xi 消融** | `full`、`static_hw_only`、`no_perf_pmu`、`no_dynamic_proc`、`no_gpu`（三套共用同一向量化与消融逻辑） |
+| **PTS suite 标量** | `--pts-suite-target logmean`（默认，与导出重建模型常用设定一致）或 `arithmetic_mean` |
+| **CV 划分** | `leave_one_session_out`（按会话目录名留出）；仅有一条会话时会 **按套件** 回退 `random_fold` |
+| **K 扫描** | `--k-sweep 1,2,3,4,5` |
+| **额外指标** | `median_bucket_accuracy_suite`（suite 中位数分桶一致性） |
+
+**一键跑三套件**（可通过环境变量改 glob / CV / 输出路径）：
+
+```bash
+cd /path/to/MoEBench
+./scripts/run_paper_cv_three_suites.sh
+# 或例如：
+OUT=dataset/paper_cv_full.json CV_MODE=random_fold FOLDS=5 ./scripts/run_paper_cv_three_suites.sh
+```
+
+**等价 Python（明确三套 glob）**：
+
+```bash
+cd /path/to/MoEBench
+
+python3 scripts/paper_reconstruct_cv_extras.py \
+  --dataset-root dataset \
+  --suites unixbench,phoronix_cpu,phoronix_gpu \
+  --glob-unixbench '*/run-*.json' \
+  --glob-pts-cpu 'aces-*/run-*.json' \
+  --glob-pts-gpu '*pts_nvidia-gpu-compute*/run-*.json' \
+  --cv-mode leave_one_session_out \
+  --folds 5 \
+  --policies random,fixed_first_k,fixed_cpu_mix,greedy_slowest,greedy_fastest \
+  --xi-ablations full \
+  --pts-suite-target logmean \
+  --eval-partial-k 3 \
+  --report-json dataset/paper_cv_three_suites.json
+```
+
+**仅跑其中一类**：
+
+```bash
+python3 scripts/paper_reconstruct_cv_extras.py --dataset-root dataset --suites unixbench \
+  --glob-unixbench '*/run-*.json' --report-json dataset/paper_cv_ub_only.json
+
+python3 scripts/paper_reconstruct_cv_extras.py --dataset-root dataset --suites phoronix_cpu \
+  --glob-pts-cpu 'aces-*/run-*.json' --report-json dataset/paper_cv_pts_cpu_only.json
+
+python3 scripts/paper_reconstruct_cv_extras.py --dataset-root dataset --suites phoronix_gpu \
+  --glob-pts-gpu '*pts_nvidia-gpu-compute*/run-*.json' --report-json dataset/paper_cv_pts_gpu_only.json
+```
+
+**含 router 的三套件对比**（示例路径请换成你训练生成的文件）：
+
+```bash
+python3 scripts/paper_reconstruct_cv_extras.py \
+  --dataset-root dataset \
+  --suites unixbench,phoronix_cpu,phoronix_gpu \
+  --policies random,router \
+  --router-model-unixbench dataset/unixbench_router/router_gnn.pt \
+  --router-model-pts-cpu dataset/pts_router/router_gnn.pt \
+  --router-model-pts-gpu dataset/pts_nvidia_gpu_router/router_gnn.pt \
+  --eval-partial-k 5 \
+  --report-json dataset/paper_cv_three_suites_router.json
+```
+
+**Pareto（多 K）**：
+
+```bash
+python3 scripts/paper_reconstruct_cv_extras.py \
+  --dataset-root dataset \
+  --suites unixbench,phoronix_cpu,phoronix_gpu \
+  --cv-mode random_fold \
+  --folds 5 \
+  --k-sweep 1,2,3,4,5,6 \
+  --policies random,fixed_first_k \
+  --report-json dataset/paper_cv_k_sweep_three_suites.json
+```
+
+说明：某一套件有效样本 **&lt; 2** 或 glob 无匹配时，该套件会记入 `suite_errors`，其余套件仍写入 `suite_results`。若三套件全部失败则退出码非 0。实现模块：`moebench/paper_eval/`（`subset_policies.py`、`xi_ablation.py`）。
+
 ## 完整实验：Router + Reconstruction vs Full
 
 目标：一次实验同时得到：
