@@ -33,6 +33,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from moebench.dataset_globs import resolve_glob_pattern
 from moebench.phoronix.training_data import (
     build_augmented_train_matrix_pts,
     canonical_test_ids_from_runs,
@@ -529,7 +530,12 @@ def main() -> int:
         default="unixbench",
         help="Dataset schema: unixbench (default) or phoronix (PTS cpu-style runs)",
     )
-    ap.add_argument("--glob-pattern", type=str, default="*/run-*.json")
+    ap.add_argument(
+        "--glob-pattern",
+        type=str,
+        default="",
+        help="Glob under dataset-root (default: auto from benchmark + --pts-suite; see moebench.dataset_globs)",
+    )
     ap.add_argument("--model-type", type=str, choices=("xgboost", "lightgbm", "mlp"), default="lightgbm")
     ap.add_argument("--folds", type=int, default=5)
     ap.add_argument("--seed", type=int, default=42)
@@ -583,6 +589,19 @@ def main() -> int:
     args = ap.parse_args()
     with_uncertainty = not args.no_uncertainty
 
+    if args.benchmark == "phoronix" and not args.pts_suite:
+        print(
+            "phoronix reconstruction requires --pts-suite (e.g. cpu or pts/nvidia-gpu-compute).",
+            file=sys.stderr,
+        )
+        return 2
+
+    glob_eff = resolve_glob_pattern(
+        benchmark=args.benchmark,
+        glob_pattern=args.glob_pattern or None,
+        pts_suite=args.pts_suite,
+    )
+
     if args.benchmark == "phoronix":
         if not args.skip_cv or not args.export_model:
             print(
@@ -592,7 +611,7 @@ def main() -> int:
             return 2
         paths_pts = collect_phoronix_run_paths(
             Path(args.dataset_root),
-            glob_pattern=args.glob_pattern,
+            glob_pattern=glob_eff,
             pts_suite=args.pts_suite,
         )
         test_ids = list(canonical_test_ids_from_runs(paths_pts))
@@ -725,7 +744,7 @@ def main() -> int:
         print("--skip-cv requires --export-model", file=sys.stderr)
         return 2
 
-    paths = collect_unixbench_run_paths(Path(args.dataset_root), glob_pattern=args.glob_pattern)
+    paths = collect_unixbench_run_paths(Path(args.dataset_root), glob_pattern=glob_eff)
     records: list[dict[str, Any]] = []
     for p in paths:
         with open(p, encoding="utf-8") as f:

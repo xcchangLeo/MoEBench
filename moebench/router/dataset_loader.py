@@ -90,7 +90,7 @@ class RouterDataset:
 def load_unixbench_dataset_for_router(
     dataset_root: str | Path,
     *,
-    glob_pattern: str = "dataset/*/run-*.json",
+    glob_pattern: str = "*/run-*.json",
     xi_vectorizer: XiVectorizer | None = None,
 ) -> RouterDataset:
     root = Path(dataset_root).resolve()
@@ -166,7 +166,7 @@ def load_unixbench_dataset_for_router(
 def load_phoronix_dataset_for_router(
     dataset_root: str | Path,
     *,
-    glob_pattern: str = "aces-*/run-*.json",
+    glob_pattern: str = "*/run-*.json",
     exclude_session_names: frozenset[str] | None = None,
     pts_suite: str | None = None,
     xi_vectorizer: XiVectorizer | None = None,
@@ -182,8 +182,7 @@ def load_phoronix_dataset_for_router(
     files = collect_phoronix_run_paths(
         root,
         glob_pattern=glob_pattern,
-        exclude_session_names=exclude_session_names
-        or frozenset({"aces-System-Product-Name_20260324T043804Z"}),
+        exclude_session_names=exclude_session_names or frozenset(),
         pts_suite=pts_suite,
     )
 

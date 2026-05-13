@@ -23,7 +23,7 @@ def _safe_float(x: Any) -> float | None:
 def collect_phoronix_run_paths(
     dataset_root: str | Path,
     *,
-    glob_pattern: str = "aces-*/run-*.json",
+    glob_pattern: str = "*/run-*.json",
     exclude_session_names: frozenset[str] | None = None,
     pts_suite: str | None = None,
 ) -> list[Path]:

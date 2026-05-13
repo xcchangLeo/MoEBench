@@ -1,19 +1,22 @@
 #!/usr/bin/env bash
 # Run offline paper CV for UnixBench + PTS CPU + PTS GPU in one JSON report.
-# Adjust globs if your dataset layout differs.
+# Defaults match MoEBench collection session directory names (see moebench.dataset_globs).
 
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 OUT="${OUT:-dataset/paper_cv_three_suites.json}"
+GLOB_UNIXBENCH="${GLOB_UNIXBENCH:-*/run-*.json}"
+GLOB_PTS_CPU="${GLOB_PTS_CPU:-*_cpu_*/run-*.json}"
+GLOB_PTS_GPU="${GLOB_PTS_GPU:-*_pts_nvidia-gpu-compute_*/run-*.json}"
 
 python3 scripts/paper_reconstruct_cv_extras.py \
   --dataset-root "${DATASET_ROOT:-dataset}" \
   --suites unixbench,phoronix_cpu,phoronix_gpu \
-  --glob-unixbench "${GLOB_UNIXBENCH:-*/run-*.json}" \
-  --glob-pts-cpu "${GLOB_PTS_CPU:-aces-*/run-*.json}" \
-  --glob-pts-gpu "${GLOB_PTS_GPU:-*pts_nvidia-gpu-compute*/run-*.json}" \
+  --glob-unixbench "$GLOB_UNIXBENCH" \
+  --glob-pts-cpu "$GLOB_PTS_CPU" \
+  --glob-pts-gpu "$GLOB_PTS_GPU" \
   --cv-mode "${CV_MODE:-leave_one_session_out}" \
   --folds "${FOLDS:-5}" \
   --seed "${SEED:-42}" \

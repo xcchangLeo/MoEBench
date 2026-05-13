@@ -22,6 +22,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from moebench.dataset_globs import resolve_glob_pattern
 from moebench.phoronix.experts import expert_template_pts
 from moebench.phoronix.pipeline import safe_session_tag
 from moebench.phoronix.training_data import (
@@ -87,7 +88,12 @@ class ProfVec:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dataset-root", type=str, default=None)
-    ap.add_argument("--glob-pattern", type=str, default="aces-*/run-*.json")
+    ap.add_argument(
+        "--glob-pattern",
+        type=str,
+        default="",
+        help="Glob under dataset-root (default: auto from --pts-suite; see moebench.dataset_globs)",
+    )
     ap.add_argument("--out-dir", type=str, default=None)
     ap.add_argument("--redundancy-threshold", type=float, default=0.9)
     ap.add_argument(
@@ -103,9 +109,15 @@ def main() -> int:
     dataset_root = Path(args.dataset_root).resolve() if args.dataset_root else repo / "dataset"
     out_dir = Path(args.out_dir).resolve() if args.out_dir else dataset_root
 
+    glob_eff = resolve_glob_pattern(
+        benchmark="phoronix",
+        glob_pattern=args.glob_pattern or None,
+        pts_suite=args.pts_suite,
+    )
+
     paths = collect_phoronix_run_paths(
         dataset_root,
-        glob_pattern=args.glob_pattern,
+        glob_pattern=glob_eff,
         pts_suite=args.pts_suite,
     )
     sample = json.load(open(paths[0], encoding="utf-8"))
@@ -204,7 +216,7 @@ def main() -> int:
         "schema": "moebench.phoronix.expert_model_global.v2",
         "created_at_utc": now,
         "dataset_root": str(dataset_root),
-        "glob_pattern": args.glob_pattern,
+        "glob_pattern": glob_eff,
         "pts_suite": args.pts_suite,
         "num_runs": len(pv[0].values),
         "experts": experts_out,

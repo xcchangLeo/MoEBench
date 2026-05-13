@@ -37,6 +37,7 @@ def _load_reconstruct_train_eval_module():
 
 rte = _load_reconstruct_train_eval_module()
 
+from moebench.dataset_globs import GLOB_UNIXBENCH_RUNS, glob_for_pts_collected_sessions
 from moebench.paper_eval.subset_policies import select_eval_subset
 from moebench.paper_eval.xi_ablation import AblatedXiVectorizer
 from moebench.phoronix.training_data import (
@@ -612,9 +613,13 @@ def main() -> int:
         default="unixbench,phoronix_cpu,phoronix_gpu",
         help="Comma-separated: unixbench, phoronix_cpu, phoronix_gpu",
     )
-    ap.add_argument("--glob-unixbench", type=str, default="*/run-*.json")
-    ap.add_argument("--glob-pts-cpu", type=str, default="aces-*/run-*.json")
-    ap.add_argument("--glob-pts-gpu", type=str, default="*pts_nvidia-gpu-compute*/run-*.json")
+    ap.add_argument("--glob-unixbench", type=str, default=GLOB_UNIXBENCH_RUNS)
+    ap.add_argument("--glob-pts-cpu", type=str, default=glob_for_pts_collected_sessions("cpu"))
+    ap.add_argument(
+        "--glob-pts-gpu",
+        type=str,
+        default=glob_for_pts_collected_sessions("pts/nvidia-gpu-compute"),
+    )
     ap.add_argument(
         "--cv-mode",
         type=str,

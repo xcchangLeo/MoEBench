@@ -18,11 +18,16 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 ROUTER_TRAIN = REPO_ROOT / "scripts" / "router_train.py"
 EXPERIMENT = REPO_ROOT / "scripts" / "experiment_router_reconstruct_vs_full.py"
 
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from moebench.dataset_globs import resolve_glob_pattern
+
 DEFAULT_MODELS: tuple[tuple[str, str], ...] = (
     ("lightgbm", "router_lgbm.pkl"),
     ("mlp", "router_mlp.pt"),
-    ("subset_sel", "router_subset.pt"),
     ("gnn_expert", "router_gnn.pt"),
+    ("subset_sel", "router_subset.pt"),
 )
 
 
@@ -100,8 +105,8 @@ def main() -> int:
     ap.add_argument(
         "--models",
         type=str,
-        default="lightgbm,mlp,subset_sel,gnn_expert",
-        help="Comma-separated subset of: lightgbm,mlp,subset_sel,gnn_expert",
+        default="lightgbm,mlp,gnn_expert",
+        help="Comma-separated subset of: lightgbm,mlp,gnn_expert,subset_sel",
     )
     ap.add_argument("--skip-train", action="store_true", help="Only run experiments (expect checkpoints to exist)")
     ap.add_argument("--dry-run", action="store_true", help="Print commands only")
@@ -127,12 +132,23 @@ def main() -> int:
         help="Subdirectory of --dataset-root for ablation outputs (default: experiments). "
         "If that directory is not writable, the script falls back to ablation_runs/.",
     )
-    ap.add_argument("--glob-pattern", type=str, default="*/run-*.json")
+    ap.add_argument(
+        "--glob-pattern",
+        type=str,
+        default="",
+        help="Training glob (default: */run-*.json for UnixBench collection layout)",
+    )
     ap.add_argument("--mlp-epochs", type=int, default=200)
     ap.add_argument("--mlp-hidden", type=int, default=64)
     ap.add_argument("--gnn-emb-dim", type=int, default=12)
     ap.add_argument("--auto-install", action="store_true")
     args = ap.parse_args()
+
+    glob_train = resolve_glob_pattern(
+        benchmark="unixbench",
+        glob_pattern=args.glob_pattern or None,
+        pts_suite=None,
+    )
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     ds_root = Path(args.dataset_root).resolve()
@@ -169,7 +185,7 @@ def main() -> int:
                 "--dataset-root",
                 str(ds_root),
                 "--glob-pattern",
-                args.glob_pattern,
+                glob_train,
                 "--model-type",
                 mt,
                 "--model-out",

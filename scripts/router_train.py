@@ -26,6 +26,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from moebench.dataset_globs import resolve_glob_pattern
 from moebench.router.dataset_loader import (
     load_phoronix_dataset_for_router,
     load_unixbench_dataset_for_router,
@@ -61,7 +62,12 @@ def main() -> int:
         default="unixbench",
         help="Training data: UnixBench runs or PTS (moebench.phoronix.dataset.v1)",
     )
-    ap.add_argument("--glob-pattern", type=str, default="*/run-*.json", help="Glob under dataset-root")
+    ap.add_argument(
+        "--glob-pattern",
+        type=str,
+        default="",
+        help="Glob under dataset-root (default: auto from benchmark + --pts-suite; see moebench.dataset_globs)",
+    )
     ap.add_argument("--model-out", type=str, required=True, help="Where to save model checkpoint")
     ap.add_argument(
         "--model-type",
@@ -91,17 +97,31 @@ def main() -> int:
     ap.add_argument("--mlp-lr", type=float, default=1e-3)
     args = ap.parse_args()
 
+    if args.benchmark == "phoronix" and not args.pts_suite:
+        print(
+            "phoronix training requires --pts-suite (e.g. cpu or pts/nvidia-gpu-compute) "
+            "so experts and default session globs match collected data.",
+            file=sys.stderr,
+        )
+        return 2
+
+    glob_eff = resolve_glob_pattern(
+        benchmark=args.benchmark,
+        glob_pattern=args.glob_pattern or None,
+        pts_suite=args.pts_suite,
+    )
+
     if args.benchmark == "phoronix":
         ds = load_phoronix_dataset_for_router(
             args.dataset_root,
-            glob_pattern=args.glob_pattern,
+            glob_pattern=glob_eff,
             pts_suite=args.pts_suite,
             xi_vectorizer=None,
         )
     else:
         ds = load_unixbench_dataset_for_router(
             args.dataset_root,
-            glob_pattern=args.glob_pattern,
+            glob_pattern=glob_eff,
             xi_vectorizer=None,
         )
 

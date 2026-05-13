@@ -137,6 +137,8 @@ both = collect_all()
 - **单轮**：默认写入 `dataset/<session>/run-01.json`；仍可用 `-o` 指定任意路径。
 - **多轮**：`-n N`（如 **5 轮**）生成 `run-01.json` … `run-NN.json`，并在同目录写入 **`manifest.json`**（轮次、路径、时间戳列表）。默认 **每一轮都采集 xi**；若需省时间可 **`--reuse-xi`**（仅第 1 轮采集，后续轮复用）。
 
+**训练 / 分析脚本中的 glob**：与采集目录对齐的规则集中在 **`moebench.dataset_globs`**（UnixBench：``*/run-*.json``；PTS `cpu`：``*_cpu_*/run-*.json``；PTS `pts/nvidia-gpu-compute`：``*_pts_nvidia-gpu-compute_*/run-*.json``）。多数 CLI 在省略 `--glob-pattern` 时会按 benchmark + `--pts-suite` 自动解析。
+
 ### 命令
 
 ```bash
@@ -213,11 +215,12 @@ python3 -m moebench.phoronix --pts-smoke --pts-smoke-suite pts/smallpt --pts-mod
 
 输出 JSON 含 `schema: moebench.phoronix.dataset.v1`：`xi`、`yi`（含 `pts_export`）、`ti`、`experts`、`phoronix`（命令、结果文件名、`result-file-to-json` 原始导出路径）。多轮时另有 `schema: moebench.phoronix.batch_manifest.v1` 的 `manifest.json`。
 
-### PTS 全套实验（与 UnixBench 流程对齐：专家 → GNN 路由 → XGBoost 重建 → 对比）
+### PTS 全套实验（与 UnixBench 流程对齐：专家 → 路由 → 重建 → 对比）
 
-**数据**：仅使用 **PTS** 会话目录（本仓库示例为 `dataset/aces-*`，且每个会话至少 `run-01.json`）。**不要**把 UnixBench 会话混进来（例如 `aces-System-Product-Name_20260324T043804Z` 仅 UnixBench）；加载器默认会排除该目录名。训练时请用 **`aces-*/run-01.json`** 这类 glob，避免扫到无关 JSON。
+**数据与会话目录**：`python3 -m moebench.phoronix` 在未指定 `--session` 时写入  
+`dataset/<主机slug>_cpu_<UTC时间戳>/run-NN.json`（套件 `cpu`）。训练 / 专家分析时的 **glob 与采集一致**：``*_cpu_*/run-*.json``（亦可用 `--glob-pattern` 显式覆盖）。加载器只保留 `schema == moebench.phoronix.dataset.v1` 且 `yi.suite` 与 `--pts-suite` 一致的文件，不会误读 UnixBench 会话。
 
-**权限**：**只有采集系统特征（xi）需要 `sudo` 时**再使用 `python3 -m moebench.phoronix ... --sudo` 或 `python3 -m moebench ... --sudo`。下面的分析、训练、对比实验均在**普通用户**下执行即可（与 Phoronix 安装在用户目录一致，也避免权限问题）。
+**权限**：**只有采集系统特征（xi）需要 `sudo` 时**再使用 `python3 -m moebench.phoronix ... --sudo`。下面的分析、训练、对比实验均在**普通用户**下执行即可。
 
 #### 1）专家建模（相关 / 冗余分析）
 
@@ -226,20 +229,23 @@ cd /home/cxc/MoEBench
 
 python3 scripts/phoronix_expert_analyze.py \
   --dataset-root dataset \
-  --glob-pattern 'aces-*/run-01.json'
+  --pts-suite cpu \
+  --out-dir dataset
 ```
 
-生成 `phoronix_expert_model_global.json`、相关系数 CSV 等（输出在 `dataset/` 或 `--out-dir`）。
+（省略 `--glob-pattern` 时按 `moebench.dataset_globs` 自动使用 ``*_cpu_*/run-*.json``。）
 
-#### 2）路由模型（Expert GNN）
+生成 `phoronix_expert_model_global.json`（或带套件前缀的文件名）、相关系数 CSV 等。
+
+#### 2）路由模型（Expert GNN 示例）
 
 ```bash
 mkdir -p dataset/pts_router
 
 python3 scripts/router_train.py \
   --benchmark phoronix \
+  --pts-suite cpu \
   --dataset-root dataset \
-  --glob-pattern 'aces-*/run-01.json' \
   --model-type gnn_expert \
   --model-out dataset/pts_router/router_gnn.pt \
   --gnn-emb-dim 16 \
@@ -254,8 +260,8 @@ mkdir -p dataset/pts_models
 
 python3 scripts/reconstruct_train_eval.py \
   --benchmark phoronix \
+  --pts-suite cpu \
   --dataset-root dataset \
-  --glob-pattern 'aces-*/run-01.json' \
   --model-type xgboost \
   --skip-cv \
   --no-uncertainty \
@@ -306,10 +312,11 @@ python3 -m moebench.phoronix --suite pts/nvidia-gpu-compute --pts-mode run
 ```bash
 python3 scripts/phoronix_expert_analyze.py \
   --dataset-root dataset \
-  --glob-pattern '*pts_nvidia-gpu-compute*/run-*.json' \
   --pts-suite pts/nvidia-gpu-compute \
   --out-dir dataset
 ```
+
+（自动 glob：``*_pts_nvidia-gpu-compute_*/run-*.json``，与默认会话目录名一致。）
 
 生成 `dataset/phoronix_pts_nvidia-gpu-compute_expert_model_global.json` 及对应 CSV（文件名含套件标签）。
 
@@ -322,7 +329,6 @@ python3 scripts/router_train.py \
   --benchmark phoronix \
   --pts-suite pts/nvidia-gpu-compute \
   --dataset-root dataset \
-  --glob-pattern '*pts_nvidia-gpu-compute*/run-*.json' \
   --model-type gnn_expert \
   --model-out dataset/pts_nvidia_gpu_router/router_gnn.pt \
   --auto-install
@@ -337,7 +343,6 @@ python3 scripts/reconstruct_train_eval.py \
   --benchmark phoronix \
   --pts-suite pts/nvidia-gpu-compute \
   --dataset-root dataset \
-  --glob-pattern '*pts_nvidia-gpu-compute*/run-*.json' \
   --model-type xgboost \
   --skip-cv \
   --no-uncertainty \
@@ -436,8 +441,7 @@ python3 scripts/reconstruct_train_eval.py \
   --export-model dataset/models/reconstruct_lgbm.pkl \
   --model-type lightgbm
 
-# 训练 lightgbm / mlp / subset_sel / gnn_expert 并各跑完整实验（可加 sudo）
-# 推荐：整行复制（避免续行符断行导致 `--auto-install` 被当成 shell 命令）
+# 训练 LightGBM / MLP / GNN 路由并各跑完整实验（可加 sudo）
 python3 scripts/run_router_model_ablation.py --dataset-root dataset --reconstruct-model dataset/models/reconstruct_lgbm.pkl --sudo --auto-install
 
 # 多行时：每行末尾必须是 \ 且后面不能有空格；下一行要紧贴接上，不要单独一行只写 --auto-install
@@ -452,7 +456,7 @@ python3 scripts/run_router_model_ablation.py \
 
 - **`--skip-train`**：跳过训练，仅对已存在的 `dataset/router_models/<时间戳>/` 下检查点跑实验。
 - **`--sudo`**：把 `--sudo` 传给完整实验脚本（采集 `xi` 需要 root 时用）。不要写裸的 `--experiment-extra --sudo`（后者会被 argparse 拆错）；若必须用 `--experiment-extra`，请写成 `--experiment-extra='--sudo'` 或 `--experiment-extra "--sudo"`。
-- **`--models lightgbm,mlp`**：只跑子集。
+- **`--models lightgbm,mlp`**：只训练 / 评测路由子集（默认可用类型：`lightgbm`、`mlp`、`gnn_expert`）。
 - **`--models-dir path`**：指定模型输出目录（默认 `dataset/router_models/<UTC时间戳>/`）。
 - **`--experiments-parent`**：实验输出放在 `<dataset-root>/<该子目录>/router_ablation_<UTC>/`（默认 `experiments`）。若该目录曾被 `sudo` 写成 root 所有导致无法创建子目录，脚本会自动改写到 `dataset/ablation_runs/router_ablation_<UTC>/`，或你可先执行 `sudo chown -R $USER:$USER dataset/experiments` 恢复权限。
 
@@ -460,6 +464,20 @@ python3 scripts/run_router_model_ablation.py \
 
 - 各模型一份完整实验 JSON：`dataset/experiments/router_ablation_<UTC>/experiment_<model>.json`（若触发回退则为 `dataset/ablation_runs/router_ablation_<UTC>/…`）
 - 汇总：同目录下的 `ablation_summary.json`（含各模型的 `suite_abs_err`、`partial_ub_s`、`full_ub_s` 等）
+
+### 路由 × 重建模型组合对比（3×3 网格，UnixBench 端到端）
+
+在**同一 `dataset/` UnixBench 会话数据**上，依次训练 **3 种路由**（LightGBM、MLP、`gnn_expert` / GNN）与 **3 种重建模型**（XGBoost、LightGBM、MLP），并对 **9 种组合** 各运行一次 `experiment_router_reconstruct_vs_full.py`，输出 `grid_summary.json`（按 suite 绝对误差排序）。
+
+```bash
+cd /home/cxc/MoEBench
+python3 scripts/run_router_reconstruct_model_grid.py \
+  --dataset-root dataset \
+  --sudo \
+  --auto-install
+```
+
+产物默认在 `dataset/experiments/router_recon_grid_<UTC>/`：`trained_models/` 下为检查点，根目录为各组合实验 JSON 与 **`grid_summary.json`**。已训练过模型时可用 `--skip-train --out-parent dataset/experiments/router_recon_grid_<同一次UTC>` 只重跑 9 次实验。
 
 ### 运行（推断 + 执行 Top-K 子测试）
 
@@ -557,8 +575,8 @@ python3 scripts/paper_reconstruct_cv_extras.py \
   --dataset-root dataset \
   --suites unixbench,phoronix_cpu,phoronix_gpu \
   --glob-unixbench '*/run-*.json' \
-  --glob-pts-cpu 'aces-*/run-*.json' \
-  --glob-pts-gpu '*pts_nvidia-gpu-compute*/run-*.json' \
+  --glob-pts-cpu '*_cpu_*/run-*.json' \
+  --glob-pts-gpu '*_pts_nvidia-gpu-compute_*/run-*.json' \
   --cv-mode leave_one_session_out \
   --folds 5 \
   --policies random,fixed_first_k,fixed_cpu_mix,greedy_slowest,greedy_fastest \
@@ -575,10 +593,10 @@ python3 scripts/paper_reconstruct_cv_extras.py --dataset-root dataset --suites u
   --glob-unixbench '*/run-*.json' --report-json dataset/paper_cv_ub_only.json
 
 python3 scripts/paper_reconstruct_cv_extras.py --dataset-root dataset --suites phoronix_cpu \
-  --glob-pts-cpu 'aces-*/run-*.json' --report-json dataset/paper_cv_pts_cpu_only.json
+  --glob-pts-cpu '*_cpu_*/run-*.json' --report-json dataset/paper_cv_pts_cpu_only.json
 
 python3 scripts/paper_reconstruct_cv_extras.py --dataset-root dataset --suites phoronix_gpu \
-  --glob-pts-gpu '*pts_nvidia-gpu-compute*/run-*.json' --report-json dataset/paper_cv_pts_gpu_only.json
+  --glob-pts-gpu '*_pts_nvidia-gpu-compute_*/run-*.json' --report-json dataset/paper_cv_pts_gpu_only.json
 ```
 
 **含 router 的三套件对比**（示例路径请换成你训练生成的文件）：
@@ -712,3 +730,79 @@ conda activate <your_env>
 cd /home/cxc/MoEBench
 ./scripts/install_ml_python_deps.sh
 ```
+
+## 完整可复制粘贴实验流程（从零到论文离线 CV）
+
+以下假设仓库路径为 `/home/cxc/MoEBench`，按需修改 `MOEBENCH_ROOT`。顺序：**依赖 → 采集三源数据 →（可选）专家分析 → 路由/重建训练 → 在线对比 → 离线 CV → 3×3 组合网格**。
+
+```bash
+set -euo pipefail
+export MOEBENCH_ROOT="/home/cxc/MoEBench"
+cd "$MOEBENCH_ROOT"
+
+# 0) 系统依赖（可选）
+./scripts/install_dependencies.sh
+
+# 1) Python ML 依赖（LightGBM / XGBoost / PyTorch 等）
+./scripts/install_ml_python_deps.sh
+
+# 2) 数据采集（与 moebench.dataset_globs 对齐的默认会话目录名）
+#    UnixBench  →  dataset/<host>_<UTC>/run-*.json
+python3 -m moebench.unixbench --dataset-root dataset -n 5
+
+#    PTS CPU    →  dataset/<host>_cpu_<UTC>/run-*.json
+python3 -m moebench.phoronix --dataset-root dataset --suite cpu --pts-mode batch-run -n 5
+
+#    PTS GPU    →  dataset/<host>_pts_nvidia-gpu-compute_<UTC>/run-*.json
+python3 -m moebench.phoronix --dataset-root dataset --suite pts/nvidia-gpu-compute --pts-mode batch-run -n 5
+
+# 3)（可选）PTS 专家相关 / 冗余分析（省略 --glob-pattern 时按套件自动选 glob）
+python3 scripts/phoronix_expert_analyze.py --dataset-root dataset --pts-suite cpu --out-dir dataset
+python3 scripts/phoronix_expert_analyze.py --dataset-root dataset --pts-suite pts/nvidia-gpu-compute --out-dir dataset
+
+# 4) UnixBench：训练路由 + 重建（glob 与采集一致）
+mkdir -p dataset/unixbench_router dataset/models
+python3 scripts/router_train.py --benchmark unixbench --dataset-root dataset --glob-pattern '*/run-*.json' \
+  --model-type lightgbm --model-out dataset/unixbench_router/router_lgbm.pkl --auto-install
+python3 scripts/reconstruct_train_eval.py --benchmark unixbench --dataset-root dataset --glob-pattern '*/run-*.json' \
+  --skip-cv --no-uncertainty --model-type lightgbm --export-model dataset/models/reconstruct_lgbm.pkl
+
+# 5) UnixBench：单次「路由 + 重建 vs 全量」在线实验
+python3 scripts/experiment_router_reconstruct_vs_full.py \
+  --dataset-root dataset \
+  --router-model dataset/unixbench_router/router_lgbm.pkl \
+  --reconstruct-model dataset/models/reconstruct_lgbm.pkl \
+  --top-k 3 --sudo
+
+# 6) PTS：路由 + 重建 + 在线对比（--glob-pattern 可省略，由 --pts-suite 自动推导）
+mkdir -p dataset/pts_router dataset/pts_models dataset/pts_nvidia_gpu_router dataset/pts_nvidia_gpu_models
+python3 scripts/router_train.py --benchmark phoronix --dataset-root dataset --pts-suite cpu \
+  --model-type gnn_expert --model-out dataset/pts_router/router_gnn.pt --auto-install
+python3 scripts/reconstruct_train_eval.py --benchmark phoronix --pts-suite cpu --dataset-root dataset \
+  --skip-cv --no-uncertainty --model-type xgboost --export-model dataset/pts_models/reconstruct_xgb.pkl \
+  --train-aug 20 --train-k-min 2 --train-k-max 12 --auto-install
+
+python3 scripts/router_train.py --benchmark phoronix --dataset-root dataset --pts-suite pts/nvidia-gpu-compute \
+  --model-type gnn_expert --model-out dataset/pts_nvidia_gpu_router/router_gnn.pt --auto-install
+python3 scripts/reconstruct_train_eval.py --benchmark phoronix --pts-suite pts/nvidia-gpu-compute --dataset-root dataset \
+  --skip-cv --no-uncertainty --model-type xgboost --export-model dataset/pts_nvidia_gpu_models/reconstruct_xgb.pkl \
+  --train-aug 20 --train-k-min 2 --train-k-max 12 --auto-install
+
+python3 scripts/experiment_router_reconstruct_vs_full_pts.py \
+  --router-model dataset/pts_router/router_gnn.pt \
+  --reconstruct-model dataset/pts_models/reconstruct_xgb.pkl \
+  --top-k 5 --pts-mode run --suite-full cpu --dataset-root dataset
+
+python3 scripts/experiment_router_reconstruct_vs_full_pts.py \
+  --router-model dataset/pts_nvidia_gpu_router/router_gnn.pt \
+  --reconstruct-model dataset/pts_nvidia_gpu_models/reconstruct_xgb.pkl \
+  --top-k 3 --pts-mode run --suite-full pts/nvidia-gpu-compute --dataset-root dataset
+
+# 7) 离线三套件 CV（run_paper_cv_three_suites.sh 默认 glob 已与采集一致）
+./scripts/run_paper_cv_three_suites.sh
+
+# 8) 路由×重建 3×3 组合对比（UnixBench 端到端；输出 grid_summary.json）
+python3 scripts/run_router_reconstruct_model_grid.py --dataset-root dataset --sudo --auto-install
+```
+
+说明：`run_router_reconstruct_model_grid.py` 会训练 6 个模型并跑 9 次完整 UnixBench 实验，**耗时长**；若已有 `trained_models/`，可用 `--skip-train --out-parent <该次实验目录>` 只重跑 9 次组合评测。
