@@ -61,6 +61,7 @@ install_debian() {
   local perf_kernel_pkg="linux-tools-$(uname -r)"
   local pkgs=(
     python3
+    python3-venv
     perl
     gcc
     g++

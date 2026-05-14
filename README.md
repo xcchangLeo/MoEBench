@@ -744,7 +744,14 @@ cd "$MOEBENCH_ROOT"
 ./scripts/install_dependencies.sh
 
 # 1) Python ML 依赖（LightGBM / XGBoost / PyTorch 等）
-./scripts/install_ml_python_deps.sh
+apt-get install -y python3-venv
+./scripts/install_ml_python_deps.sh --use-venv
+sudo apt-get install php-cli
+apt install php8.5-xml
+sudo apt install zip
+cd phoronix-test-suite
+sudo ./install-sh
+phoronix-test-suite install cpu
 
 # 2) 数据采集（与 moebench.dataset_globs 对齐的默认会话目录名）
 #    UnixBench  →  dataset/<host>_<UTC>/run-*.json

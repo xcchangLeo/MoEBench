@@ -34,6 +34,20 @@ need_cmd() {
 
 need_cmd python3
 
+ensure_venv_capable() {
+  if python3 -c "import ensurepip" >/dev/null 2>&1; then
+    return 0
+  fi
+  local pyver
+  pyver="$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')"
+  echo "Python's ensurepip is not available; \`python3 -m venv\` will fail." >&2
+  echo "On Debian/Ubuntu install the venv package, for example:" >&2
+  echo "  sudo apt-get update && sudo apt-get install -y python3-venv" >&2
+  echo "If that does not match your interpreter, try:" >&2
+  echo "  sudo apt-get install -y python${pyver}-venv" >&2
+  exit 1
+}
+
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VENV_DIR="${VENV_DIR:-${ROOT_DIR}/.venv-moebench-router}"
 
@@ -55,7 +69,13 @@ if [[ "${USE_VENV}" -eq 0 && -n "${CONDA_PREFIX:-}" ]]; then
   return 0 2>/dev/null || exit 0
 fi
 
+if [[ -d "${VENV_DIR}" && ! -x "${VENV_DIR}/bin/python" && ! -x "${VENV_DIR}/bin/python3" ]]; then
+  echo "Removing incomplete venv at ${VENV_DIR}" >&2
+  rm -rf "${VENV_DIR}"
+fi
+
 if [[ ! -d "${VENV_DIR}" ]]; then
+  ensure_venv_capable
   echo "Creating venv at ${VENV_DIR}"
   python3 -m venv "${VENV_DIR}"
 fi
