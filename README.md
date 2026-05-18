@@ -778,7 +778,14 @@ export MOEBENCH_ROOT="/home/cxc/MoEBench"
 cd "$MOEBENCH_ROOT"
 
 ./scripts/install_dependencies.sh
-./scripts/install_ml_python_deps.sh
+apt-get install -y python3-venv
+./scripts/install_ml_python_deps.sh --use-venv
+sudo apt-get install php-cli
+apt install php8.5-xml
+sudo apt install zip
+cd phoronix-test-suite
+sudo ./install-sh
+phoronix-test-suite install cpu
 ```
 
 （Phoronix Test Suite 请按官方文档安装；首次批量跑前建议执行 **`phoronix-test-suite batch-setup`**。）
