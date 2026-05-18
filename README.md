@@ -123,11 +123,11 @@ both = collect_all()
 
 ## UnixBench 实验流水线（xi / yi / ti 与专家元数据）
 
-默认与官方 `perl Run` 一致，跑 **system index** 子项（`dhry2reg`、`whetstone-double`、文件与管道/进程/系统调用、shell 脚本等，见 `INDEX_SUITE_TEST_IDS`）。**终端会完整显示** UnixBench 的标准输出（子进程继承当前终端，不经管道截获）。
+默认与官方 `perl Run` 一致，跑 **system index** 子项（`dhry2reg`、`whetstone-double`、文件与管道/进程/系统调用、shell 脚本等，见 `INDEX_SUITE_TEST_IDS`）。MoEBench **固定只跑单副本**：等价于 **`perl Run -c 1`**（不会按 CPU 核数再跑一轮 N 副本全量测试）。**终端会完整显示** UnixBench 的标准输出（子进程继承当前终端，不经管道截获）。
 
 1. 采集 **xi**：`collect_all()`（静态 + 动态特征，可用 `--no-features` 跳过）。
-2. 在 `byte-unixbench/UnixBench` 下执行 **`perl Run`**，并通过 `UB_OUTPUT_FILE_NAME` 固定本次结果文件名。
-3. 解析生成的纯文本报告，得到 **yi**（各子项分数、Index、System Benchmarks Index Score）与 **ti**（各子项耗时秒数，按并行副本数分组）。
+2. 在 `byte-unixbench/UnixBench` 下执行 **`perl Run -c 1`**（若 `--` 后自行传入 `-c`，则以你的参数为准），并通过 `UB_OUTPUT_FILE_NAME` 固定本次结果文件名。
+3. 解析生成的纯文本报告，得到 **yi**（各子项分数、Index、System Benchmarks Index Score）与 **ti**（各子项耗时秒数；`parallel_copies` 为 **1**）。
 4. 合并 **专家集合 E**：每个子项对应 `e_001…`，含类别（CPU / IO / syscall / thread 等）、占位字段（历史均值/方差、权重、相关性、跨硬件稳定性），并在本次运行填入 `observed` 与 `execution_cost`（以耗时为代理）。
 
 ### 数据集目录（`dataset/`）
@@ -582,7 +582,7 @@ python3 scripts/reconstruct_train_eval.py \
 | 能力 | 说明 |
 |------|------|
 | **三套件** | **UnixBench**（`moebench.unixbench.dataset.v1`）；**PTS CPU**（`yi.suite == cpu`）；**PTS GPU**（`yi.suite == pts/nvidia-gpu-compute`）。各自可用独立 glob 收集 `run-*.json`。 |
-| **评估子集策略** | `random`、`fixed_first_k`、`fixed_cpu_mix` / `fixed_io_mix`（UnixBench 优先 CPU/IO 子项；PTS 上无匹配 id 时退化为「canonical profile 顺序前缀」）、`greedy_slowest` / `greedy_fastest`（UB：`ti` parallel 32；PTS：`ti.by_test_id.time_s_total`）、`router`（见下） |
+| **评估子集策略** | `random`、`fixed_first_k`、`fixed_cpu_mix` / `fixed_io_mix`（UnixBench 优先 CPU/IO 子项；PTS 上无匹配 id 时退化为「canonical profile 顺序前缀」）、`greedy_slowest` / `greedy_fastest`（UB：`ti` 单副本 key `1`；PTS：`ti.by_test_id.time_s_total`）、`router`（见下） |
 | **router** | 三套套件需 **分别** 训练路由：`--router-model-unixbench`、`--router-model-pts-cpu`、`--router-model-pts-gpu`。也可用 **`--router-model`**（仅等价于 UnixBench，兼容旧用法）。`policies` 含 `router` 时，**凡在本次 `--suites` 中选中的套件都必须提供对应 checkpoint**，否则会报错退出。 |
 | **xi 消融** | `full`、`static_hw_only`、`no_perf_pmu`、`no_dynamic_proc`、`no_gpu`（三套共用同一向量化与消融逻辑） |
 | **PTS suite 标量** | `--pts-suite-target logmean`（默认，与导出重建模型常用设定一致）或 `arithmetic_mean` |

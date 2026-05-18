@@ -970,7 +970,7 @@ def main() -> int:
             if all_time_saved_ratio
             else None,
             "description": "Mean (T_full - T_partial) / T_full over validation rows; "
-            "T from ti.by_test_id for parallel key 32.",
+            "T from ti.by_test_id for parallel key 1 (single-copy).",
         },
         "targets_layout": {
             "y_dim": n_test + 1,

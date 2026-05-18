@@ -94,10 +94,12 @@ def _select_block_for_vectors(ds: dict[str, Any]) -> dict[str, Any] | None:
     runs = ds.get("yi", {}).get("runs") or []
     if not runs:
         return None
-    # Prefer parallel_copies == 32 (common in many high-core systems); else smallest numeric copy; else first.
+    from moebench.unixbench.experts import UNIXBENCH_PARALLEL_COPIES
+
+    # Prefer single-copy block (MoEBench ``Run -c 1``).
     def key(rb: dict[str, Any]) -> tuple[int, int, int]:
         pc = rb.get("parallel_copies")
-        if pc == 32:
+        if pc == UNIXBENCH_PARALLEL_COPIES:
             return (0, 0, 0)
         if isinstance(pc, int):
             return (1, pc, 0)
@@ -114,9 +116,11 @@ def _choose_ti_parallel_copy(ds: dict[str, Any], test_id: str) -> str | None:
     copies = (by_test.get(test_id) or {}).keys()
     if not copies:
         return None
-    # Prefer "32", else smallest numeric, else first lexicographic.
-    if "32" in copies:
-        return "32"
+    from moebench.unixbench.experts import UNIXBENCH_PARALLEL_COPIES
+
+    pk = str(UNIXBENCH_PARALLEL_COPIES)
+    if pk in copies:
+        return pk
     numeric = []
     for c in copies:
         try:

@@ -13,7 +13,9 @@ from moebench.router.inference import predict_expert_scores, select_top_k_from_p
 
 
 def _unixbench_wall_s(ds: dict[str, Any], tid: str) -> float | None:
-    return _ti_for_test(ds, tid, parallel_key="32")
+    from moebench.unixbench.experts import UNIXBENCH_PARALLEL_COPIES
+
+    return _ti_for_test(ds, tid, parallel_key=str(UNIXBENCH_PARALLEL_COPIES))
 
 
 def stable_seed(parts: tuple[Any, ...]) -> int:
@@ -45,7 +47,7 @@ def select_eval_subset(
     - ``fixed_first_k``: first ``k`` entries in ``test_ids`` order.
     - ``fixed_cpu_mix``: cycles through FIXED_CPU_MIX then fills from test_ids order.
     - ``fixed_io_mix``: same with FIXED_IO_MIX.
-    - ``greedy_slowest``: ``k`` largest wall-clock seconds on this sample (UnixBench: ``ti`` key 32;
+    - ``greedy_slowest``: ``k`` largest wall-clock seconds on this sample (UnixBench: ``ti`` key 1;
       PTS: pass ``profile_wall_seconds``, e.g. ``time_seconds_for_profile``).
     - ``greedy_fastest``: ``k`` smallest positive wall times.
     - ``router``: Top-K from a trained router checkpoint (requires ``router_meta``).

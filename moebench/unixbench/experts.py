@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
+# MoEBench always runs UnixBench with a single parallel copy (``perl Run -c 1``).
+# UnixBench's default without ``-c`` also runs N-copy blocks when CPU count > 1.
+UNIXBENCH_PARALLEL_COPIES: int = 1
+
 # Default `perl Run` uses the "index" suite (system index score).
 INDEX_SUITE_TEST_IDS: tuple[str, ...] = (
     "dhry2reg",

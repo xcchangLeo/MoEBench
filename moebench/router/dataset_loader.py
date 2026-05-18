@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from moebench.router.feature_vectorizer import XiVectorizer
+from moebench.unixbench.experts import UNIXBENCH_PARALLEL_COPIES
 
 
 def _safe_float(x: Any) -> float | None:
@@ -31,10 +32,10 @@ def choose_y_block(yi: dict[str, Any]) -> dict[str, Any] | None:
     runs = yi.get("runs") or []
     if not runs:
         return None
-    # Prefer parallel_copies == 32 (common in your ti keys); else smallest numeric; else first.
+    # Prefer single-copy block (MoEBench default ``Run -c 1``).
     def key(rb: dict[str, Any]) -> tuple[int, int]:
         pc = rb.get("parallel_copies")
-        if pc == 32:
+        if pc == UNIXBENCH_PARALLEL_COPIES:
             return (0, 0)
         if isinstance(pc, int):
             return (1, pc)

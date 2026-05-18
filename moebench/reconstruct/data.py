@@ -8,7 +8,9 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from moebench.router.feature_vectorizer import XiVectorizer
-from moebench.unixbench.experts import INDEX_SUITE_TEST_IDS
+from moebench.unixbench.experts import INDEX_SUITE_TEST_IDS, UNIXBENCH_PARALLEL_COPIES
+
+_TI_PARALLEL_KEY = str(UNIXBENCH_PARALLEL_COPIES)
 
 
 def _safe_float(x: Any) -> float | None:
@@ -21,7 +23,7 @@ def _safe_float(x: Any) -> float | None:
 
 
 def preferred_run_block(yi: dict[str, Any] | None) -> dict[str, Any] | None:
-    """Prefer the multi-copy (e.g. parallel_copies==32) run for index scores; fallback to first."""
+    """Prefer single-copy run (parallel_copies==1); fallback to smallest numeric copy."""
     if not yi:
         return None
     runs = yi.get("runs") or []
@@ -30,13 +32,13 @@ def preferred_run_block(yi: dict[str, Any] | None) -> dict[str, Any] | None:
 
     def sort_key(rb: dict[str, Any]) -> tuple[int, int]:
         pc = rb.get("parallel_copies")
-        if pc == 32:
+        if pc == UNIXBENCH_PARALLEL_COPIES:
             return (0, 0)
         if isinstance(pc, int):
-            return (1, -pc)
+            return (1, pc)
         if pc is None:
-            return (2, 0)
-        return (3, 0)
+            return (2, 10**9)
+        return (3, 10**9)
 
     return sorted(runs, key=sort_key)[0]
 
@@ -78,7 +80,7 @@ def _ti_for_test(
     ds: dict[str, Any],
     test_id: str,
     *,
-    parallel_key: str = "32",
+    parallel_key: str = _TI_PARALLEL_KEY,
 ) -> float | None:
     by_test = (ds.get("ti") or {}).get("by_test_id") or {}
     entry = by_test.get(test_id) or {}
@@ -89,7 +91,7 @@ def full_suite_wall_seconds(
     ds: dict[str, Any],
     *,
     test_ids: tuple[str, ...] = INDEX_SUITE_TEST_IDS,
-    parallel_key: str = "32",
+    parallel_key: str = _TI_PARALLEL_KEY,
 ) -> float | None:
     total = 0.0
     for tid in test_ids:
@@ -104,7 +106,7 @@ def partial_wall_seconds(
     ds: dict[str, Any],
     executed: Iterable[str],
     *,
-    parallel_key: str = "32",
+    parallel_key: str = _TI_PARALLEL_KEY,
 ) -> float | None:
     total = 0.0
     for tid in executed:
@@ -121,7 +123,7 @@ def build_partial_feature_row(
     *,
     test_ids: tuple[str, ...] = INDEX_SUITE_TEST_IDS,
     xi_vectorizer: XiVectorizer | None = None,
-    parallel_key: str = "32",
+    parallel_key: str = _TI_PARALLEL_KEY,
     log1p_index: bool = False,
 ) -> list[float] | None:
     """

@@ -145,12 +145,14 @@ def build_ti_from_runs(runs: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def pick_preferred_run_block(parsed: dict[str, Any]) -> dict[str, Any]:
-    """Prefer parallel_copies==32, else largest int, for experiment / reconstruction."""
+    """Prefer MoEBench single-copy block (parallel_copies==1), else smallest int."""
+    from moebench.unixbench.experts import UNIXBENCH_PARALLEL_COPIES
+
     runs = parsed.get("runs") or []
 
     def key(rb: dict[str, Any]) -> tuple[int, int]:
         pc = rb.get("parallel_copies")
-        if pc == 32:
+        if pc == UNIXBENCH_PARALLEL_COPIES:
             return (0, 0)
         if isinstance(pc, int):
             return (1, pc)

@@ -28,7 +28,8 @@ if str(REPO_ROOT) not in sys.path:
 
 from moebench import collect_all
 from moebench.router.inference import predict_expert_scores, select_top_k_from_probs
-from moebench.unixbench.report_parser import parse_report_text
+from moebench.unixbench.experts import UNIXBENCH_PARALLEL_COPIES
+from moebench.unixbench.report_parser import parse_report_text, pick_preferred_run_block
 
 
 def _ensure_module(module_name: str) -> None:
@@ -63,7 +64,7 @@ def main() -> int:
         "--copies",
         type=int,
         default=0,
-        help="UnixBench -c copies value. Default 0 means auto: min(32, os.cpu_count()). (Speeds up by running only one block.)",
+        help=f"UnixBench -c copies value. Default 0 means {UNIXBENCH_PARALLEL_COPIES} (single-copy only).",
     )
     args = ap.parse_args()
 
@@ -171,8 +172,7 @@ def main() -> int:
     ub_env["UB_RESULTDIR"] = str(result_dir)
 
     run_script = unixbench_root / "Run"
-    cpu_count = os.cpu_count() or 1
-    copies = args.copies if args.copies and args.copies > 0 else min(32, int(cpu_count))
+    copies = args.copies if args.copies and args.copies > 0 else UNIXBENCH_PARALLEL_COPIES
     cmd = ["perl", str(run_script), "-c", str(copies)] + selected_test_ids
     rc = subprocess.call(cmd, cwd=str(unixbench_root), env=ub_env)
     if rc != 0:
@@ -181,19 +181,7 @@ def main() -> int:
     report_path = result_dir / ub_base_name
     report_txt = report_path.read_text(encoding="utf-8", errors="replace")
     parsed = parse_report_text(report_txt)
-    runs = parsed.get("runs") or []
-    # Prefer numeric parallel copies block (often 32 on your machines).
-    def key(rb: dict[str, Any]) -> tuple[int, int]:
-        pc = rb.get("parallel_copies")
-        if pc == 32:
-            return (0, 0)
-        if isinstance(pc, int):
-            return (1, pc)
-        if pc is None:
-            return (2, 10**9)
-        return (3, 10**9)
-
-    parsed_run = sorted(runs, key=key)[0] if runs else {}
+    parsed_run = pick_preferred_run_block(parsed)
 
     executed_tests: list[dict[str, Any]] = []
     tests_map = (parsed_run.get("tests") or {}) if parsed_run else {}

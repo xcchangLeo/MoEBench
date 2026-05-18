@@ -13,7 +13,12 @@ from pathlib import Path
 from typing import Any
 
 from moebench.collector import collect_all
-from moebench.unixbench.experts import INDEX_SUITE_TEST_IDS, build_expert_catalog, expert_template
+from moebench.unixbench.experts import (
+    INDEX_SUITE_TEST_IDS,
+    UNIXBENCH_PARALLEL_COPIES,
+    build_expert_catalog,
+    expert_template,
+)
 from moebench.unixbench.report_parser import build_ti_from_runs, parse_report_text
 
 
@@ -50,6 +55,13 @@ def safe_session_tag(tag: str) -> str:
 def default_session_tag() -> str:
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     return f"{host_slug()}_{stamp}"
+
+
+def resolve_unixbench_run_args(run_args: list[str] | None) -> list[str]:
+    """Ensure ``perl Run`` uses single-copy mode unless caller passed ``-c`` after ``--``."""
+    if run_args:
+        return list(run_args)
+    return ["-c", str(UNIXBENCH_PARALLEL_COPIES)]
 
 
 def _merge_experts_observed(
@@ -105,7 +117,7 @@ def run_unixbench_dataset(
 ) -> dict[str, Any]:
     """
     1) Collect xi (static + dynamic features), unless ``xi_override`` is set.
-    2) Run `perl Run` in UnixBench directory with inherited stdio (terminal output).
+    2) Run `perl Run -c 1` (single parallel copy) in UnixBench directory with inherited stdio.
     3) Parse report file; build yi (scores + index) and ti (per-test times).
 
     Uses UB_OUTPUT_FILE_NAME + UB_RESULTDIR so the report path is known.
@@ -139,8 +151,7 @@ def run_unixbench_dataset(
     env["UB_RESULTDIR"] = str(result_dir)
 
     cmd = [perl_exe, str(run_script)]
-    if run_args:
-        cmd.extend(run_args)
+    cmd.extend(resolve_unixbench_run_args(run_args))
 
     rc = subprocess.call(cmd, cwd=str(root), env=env)
     if rc != 0:

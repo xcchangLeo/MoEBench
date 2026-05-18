@@ -262,7 +262,7 @@ def run_one_combo_unixbench(
             "mean_fraction_wall_time_saved_vs_full_suite": float(np.mean(all_time_saved_ratio))
             if all_time_saved_ratio
             else None,
-            "description": "Eval subset; UnixBench ti.by_test_id parallel key 32.",
+            "description": "Eval subset; UnixBench ti.by_test_id parallel key 1 (single-copy).",
         },
         "n_oof": int(np.sum(oof_mask)),
     }

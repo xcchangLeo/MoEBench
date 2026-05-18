@@ -29,7 +29,7 @@ if str(REPO_ROOT) not in sys.path:
 from moebench import collect_all
 from moebench.reconstruct.inference import load_reconstruction_bundle, predict_from_partial
 from moebench.router.inference import predict_expert_scores, select_top_k_from_probs
-from moebench.unixbench.experts import INDEX_SUITE_TEST_IDS
+from moebench.unixbench.experts import INDEX_SUITE_TEST_IDS, UNIXBENCH_PARALLEL_COPIES
 from moebench.unixbench.report_parser import parse_executed_tests_from_report, parse_report_text, pick_preferred_run_block
 
 
@@ -106,7 +106,12 @@ def main() -> int:
     ap.add_argument("--reconstruct-model", type=str, default="dataset/models/reconstruct_xgb_v2.pkl")
     ap.add_argument("--k-values", type=str, default="1,2,3,4,5,6")
     ap.add_argument("--objective", type=str, choices=("error", "time", "balanced"), default="balanced")
-    ap.add_argument("--copies", type=int, default=0, help="UnixBench -c; 0 = min(32, cpu_count)")
+    ap.add_argument(
+        "--copies",
+        type=int,
+        default=0,
+        help=f"UnixBench -c; 0 = {UNIXBENCH_PARALLEL_COPIES} (single-copy only)",
+    )
     ap.add_argument("--warmup-s", type=float, default=3.0)
     ap.add_argument("--proc-sample-s", type=float, default=0.5)
     ap.add_argument("--mem-mb", type=int, default=64)
@@ -155,8 +160,7 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     out_json = Path(args.output) if args.output else out_dir / "topk_sweep.json"
 
-    cpu_count = os.cpu_count() or 1
-    copies = args.copies if args.copies and args.copies > 0 else min(32, int(cpu_count))
+    copies = args.copies if args.copies and args.copies > 0 else UNIXBENCH_PARALLEL_COPIES
 
     t0 = time.perf_counter()
     xi = collect_all(

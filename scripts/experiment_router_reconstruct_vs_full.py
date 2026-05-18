@@ -25,6 +25,7 @@ if str(REPO_ROOT) not in sys.path:
 from moebench import collect_all
 from moebench.reconstruct.inference import load_reconstruction_bundle, predict_from_partial
 from moebench.router.inference import predict_expert_scores, select_top_k_from_probs
+from moebench.unixbench.experts import UNIXBENCH_PARALLEL_COPIES
 from moebench.unixbench.report_parser import parse_report_text, parse_executed_tests_from_report
 
 
@@ -122,7 +123,12 @@ def main() -> int:
         help="Reconstruction bundle from reconstruct_train_eval --export-model",
     )
     ap.add_argument("--top-k", type=int, default=None)
-    ap.add_argument("--copies", type=int, default=0, help="UnixBench -c; 0 = min(32, cpu_count)")
+    ap.add_argument(
+        "--copies",
+        type=int,
+        default=0,
+        help=f"UnixBench -c; 0 = {UNIXBENCH_PARALLEL_COPIES} (single-copy only)",
+    )
     ap.add_argument("--warmup-s", type=float, default=3.0)
     ap.add_argument("--proc-sample-s", type=float, default=0.5)
     ap.add_argument("--mem-mb", type=int, default=64)
@@ -177,8 +183,7 @@ def main() -> int:
     scores, probs, expert_ids, expert_test_ids = predict_expert_scores(router_meta, xi)
     selected_experts, selected_test_ids = select_top_k_from_probs(probs, expert_ids, expert_test_ids, top_k)
 
-    cpu_count = os.cpu_count() or 1
-    copies = args.copies if args.copies and args.copies > 0 else min(32, int(cpu_count))
+    copies = args.copies if args.copies and args.copies > 0 else UNIXBENCH_PARALLEL_COPIES
     run_script = unixbench_root / "Run"
 
     ub_partial_base = f"moebench_exp_partial_{session_tag}_{stamps}".replace(":", "-")
