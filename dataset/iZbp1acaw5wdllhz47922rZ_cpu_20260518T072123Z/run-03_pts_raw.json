@@ -1,0 +1,321 @@
+{
+    "title": "moebenchptsizbp1acaw5wdllhz47922rzcpu20260518t072123zr03083956539613",
+    "last_modified": "2026-05-18 09:13:10",
+    "description": "KVM testing on Ubuntu 26.04 via the Phoronix Test Suite.",
+    "systems": {
+        "moebenchptsizbp1acaw5wdllhz47922rzcpu20260518t072123zr03083956539613": {
+            "identifier": "moebenchptsizbp1acaw5wdllhz47922rzcpu20260518t072123zr03083956539613",
+            "hardware": {
+                "Processor": "Intel Xeon Platinum (4 Cores \/ 8 Threads)",
+                "Motherboard": "Alibaba Cloud ECS (2.0.0 BIOS)",
+                "Chipset": "Intel 440FX 82441FX PMC",
+                "Memory": "1 x 8 GB RAM Alibaba Cloud",
+                "Disk": "43GB Alibaba Cloud Elastic Block Storage",
+                "Graphics": "Cirrus Logic GD 5446",
+                "Network": "Red Hat Virtio device"
+            },
+            "software": {
+                "OS": "Ubuntu 26.04",
+                "Kernel": "7.0.0-15-generic (x86_64)",
+                "Compiler": "GCC 15.2.0",
+                "File-System": "ext4",
+                "Screen Resolution": "800x600",
+                "System Layer": "KVM"
+            },
+            "user": "root",
+            "timestamp": "2026-05-18 08:40:24",
+            "client_version": "10.8.6",
+            "data": {
+                "compiler-configuration": "--build=x86_64-linux-gnu --disable-vtable-verify --disable-werror --enable-bootstrap --enable-cet --enable-checking=release --enable-clocale=gnu --enable-default-pie --enable-gnu-unique-object --enable-languages=c,ada,c++,go,d,fortran,objc,obj-c++,m2,rust,cobol,algol68 --enable-libphobos-checking=release --enable-libstdcxx-backtrace --enable-libstdcxx-debug --enable-libstdcxx-time=yes --enable-link-serialization=2 --enable-multiarch --enable-multilib --enable-nls --enable-objc-gc=auto --enable-offload-defaulted --enable-offload-targets=nvptx-none=\/build\/gcc-15-j35TAX\/gcc-15-15.2.0\/debian\/tmp-nvptx\/usr,amdgcn-amdhsa=\/build\/gcc-15-j35TAX\/gcc-15-15.2.0\/debian\/tmp-gcn\/usr --enable-plugin --enable-shared --enable-threads=posix --host=x86_64-linux-gnu --program-prefix=x86_64-linux-gnu- --target=x86_64-linux-gnu --with-abi=m64 --with-arch-32=i686 --with-build-config=bootstrap-lto-lean --with-default-libstdcxx-abi=new --with-gcc-major-version-only --with-multilib-list=m32,m64,mx32 --with-target-system-zlib=auto --with-tune=generic --without-cuda-driver -v",
+                "cpu-microcode": "0x1",
+                "kernel-parameters": "nvme_core.io_timeout=4294967295 nvme_core.admin_timeout=4294967295",
+                "kernel-extra-details": "Transparent Huge Pages: madvise",
+                "security": "gather_data_sampling: Not affected + ghostwrite: Not affected + indirect_target_selection: Mitigation of Aligned branch\/return thunks + itlb_multihit: Not affected + l1tf: Not affected + mds: Not affected + meltdown: Not affected + mmio_stale_data: Not affected + old_microcode: Not affected + reg_file_data_sampling: Not affected + retbleed: Not affected + spec_rstack_overflow: Not affected + spec_store_bypass: Mitigation of SSB disabled via prctl + spectre_v1: Mitigation of usercopy\/swapgs barriers and __user pointer sanitization + spectre_v2: Mitigation of Enhanced \/ Automatic IBRS; IBPB: conditional; PBRSB-eIBRS: SW sequence; BHI: SW loop KVM: SW loop + srbds: Not affected + tsa: Not affected + tsx_async_abort: Not affected + vmscape: Not affected"
+            }
+        }
+    },
+    "results": {
+        "093545d5463f093c6c2d76293fbabd6cf2ebc503": {
+            "identifier": "pts\/rodinia-1.3.2",
+            "title": "Rodinia",
+            "app_version": "3.1",
+            "arguments": "OMP_LAVAMD",
+            "description": "Test: OpenMP LavaMD",
+            "scale": "Seconds",
+            "proportion": "LIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp1acaw5wdllhz47922rzcpu20260518t072123zr03083956539613": {
+                    "test_run_times": [
+                        0.22,
+                        0,
+                        0
+                    ],
+                    "details": {
+                        "compiler-options": {
+                            "compiler-type": "CXX",
+                            "compiler": "g++",
+                            "compiler-options": "-O2 -lOpenCL"
+                        },
+                        "error": "The test quit with a non-zero exit status. E: .\/rodinia: 12: .\/lavaMD: not found"
+                    }
+                }
+            }
+        },
+        "851d8a0de9be8a446f2a451d458f0c56b311487c": {
+            "identifier": "pts\/rodinia-1.3.2",
+            "title": "Rodinia",
+            "app_version": "3.1",
+            "arguments": "OMP_CFD",
+            "description": "Test: OpenMP CFD Solver",
+            "scale": "Seconds",
+            "proportion": "LIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp1acaw5wdllhz47922rzcpu20260518t072123zr03083956539613": {
+                    "value": 29.341,
+                    "raw_values": [
+                        29.329,
+                        29.455,
+                        29.239
+                    ],
+                    "test_run_times": [
+                        29.33,
+                        29.45,
+                        29.24
+                    ],
+                    "details": {
+                        "compiler-options": {
+                            "compiler-type": "CXX",
+                            "compiler": "g++",
+                            "compiler-options": "-O2 -lOpenCL"
+                        }
+                    }
+                }
+            }
+        },
+        "d03c92614e18f4e121d1fd9fd6893158013f0df5": {
+            "identifier": "pts\/namd-1.4.0",
+            "title": "NAMD",
+            "app_version": "3.0",
+            "arguments": "..\/f1atpase\/f1atpase.namd",
+            "description": "Input: ATPase with 327,506 Atoms",
+            "scale": "ns\/day",
+            "proportion": "HIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp1acaw5wdllhz47922rzcpu20260518t072123zr03083956539613": {
+                    "value": 0.73978,
+                    "raw_values": [
+                        0.73958479709491,
+                        0.73957385754328,
+                        0.74019245003701
+                    ],
+                    "test_run_times": [
+                        64.33,
+                        64.3,
+                        64.26
+                    ]
+                }
+            }
+        },
+        "b840d6ec6a5d1df22eaef93336853bbe96238da2": {
+            "identifier": "pts\/namd-1.4.0",
+            "title": "NAMD",
+            "app_version": "3.0",
+            "arguments": "..\/stmv\/stmv.namd",
+            "description": "Input: STMV with 1,066,628 Atoms",
+            "scale": "ns\/day",
+            "proportion": "HIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp1acaw5wdllhz47922rzcpu20260518t072123zr03083956539613": {
+                    "value": 0.21693,
+                    "raw_values": [
+                        0.21703932318457,
+                        0.21697339472234,
+                        0.21676598161391
+                    ],
+                    "test_run_times": [
+                        212.35,
+                        212.27,
+                        212.33
+                    ]
+                }
+            }
+        },
+        "05a5fd290b9902694beb7aecb2dda18ae3870ef3": {
+            "identifier": "pts\/x264-2.7.0",
+            "title": "x264",
+            "app_version": "2022-02-22",
+            "arguments": "Bosphorus_3840x2160.y4m",
+            "description": "Video Input: Bosphorus 4K",
+            "scale": "Frames Per Second",
+            "proportion": "HIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp1acaw5wdllhz47922rzcpu20260518t072123zr03083956539613": {
+                    "value": 9.03,
+                    "raw_values": [
+                        8.99,
+                        9.07,
+                        9.02
+                    ],
+                    "test_run_times": [
+                        66.8,
+                        66.17,
+                        66.57
+                    ],
+                    "details": {
+                        "compiler-options": {
+                            "compiler-type": "CC",
+                            "compiler": "gcc",
+                            "compiler-options": "-ldl -m64 -lm -lpthread -O3 -flto"
+                        }
+                    }
+                }
+            }
+        },
+        "eb54c6df8f4d5cf1f110ac2c4fd373453a43e1d1": {
+            "identifier": "pts\/x264-2.7.0",
+            "title": "x264",
+            "app_version": "2022-02-22",
+            "arguments": "Bosphorus_1920x1080_120fps_420_8bit_YUV.y4m",
+            "description": "Video Input: Bosphorus 1080p",
+            "scale": "Frames Per Second",
+            "proportion": "HIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp1acaw5wdllhz47922rzcpu20260518t072123zr03083956539613": {
+                    "value": 52.85,
+                    "raw_values": [
+                        37.89,
+                        48.59,
+                        49.91,
+                        50.96,
+                        51.87,
+                        51.82,
+                        51.78,
+                        51.74,
+                        52.14,
+                        57.95,
+                        57.47,
+                        57.52,
+                        57.67,
+                        57.6,
+                        57.82
+                    ],
+                    "test_run_times": [
+                        15.85,
+                        12.37,
+                        12.04,
+                        11.79,
+                        11.58,
+                        11.6,
+                        11.6,
+                        11.61,
+                        11.52,
+                        10.37,
+                        10.46,
+                        10.45,
+                        10.42,
+                        10.43,
+                        10.39
+                    ],
+                    "details": {
+                        "compiler-options": {
+                            "compiler-type": "CC",
+                            "compiler": "gcc",
+                            "compiler-options": "-ldl -m64 -lm -lpthread -O3 -flto"
+                        }
+                    }
+                }
+            }
+        },
+        "32cc22db72e4f0c9b9d9691279cba951d57b3d32": {
+            "identifier": "pts\/x265-1.5.0",
+            "title": "x265",
+            "app_version": "4.1",
+            "arguments": "Bosphorus_3840x2160.y4m",
+            "description": "Video Input: Bosphorus 4K",
+            "scale": "Frames Per Second",
+            "proportion": "HIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp1acaw5wdllhz47922rzcpu20260518t072123zr03083956539613": {
+                    "test_run_times": [
+                        0,
+                        0,
+                        0
+                    ],
+                    "details": {
+                        "compiler-options": {
+                            "compiler-type": "CXX",
+                            "compiler": "g++",
+                            "compiler-options": ""
+                        },
+                        "error": "The test quit with a non-zero exit status. E: .\/x265: 2: .\/x265_4.1\/build\/x265: not found"
+                    }
+                }
+            }
+        },
+        "7271dab077d02af53295faa3ee6acc9d78268a5f": {
+            "identifier": "pts\/x265-1.5.0",
+            "title": "x265",
+            "app_version": "4.1",
+            "arguments": "Bosphorus_1920x1080_120fps_420_8bit_YUV.y4m",
+            "description": "Video Input: Bosphorus 1080p",
+            "scale": "Frames Per Second",
+            "proportion": "HIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp1acaw5wdllhz47922rzcpu20260518t072123zr03083956539613": {
+                    "test_run_times": [
+                        0,
+                        0,
+                        0
+                    ],
+                    "details": {
+                        "compiler-options": {
+                            "compiler-type": "CXX",
+                            "compiler": "g++",
+                            "compiler-options": ""
+                        },
+                        "error": "The test quit with a non-zero exit status. E: .\/x265: 2: .\/x265_4.1\/build\/x265: not found"
+                    }
+                }
+            }
+        },
+        "74dee63da9a8d7670c5b5a0630b3e29038978bad": {
+            "identifier": "pts\/stockfish-1.7.0",
+            "title": "Stockfish",
+            "app_version": "17.1",
+            "description": "Chess Benchmark",
+            "scale": "Nodes Per Second",
+            "proportion": "HIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp1acaw5wdllhz47922rzcpu20260518t072123zr03083956539613": {
+                    "value": 5883369,
+                    "raw_values": [
+                        5826534,
+                        5921537,
+                        5902035
+                    ],
+                    "test_run_times": [
+                        154.46,
+                        154.35,
+                        154.32
+                    ],
+                    "details": {
+                        "compiler-options": {
+                            "compiler-type": "CXX",
+                            "compiler": "g++",
+                            "compiler-options": "-lgcov -m64 -lpthread -fno-exceptions -std=c++17 -fno-peel-loops -fno-tracer -pedantic -O3 -funroll-loops -msse -msse3 -mpopcnt -mavx2 -mbmi -mavx512f -mavx512bw -mavx512vnni -mavx512dq -mavx512vl -msse4.1 -mssse3 -msse2 -mbmi2 -flto -flto-partition=one -flto=jobserver"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
