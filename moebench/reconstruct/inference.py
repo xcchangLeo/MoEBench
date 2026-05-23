@@ -59,6 +59,15 @@ def bundle_has_uncertainty(bundle: dict[str, Any]) -> bool:
     )
 
 
+def _normalize_sequential_state_dict(state_dict: dict[str, Any]) -> dict[str, Any]:
+    """Training wraps ``nn.Sequential`` in ``self.net``; inference uses a bare Sequential."""
+    if not state_dict:
+        return state_dict
+    if any(str(k).startswith("net.") for k in state_dict):
+        return {str(k)[4:]: v for k, v in state_dict.items() if str(k).startswith("net.")}
+    return state_dict
+
+
 def _mlp_forward_mean_only(
     x: np.ndarray,
     *,
@@ -77,7 +86,7 @@ def _mlp_forward_mean_only(
         nn.ReLU(),
         nn.Linear(hidden, out_dim),
     )
-    net.load_state_dict(state_dict)
+    net.load_state_dict(_normalize_sequential_state_dict(state_dict))
     net.eval()
     with torch.no_grad():
         return net(torch.from_numpy(x.astype(np.float32))).numpy()[0]

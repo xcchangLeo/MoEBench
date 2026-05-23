@@ -822,7 +822,6 @@ cd "$MOEBENCH_ROOT"
 python3 scripts/run_router_reconstruct_model_grid.py \
   --benchmark unixbench \
   --dataset-root dataset \
-  --sudo \
   --auto-install
 ```
 

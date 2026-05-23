@@ -84,7 +84,18 @@ def _ti_for_test(
 ) -> float | None:
     by_test = (ds.get("ti") or {}).get("by_test_id") or {}
     entry = by_test.get(test_id) or {}
-    return _safe_float(entry.get(parallel_key))
+    t = _safe_float(entry.get(parallel_key))
+    if t is not None:
+        return t
+    for v in entry.values():
+        t = _safe_float(v)
+        if t is not None:
+            return t
+    rb = preferred_run_block(ds.get("yi") or {})
+    if rb:
+        tinfo = (rb.get("tests") or {}).get(test_id) or {}
+        return _safe_float(tinfo.get("time_s"))
+    return None
 
 
 def full_suite_wall_seconds(

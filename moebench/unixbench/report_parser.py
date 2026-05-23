@@ -129,12 +129,12 @@ def _parse_single_block(block: str) -> dict[str, Any] | None:
 
 def build_ti_from_runs(runs: list[dict[str, Any]]) -> dict[str, Any]:
     """ti: per-subtest wall time (seconds) keyed by test_id and parallel_copies."""
+    from moebench.unixbench.experts import UNIXBENCH_PARALLEL_COPIES
+
     by_test: dict[str, dict[str, float]] = {}
     for run in runs:
         copies = run.get("parallel_copies")
-        if copies is None:
-            continue
-        key = str(copies)
+        key = str(copies if copies is not None else UNIXBENCH_PARALLEL_COPIES)
         for tid, tinfo in run.get("tests", {}).items():
             if tid.startswith("unmapped:"):
                 continue

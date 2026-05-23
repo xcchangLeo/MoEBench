@@ -1,0 +1,93 @@
+{
+  "schema": "moebench.experiment.router_reconstruct_vs_full.v1",
+  "created_at_utc": "2026-05-23T09:48:15.609988+00:00",
+  "session_tag": "aces-System-Product-Name_20260523T090112Z",
+  "router_model": "/home/cxc/MoEBench/dataset/experiments/router_recon_grid_unixbench_20260523T072829Z/trained_models/router_lgbm.pkl",
+  "router_model_type": "lightgbm",
+  "reconstruct_model": "/home/cxc/MoEBench/dataset/experiments/router_recon_grid_unixbench_20260523T072829Z/trained_models/recon_mlp.pt",
+  "unixbench_root": "/home/cxc/MoEBench/byte-unixbench/UnixBench",
+  "copies_parallel": 1,
+  "router": {
+    "selected_experts": [
+      "e_001",
+      "e_006",
+      "e_012"
+    ],
+    "selected_test_ids": [
+      "dhry2reg",
+      "fsdisk",
+      "shell8"
+    ],
+    "top_k": 3,
+    "scores": {
+      "e_001": 4.145673659307628,
+      "e_002": -3.632088426365674,
+      "e_003": -4.51110371247512,
+      "e_004": -1.0311353733463362,
+      "e_005": -4.367336202089546,
+      "e_006": 3.1483361399363075,
+      "e_007": -1.2436278490064694,
+      "e_008": -4.602779997620449,
+      "e_009": -4.599647704934651,
+      "e_010": -4.494538839477207,
+      "e_011": -4.3152700378710485,
+      "e_012": 0.01952357392140905
+    },
+    "probabilities": {
+      "e_001": 0.7159649832842228,
+      "e_002": 0.0002999525972623427,
+      "e_003": 0.0001245377853861653,
+      "e_004": 0.004042333915738919,
+      "e_005": 0.00014379327492390788,
+      "e_006": 0.2640909999060108,
+      "e_007": 0.0032684953827643837,
+      "e_008": 0.0001136283325898451,
+      "e_009": 0.0001139848077857844,
+      "e_010": 0.00012661791899440747,
+      "e_011": 0.00015147836985780422,
+      "e_012": 0.011559194424462856
+    }
+  },
+  "timing_seconds": {
+    "xi_collection": 8.24652472397429,
+    "partial_unixbench": 507.41810340597294,
+    "reconstruct_predict": 0.003053280001040548,
+    "full_unixbench": 2306.7153085159953,
+    "partial_plus_predict": 507.421156685974,
+    "note": "Compare partial_unixbench vs full_unixbench for benchmark-only savings; xi_collection is shared once at start."
+  },
+  "scores": {
+    "predicted_full_suite_benchmarks_index": 3733.748779296875,
+    "actual_full_suite_benchmarks_index": 3041.5,
+    "partial_run_composite_index_selected_tests_only": 9471.2,
+    "partial_composite_note": "UnixBench composite when running only selected tests; not equal to full-suite index."
+  },
+  "reconstruction": {
+    "predicted_subtest_index": {
+      "dhry2reg": 7533.06689453125,
+      "whetstone-double": 2280.241455078125,
+      "execl": 1750.7125244140625,
+      "fstime": 4307.30126953125,
+      "fsbuffer": 2848.56201171875,
+      "fsdisk": 10628.65234375,
+      "pipe": 3867.78662109375,
+      "context1": 1372.54248046875,
+      "spawn": 1320.247314453125,
+      "syscall": 2185.692138671875,
+      "shell1": 5315.2509765625,
+      "shell8": 14793.177734375
+    }
+  },
+  "comparison": {
+    "suite_absolute_error": 692.248779296875,
+    "suite_relative_error": 0.22760111106259248,
+    "benchmark_time_ratio_full_over_partial": 4.545985436925667,
+    "benchmark_time_saved_seconds_vs_full": 1799.2972051100223,
+    "moe_benchmark_wall_seconds": 507.41810340597294,
+    "full_benchmark_wall_seconds": 2306.7153085159953
+  },
+  "artifacts": {
+    "partial_report": "/home/cxc/MoEBench/byte-unixbench/UnixBench/results/moebench_exp_partial_aces-System-Product-Name_20260523T090112Z_20260523T090112Z",
+    "full_report": "/home/cxc/MoEBench/byte-unixbench/UnixBench/results/moebench_exp_full_aces-System-Product-Name_20260523T090112Z_20260523T090112Z"
+  }
+}
