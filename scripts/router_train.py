@@ -27,6 +27,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from moebench.dataset_globs import resolve_glob_pattern
+from moebench.dataset_machines import resolve_glob_for_machine, resolve_training_machine
 from moebench.router.dataset_loader import (
     load_phoronix_dataset_for_router,
     load_unixbench_dataset_for_router,
@@ -84,6 +85,12 @@ def main() -> int:
         metavar="ID",
         help="With --benchmark phoronix: only use runs where yi.suite matches (e.g. pts/nvidia-gpu-compute)",
     )
+    ap.add_argument(
+        "--machine",
+        type=str,
+        default="",
+        help="Train only on sessions from this host slug (default: current hostname; see moebench.dataset_machines)",
+    )
 
     ap.add_argument("--top-k", type=int, default=3, help="For runtime selection output; stored in model")
     ap.add_argument("--lgbm-estimators", type=int, default=300)
@@ -105,11 +112,14 @@ def main() -> int:
         )
         return 2
 
-    glob_eff = resolve_glob_pattern(
+    machine = resolve_training_machine(args.machine or None)
+    glob_eff = resolve_glob_for_machine(
         benchmark=args.benchmark,
+        machine=machine,
         glob_pattern=args.glob_pattern or None,
         pts_suite=args.pts_suite,
     )
+    print(f"[router_train] machine={machine!r} glob={glob_eff!r}", file=sys.stderr)
 
     if args.benchmark == "phoronix":
         ds = load_phoronix_dataset_for_router(
@@ -177,6 +187,7 @@ def main() -> int:
             "label_transform": args.label_transform,
             "label_discretization": "per-group-rank-integers-0..g-1",
             "ranker": ranker,
+            "machine": machine,
         }
         if args.benchmark == "phoronix" and args.pts_suite:
             model_obj["pts_suite"] = args.pts_suite
@@ -225,6 +236,7 @@ def main() -> int:
     bundle["top_k"] = args.top_k
     bundle["label_transform"] = args.label_transform
     bundle["benchmark"] = args.benchmark
+    bundle["machine"] = machine
     if args.benchmark == "phoronix" and args.pts_suite:
         bundle["pts_suite"] = args.pts_suite
 

@@ -33,7 +33,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from moebench.dataset_globs import resolve_glob_pattern
+from moebench.dataset_machines import resolve_glob_for_machine, resolve_training_machine
 from moebench.phoronix.training_data import (
     build_augmented_train_matrix_pts,
     canonical_test_ids_from_runs,
@@ -586,6 +586,12 @@ def main() -> int:
         metavar="ID",
         help="With --benchmark phoronix: only use runs where yi.suite matches (e.g. pts/nvidia-gpu-compute)",
     )
+    ap.add_argument(
+        "--machine",
+        type=str,
+        default="",
+        help="Train only on sessions from this host slug (default: current hostname)",
+    )
     args = ap.parse_args()
     with_uncertainty = not args.no_uncertainty
 
@@ -596,11 +602,14 @@ def main() -> int:
         )
         return 2
 
-    glob_eff = resolve_glob_pattern(
+    machine = resolve_training_machine(args.machine or None)
+    glob_eff = resolve_glob_for_machine(
         benchmark=args.benchmark,
+        machine=machine,
         glob_pattern=args.glob_pattern or None,
         pts_suite=args.pts_suite,
     )
+    print(f"[reconstruct_train_eval] machine={machine!r} glob={glob_eff!r}", file=sys.stderr)
 
     if args.benchmark == "phoronix":
         if not args.skip_cv or not args.export_model:
@@ -713,6 +722,7 @@ def main() -> int:
         if args.pts_suite:
             bundle["pts_suite"] = args.pts_suite
         bundle["pts_suite_target"] = args.pts_suite_target
+        bundle["machine"] = machine
         save_reconstruction_bundle(outp, bundle)
         print(
             json.dumps(
@@ -821,10 +831,12 @@ def main() -> int:
                 test_ids=test_ids,
                 with_uncertainty=with_uncertainty,
             )
+        bundle["machine"] = machine
         save_reconstruction_bundle(outp, bundle)
         summary = {
             "export_only": True,
             "export_model": str(outp.resolve()),
+            "machine": machine,
             "train_rows": int(len(xt)),
             "model_type": args.model_type,
             "uncertainty": with_uncertainty,
@@ -1047,6 +1059,7 @@ def main() -> int:
                 test_ids=test_ids,
                 with_uncertainty=with_uncertainty,
             )
+        bundle["machine"] = machine
         save_reconstruction_bundle(outp, bundle)
         report["exported_model"] = str(outp.resolve())
         report["export_train_rows"] = int(len(xt))

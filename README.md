@@ -469,6 +469,8 @@ python3 scripts/run_router_model_ablation.py \
 
 脚本 **`scripts/run_router_reconstruct_model_grid.py`** 在**单个基准**内按顺序执行：**3 种路由**（LightGBM、MLP、`gnn_expert`）→ **3 种重建**（XGBoost、LightGBM、MLP）→ **9 次端到端组合实验**，并生成 **`grid_summary.json`**（按 suite 误差排序）。
 
+**按机器训练（默认）**：训练与 3×3 网格实验**只使用本机采集的数据**（会话目录名前缀为 `<hostname>_…`）。未指定 **`--machine`** 时自动取当前主机名（与采集时 `host_slug()` 一致）；在每台机器上分别执行同一条 grid 命令即可。若 `dataset/` 里有多台机器的数据且要在**一台机器上批量跑全部主机**，可加 **`--all-machines`**（每台主机单独输出目录）。显式指定某台：`--machine iZbp1glgt48i9a8d49embxZ`。
+
 - **UnixBench**：驱动 `experiment_router_reconstruct_vs_full.py`；可加 **`--sudo`**（采集 xi）。
 - **PTS**：**必须**指定 **`--benchmark phoronix --pts-suite <套件>`**（与采集时 `yi.suite` 一致，如 `cpu`、`pts/nvidia-gpu-compute`）；驱动 `experiment_router_reconstruct_vs_full_pts.py`；全量基线默认与 `--pts-suite` 相同，可用 **`--suite-full`** 覆盖；需要 root 采 xi 时用 **`--sudo-for-xi`**。PTS 训练建议 **`--train-k-max 12`**（勿超过该套件 profile 数）。
 
@@ -510,7 +512,7 @@ python3 scripts/run_router_reconstruct_model_grid.py --benchmark unixbench --dat
 
 PTS 将 `--benchmark phoronix --pts-suite …` 与上例相同即可。仅重跑 9 次组合时：`--stage grid --out-parent <已有目录>`。
 
-产物：每次运行默认在 `dataset/experiments/router_recon_grid_unixbench_<UTC>/`、`router_recon_grid_cpu_<UTC>/`、`router_recon_grid_pts_nvidia-gpu-compute_<UTC>/`；若指定了 `--out-parent` 则落在该目录下（含 `trained_models/` 与各 `exp_*.json`、`grid_summary.json`）。
+产物：每次运行默认在 `dataset/experiments/router_recon_grid_unixbench_<hostname>_<UTC>/`、`router_recon_grid_cpu_<hostname>_<UTC>/` 等（目录名含主机 slug）；若指定了 `--out-parent` 则落在该目录下（含 `trained_models/` 与各 `exp_*.json`、`grid_summary.json`）。`grid_summary.json` 含 **`machine`** 字段。
 
 ### 运行（推断 + 执行 Top-K 子测试）
 
@@ -768,7 +770,7 @@ cd /home/cxc/MoEBench
 
 以下假设仓库路径为 `/home/cxc/MoEBench`，按需修改 `MOEBENCH_ROOT`。**顺序**：依赖与环境 → 三套件数据采集 →（可选）PTS 专家分析 → **按套件分别**：三种路由 → 三种重建 → 3×3 组合对比 → **最后**论文补充离线 CV。
 
-**说明**：三套件的组合对比是 **三条独立命令**（UnixBench、PTS CPU、PTS GPU），请按顺序分别执行；每套内已由 `run_router_reconstruct_model_grid.py` 保证「路由 → 重建 → 9 次组合」顺序。若需将三阶段拆成多次 shell 调用，见上文「方式 B」与脚本的 **`--stage routers|reconstructors|grid`**。
+**说明**：三套件的组合对比是 **三条独立命令**（UnixBench、PTS CPU、PTS GPU），请按顺序分别执行；每套内已由 `run_router_reconstruct_model_grid.py` 保证「路由 → 重建 → 9 次组合」顺序。**在 8 台机器上**：每台机器先完成阶段 1 采集，再在本机执行阶段 3–5（默认 `--machine` 为本机，无需手填）。若需将三阶段拆成多次 shell 调用，见上文「方式 B」与脚本的 **`--stage routers|reconstructors|grid`**。
 
 ### 阶段 0：依赖
 
@@ -863,6 +865,6 @@ cd "$MOEBENCH_ROOT"
 ./scripts/run_paper_cv_three_suites.sh
 ```
 
-**产物路径**：各套件网格默认在 `dataset/experiments/router_recon_grid_unixbench_<UTC>/`、`router_recon_grid_cpu_<UTC>/`、`router_recon_grid_pts_nvidia-gpu-compute_<UTC>/`（目录名随时间戳变化），内含 `trained_models/`、`exp_<路由>__<重建>.json`、`grid_summary.json`。离线 CV 输出默认为 `dataset/paper_cv_three_suites.json`（可用环境变量 `OUT` 修改，见 `scripts/run_paper_cv_three_suites.sh`）。
+**产物路径**：各套件网格默认在 `dataset/experiments/router_recon_grid_unixbench_<hostname>_<UTC>/` 等（目录名随主机与时间戳变化），内含 `trained_models/`、`exp_<路由>__<重建>.json`、`grid_summary.json`（含 `machine`）。阶段 6 论文离线 CV 为**跨会话/跨机器**补充实验，与默认「本机训练本机测」流程独立；见 `scripts/run_paper_cv_three_suites.sh`。
 
 **耗时**：阶段 3–5 各含 9 次完整基准运行，总耗时会很长；可先缩小 `-n` 采集轮次或仅用 **`--stage`** 分天执行。

@@ -22,7 +22,12 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from moebench.dataset_globs import resolve_glob_pattern
+from moebench.dataset_machines import (
+    list_machines_in_dataset,
+    local_host_slug,
+    resolve_glob_for_machine,
+    resolve_training_machine,
+)
 from moebench.phoronix.pipeline import safe_session_tag
 
 ROUTER_TRAIN = REPO_ROOT / "scripts" / "router_train.py"
@@ -134,6 +139,17 @@ def main() -> int:
         default="",
         help="Training glob (default: auto from benchmark + --pts-suite)",
     )
+    ap.add_argument(
+        "--machine",
+        type=str,
+        default="",
+        help="Train and evaluate using only this host's sessions (default: current hostname)",
+    )
+    ap.add_argument(
+        "--all-machines",
+        action="store_true",
+        help="Run the full pipeline once per machine found under dataset-root (implies --stage all)",
+    )
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument(
         "--stage",
@@ -170,8 +186,47 @@ def main() -> int:
     )
     args = ap.parse_args()
 
+    if args.all_machines and args.stage != "all":
+        print("--all-machines requires --stage all (one output tree per machine).", file=sys.stderr)
+        return 2
+
     if args.benchmark == "phoronix" and not args.pts_suite.strip():
         print("--benchmark phoronix requires --pts-suite", file=sys.stderr)
+        return 2
+
+    if args.stage in ("reconstructors", "grid") and not args.out_parent.strip() and not args.all_machines:
+        print(
+            "--stage reconstructors|grid requires --out-parent=<same directory> from the first stage "
+            "(or run --stage all / --stage routers with optional --out-parent).",
+            file=sys.stderr,
+        )
+        return 2
+
+    ds_root = Path(args.dataset_root).resolve()
+    pts_suite = args.pts_suite.strip() if args.benchmark == "phoronix" else None
+
+    if args.all_machines:
+        machines = list_machines_in_dataset(ds_root, benchmark=args.benchmark, pts_suite=pts_suite)
+        if not machines:
+            print(
+                f"No sessions found for benchmark={args.benchmark!r} under {ds_root}",
+                file=sys.stderr,
+            )
+            return 2
+    else:
+        machines = [resolve_training_machine(args.machine or None)]
+
+    batch_stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    last_code = 0
+    for machine in machines:
+        code = _run_for_machine(args, machine=machine, ds_root=ds_root, batch_stamp=batch_stamp)
+        if code != 0:
+            last_code = code
+    return last_code
+
+
+def _run_for_machine(args: argparse.Namespace, *, machine: str, ds_root: Path, batch_stamp: str) -> int:
+    if args.benchmark == "phoronix" and not args.pts_suite.strip():
         return 2
 
     if args.stage in ("reconstructors", "grid") and not args.out_parent.strip():
@@ -182,26 +237,28 @@ def main() -> int:
         )
         return 2
 
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    ds_root = Path(args.dataset_root).resolve()
     suite_full = (args.suite_full or args.pts_suite).strip() if args.benchmark == "phoronix" else ""
     pts_suite = args.pts_suite.strip() if args.benchmark == "phoronix" else None
 
-    glob_eff = resolve_glob_pattern(
+    glob_eff = resolve_glob_for_machine(
         benchmark=args.benchmark,
+        machine=machine,
         glob_pattern=args.glob_pattern or None,
         pts_suite=pts_suite,
     )
 
     if args.out_parent.strip():
-        out_dir = Path(args.out_parent).resolve()
+        base_out = Path(args.out_parent).resolve()
+        out_dir = base_out / machine if args.all_machines else base_out
     else:
         if args.benchmark == "unixbench":
-            sub = f"router_recon_grid_unixbench_{stamp}"
+            sub = f"router_recon_grid_unixbench_{machine}_{batch_stamp}"
         else:
             tok = safe_session_tag(str(pts_suite or "").replace("/", "_"))
-            sub = f"router_recon_grid_{tok}_{stamp}"
+            sub = f"router_recon_grid_{tok}_{machine}_{batch_stamp}"
         out_dir = (ds_root / "experiments" / sub).resolve()
+
+    print(f"[grid] machine={machine!r} glob={glob_eff!r} out={out_dir}", file=sys.stderr)
 
     py = sys.executable
     models_dir = out_dir / "trained_models"
@@ -224,6 +281,8 @@ def main() -> int:
         args.benchmark,
         "--glob-pattern",
         glob_eff,
+        "--machine",
+        machine,
         "--top-k",
         str(args.top_k),
         "--mlp-epochs",
@@ -249,6 +308,8 @@ def main() -> int:
         args.benchmark,
         "--glob-pattern",
         glob_eff,
+        "--machine",
+        machine,
         "--skip-cv",
         "--no-uncertainty",
         "--train-aug",
@@ -365,6 +426,8 @@ def main() -> int:
         "schema": "moebench.experiment.router_recon_grid_summary.v2",
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
         "dataset_root": str(ds_root),
+        "machine": machine,
+        "local_host_slug": local_host_slug(),
         "benchmark": args.benchmark,
         "stage": args.stage,
         "glob_pattern": glob_eff,
