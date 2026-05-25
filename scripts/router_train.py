@@ -39,8 +39,9 @@ def _ensure_import(module_name: str) -> Any:
 def _maybe_auto_install(auto_install: bool, pkgs: list[str]) -> None:
     if not auto_install:
         return
-    cmd = [sys.executable, "-m", "pip", "install", "--upgrade"] + pkgs
-    subprocess.check_call(cmd)
+    from moebench.pip_install import pip_install
+
+    pip_install(pkgs)
 
 
 def _bootstrap_router_deps(auto_install: bool, model_type: str) -> None:

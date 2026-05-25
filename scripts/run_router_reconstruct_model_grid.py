@@ -51,6 +51,13 @@ RECON_SPECS: tuple[tuple[str, str], ...] = (
 )
 
 
+def _preferred_python() -> str:
+    venv_py = REPO_ROOT / ".venv-moebench-router" / "bin" / "python3"
+    if venv_py.is_file():
+        return str(venv_py)
+    return sys.executable
+
+
 def _run(cmd: list[str], *, dry_run: bool) -> None:
     print("+", " ".join(cmd), file=sys.stderr)
     if dry_run:

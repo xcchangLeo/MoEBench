@@ -21,6 +21,15 @@ import warnings
 from pathlib import Path
 from typing import Any
 
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from moebench.pip_install import ensure_importable
+
+ensure_importable("numpy", auto_install="--auto-install" in sys.argv)
+
 import numpy as np
 
 warnings.filterwarnings(
@@ -28,10 +37,6 @@ warnings.filterwarnings(
     message="X does not have valid feature names, but LGBMRegressor was fitted with feature names",
     category=UserWarning,
 )
-
-REPO_ROOT = Path(__file__).resolve().parents[1]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
 
 from moebench.dataset_machines import resolve_glob_for_machine, resolve_training_machine
 from moebench.phoronix.training_data import (
@@ -63,7 +68,9 @@ def _ensure_import(name: str) -> Any:
 def _maybe_auto_install(flag: bool, pkgs: list[str]) -> None:
     if not flag:
         return
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", *pkgs])
+    from moebench.pip_install import pip_install
+
+    pip_install(pkgs)
 
 
 def spearman_rho(a: np.ndarray, b: np.ndarray) -> float:
