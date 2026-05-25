@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -34,6 +35,8 @@ ROUTER_TRAIN = REPO_ROOT / "scripts" / "router_train.py"
 RECON_TRAIN = REPO_ROOT / "scripts" / "reconstruct_train_eval.py"
 EXPERIMENT_UB = REPO_ROOT / "scripts" / "experiment_router_reconstruct_vs_full.py"
 EXPERIMENT_PTS = REPO_ROOT / "scripts" / "experiment_router_reconstruct_vs_full_pts.py"
+ML_VENV_PY = REPO_ROOT / ".venv-moebench-router" / "bin" / "python3"
+INSTALL_ML_DEPS = REPO_ROOT / "scripts" / "install_ml_python_deps.sh"
 
 ROUTER_SPECS: tuple[tuple[str, str], ...] = (
     ("lightgbm", "router_lgbm.pkl"),
@@ -53,6 +56,40 @@ def _run(cmd: list[str], *, dry_run: bool) -> None:
     if dry_run:
         return
     subprocess.run(cmd, check=True)
+
+
+def _python_has_numpy(python: str) -> bool:
+    try:
+        subprocess.run(
+            [python, "-c", "import numpy"],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        return True
+    except (subprocess.CalledProcessError, OSError):
+        return False
+
+
+def _resolve_training_python(*, auto_install: bool) -> str:
+    if auto_install and INSTALL_ML_DEPS.is_file():
+        install_args = [str(INSTALL_ML_DEPS)]
+        if not os.environ.get("CONDA_PREFIX"):
+            install_args.append("--use-venv")
+        print("+", " ".join(["bash", *install_args]), file=sys.stderr)
+        subprocess.run(["bash", *install_args], check=True)
+
+    if ML_VENV_PY.is_file() and _python_has_numpy(str(ML_VENV_PY)):
+        return str(ML_VENV_PY)
+
+    if _python_has_numpy(sys.executable):
+        return sys.executable
+
+    raise RuntimeError(
+        "Python ML dependencies are missing (numpy). "
+        "Run ./scripts/install_ml_python_deps.sh --use-venv "
+        "or rerun with --auto-install."
+    )
 
 
 def _summarize_unixbench(path: Path) -> dict[str, Any]:
@@ -260,7 +297,7 @@ def _run_for_machine(args: argparse.Namespace, *, machine: str, ds_root: Path, b
 
     print(f"[grid] machine={machine!r} glob={glob_eff!r} out={out_dir}", file=sys.stderr)
 
-    py = sys.executable
+    py = _resolve_training_python(auto_install=args.auto_install)
     models_dir = out_dir / "trained_models"
 
     do_routers = args.stage in ("all", "routers")

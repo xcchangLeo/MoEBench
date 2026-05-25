@@ -70,6 +70,8 @@ install_debian() {
     numactl
     util-linux
     procps
+    pciutils
+    mesa-utils
     linux-tools-common
     linux-tools-generic
     "${perf_kernel_pkg}"

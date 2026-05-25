@@ -26,16 +26,27 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+
+def _bootstrap_ml_deps_if_requested() -> None:
+    if "--auto-install" not in sys.argv:
+        return
+    missing: list[str] = []
+    for mod, pkg in (("numpy", "numpy"), ("sklearn", "scikit-learn")):
+        try:
+            __import__(mod)
+        except ImportError:
+            missing.append(pkg)
+    if missing:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", *missing])
+
+
+_bootstrap_ml_deps_if_requested()
+
 from moebench.dataset_globs import resolve_glob_pattern
 from moebench.dataset_machines import resolve_glob_for_machine, resolve_training_machine
 from moebench.router.dataset_loader import (
     load_phoronix_dataset_for_router,
     load_unixbench_dataset_for_router,
-)
-from moebench.router.neural_routers import (
-    train_expert_gnn,
-    train_pointwise_mlp,
-    train_subset_selection_router,
 )
 
 
@@ -204,6 +215,11 @@ def main() -> int:
         _maybe_auto_install(args.auto_install, ["numpy", "scikit-learn", "torch"])
 
     import torch
+    from moebench.router.neural_routers import (
+        train_expert_gnn,
+        train_pointwise_mlp,
+        train_subset_selection_router,
+    )
 
     if args.model_type == "mlp":
         bundle = train_pointwise_mlp(
