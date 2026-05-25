@@ -26,28 +26,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-
-def _bootstrap_ml_deps_if_requested() -> None:
-    if "--auto-install" not in sys.argv:
-        return
-    missing: list[str] = []
-    for mod, pkg in (("numpy", "numpy"), ("sklearn", "scikit-learn")):
-        try:
-            __import__(mod)
-        except ImportError:
-            missing.append(pkg)
-    if missing:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", *missing])
-
-
-_bootstrap_ml_deps_if_requested()
-
-from moebench.dataset_globs import resolve_glob_pattern
 from moebench.dataset_machines import resolve_glob_for_machine, resolve_training_machine
-from moebench.router.dataset_loader import (
-    load_phoronix_dataset_for_router,
-    load_unixbench_dataset_for_router,
-)
 
 
 def _ensure_import(module_name: str) -> Any:
@@ -62,6 +41,21 @@ def _maybe_auto_install(auto_install: bool, pkgs: list[str]) -> None:
         return
     cmd = [sys.executable, "-m", "pip", "install", "--upgrade"] + pkgs
     subprocess.check_call(cmd)
+
+
+def _bootstrap_router_deps(auto_install: bool, model_type: str) -> None:
+    pkgs = ["numpy", "scikit-learn"]
+    if model_type == "lightgbm":
+        pkgs.append("lightgbm")
+    else:
+        pkgs.append("torch")
+    try:
+        __import__("numpy")
+        __import__("lightgbm" if model_type == "lightgbm" else "torch")
+    except ImportError:
+        if not auto_install:
+            raise
+        _maybe_auto_install(True, pkgs)
 
 
 def main() -> int:
@@ -114,6 +108,17 @@ def main() -> int:
     ap.add_argument("--mlp-epochs", type=int, default=200)
     ap.add_argument("--mlp-lr", type=float, default=1e-3)
     args = ap.parse_args()
+    _bootstrap_router_deps(args.auto_install, args.model_type)
+
+    from moebench.router.dataset_loader import (
+        load_phoronix_dataset_for_router,
+        load_unixbench_dataset_for_router,
+    )
+    from moebench.router.neural_routers import (
+        train_expert_gnn,
+        train_pointwise_mlp,
+        train_subset_selection_router,
+    )
 
     if args.benchmark == "phoronix" and not args.pts_suite:
         print(

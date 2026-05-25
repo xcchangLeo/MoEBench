@@ -13,13 +13,11 @@ __all__ = [
 
 
 def __getattr__(name: str):
-    if name == "predict_expert_scores":
-        from moebench.router.inference import predict_expert_scores
+    if name in {"predict_expert_scores", "select_top_k_from_probs"}:
+        from moebench.router.inference import predict_expert_scores, select_top_k_from_probs
 
-        return predict_expert_scores
-    if name == "select_top_k_from_probs":
-        from moebench.router.inference import select_top_k_from_probs
-
-        return select_top_k_from_probs
+        return {
+            "predict_expert_scores": predict_expert_scores,
+            "select_top_k_from_probs": select_top_k_from_probs,
+        }[name]
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-

@@ -58,39 +58,55 @@ def _run(cmd: list[str], *, dry_run: bool) -> None:
     subprocess.run(cmd, check=True)
 
 
-def _python_has_numpy(python: str) -> bool:
-    try:
-        subprocess.run(
-            [python, "-c", "import numpy"],
-            check=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+ROUTER_VENV = REPO_ROOT / ".venv-moebench-router"
+
+
+def _python_import_ok(py: str, module: str) -> bool:
+    return (
+        subprocess.run([py, "-c", f"import {module}"], capture_output=True).returncode == 0
+    )
+
+
+def _resolve_python(*, require_ml: bool = False) -> str:
+    if ML_VENV_PY.is_file() and (not require_ml or _python_import_ok(str(ML_VENV_PY), "numpy")):
+        return str(ML_VENV_PY)
+    for name in ("python", "python3"):
+        cand = ROUTER_VENV / "bin" / name
+        if cand.is_file() and (not require_ml or _python_import_ok(str(cand), "numpy")):
+            return str(cand)
+    if not require_ml or _python_import_ok(sys.executable, "numpy"):
+        return sys.executable
+    return sys.executable
+
+
+def _ensure_ml_python(auto_install: bool) -> str:
+    py = _resolve_python(require_ml=True)
+    if _python_import_ok(py, "numpy"):
+        if py != sys.executable:
+            print(f"[grid] using project venv python: {py}", file=sys.stderr)
+        return py
+
+    if not auto_install:
+        raise SystemExit(
+            "Missing Python ML deps (numpy). Run:\n"
+            "  bash scripts/install_ml_python_deps.sh --use-venv\n"
+            f"Then re-run with: {ML_VENV_PY} scripts/run_router_reconstruct_model_grid.py ..."
         )
-        return True
-    except (subprocess.CalledProcessError, OSError):
-        return False
 
-
-def _resolve_training_python(*, auto_install: bool) -> str:
-    if auto_install and INSTALL_ML_DEPS.is_file():
+    if INSTALL_ML_DEPS.is_file():
         install_args = [str(INSTALL_ML_DEPS)]
         if not os.environ.get("CONDA_PREFIX"):
             install_args.append("--use-venv")
-        print("+", " ".join(["bash", *install_args]), file=sys.stderr)
-        subprocess.run(["bash", *install_args], check=True)
+        print(f"[grid] bootstrapping ML deps via {' '.join(install_args)}", file=sys.stderr)
+        subprocess.check_call(["bash", *install_args])
+    else:
+        raise SystemExit(f"Missing install script: {INSTALL_ML_DEPS}")
 
-    if ML_VENV_PY.is_file() and _python_has_numpy(str(ML_VENV_PY)):
-        return str(ML_VENV_PY)
-
-    if _python_has_numpy(sys.executable):
-        return sys.executable
-
-    raise RuntimeError(
-        "Python ML dependencies are missing (numpy). "
-        "Run ./scripts/install_ml_python_deps.sh --use-venv "
-        "or rerun with --auto-install."
-    )
-
+    py = _resolve_python(require_ml=True)
+    if not _python_import_ok(py, "numpy"):
+        raise SystemExit("ML dependency install finished but numpy is still unavailable.")
+    print(f"[grid] using python: {py}", file=sys.stderr)
+    return py
 
 def _summarize_unixbench(path: Path) -> dict[str, Any]:
     with open(path, encoding="utf-8") as f:
@@ -222,6 +238,7 @@ def main() -> int:
         help="Extra argv token(s) for the experiment script (quoted; rarely needed)",
     )
     args = ap.parse_args()
+    python_exe = _ensure_ml_python(args.auto_install)
 
     if args.all_machines and args.stage != "all":
         print("--all-machines requires --stage all (one output tree per machine).", file=sys.stderr)
@@ -256,13 +273,26 @@ def main() -> int:
     batch_stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     last_code = 0
     for machine in machines:
-        code = _run_for_machine(args, machine=machine, ds_root=ds_root, batch_stamp=batch_stamp)
+        code = _run_for_machine(
+            args,
+            machine=machine,
+            ds_root=ds_root,
+            batch_stamp=batch_stamp,
+            python_exe=python_exe,
+        )
         if code != 0:
             last_code = code
     return last_code
 
 
-def _run_for_machine(args: argparse.Namespace, *, machine: str, ds_root: Path, batch_stamp: str) -> int:
+def _run_for_machine(
+    args: argparse.Namespace,
+    *,
+    machine: str,
+    ds_root: Path,
+    batch_stamp: str,
+    python_exe: str,
+) -> int:
     if args.benchmark == "phoronix" and not args.pts_suite.strip():
         return 2
 
@@ -297,7 +327,7 @@ def _run_for_machine(args: argparse.Namespace, *, machine: str, ds_root: Path, b
 
     print(f"[grid] machine={machine!r} glob={glob_eff!r} out={out_dir}", file=sys.stderr)
 
-    py = _resolve_training_python(auto_install=args.auto_install)
+    py = python_exe
     models_dir = out_dir / "trained_models"
 
     do_routers = args.stage in ("all", "routers")
