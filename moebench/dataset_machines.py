@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import socket
 from pathlib import Path
@@ -118,6 +119,52 @@ def resolve_training_machine(explicit: str | None) -> str:
     if explicit and explicit.strip():
         return explicit.strip()
     return local_host_slug()
+
+
+def _machine_subdir(dataset_root: Path, kind: str, machine: str) -> Path:
+    """``kind`` is ``models`` or ``experiments``; fallback if root-owned."""
+    canonical = dataset_root / kind / machine
+    parent = dataset_root / kind
+    check = canonical if canonical.exists() else parent
+    if check.exists() and not os.access(check, os.W_OK):
+        return dataset_root / "probe_artifacts" / machine
+    return canonical
+
+
+def machine_experiments_dir(
+    dataset_root: str | Path,
+    machine: str | None = None,
+) -> Path:
+    """Per-host experiment outputs: ``<dataset-root>/experiments/<machine>/``."""
+    m = resolve_training_machine(machine)
+    return _machine_subdir(Path(dataset_root).resolve(), "experiments", m)
+
+
+def machine_models_dir(
+    dataset_root: str | Path,
+    machine: str | None = None,
+) -> Path:
+    """Per-host trained artifacts: ``<dataset-root>/models/<machine>/``."""
+    m = resolve_training_machine(machine)
+    return _machine_subdir(Path(dataset_root).resolve(), "models", m)
+
+
+def ensure_machine_output_dir(path: Path) -> Path:
+    """Create parent dirs; raise a clear error if the path is not writable."""
+    path = path.resolve()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    probe = path.parent / ".moebench_write_probe"
+    try:
+        probe.write_text("", encoding="utf-8")
+        probe.unlink(missing_ok=True)
+    except OSError as e:
+        raise PermissionError(
+            f"Cannot write under {path.parent}. "
+            "This often happens after `sudo mkdir` on dataset/models or "
+            f"dataset/experiments/<host>. Fix: sudo chown -R $USER:$USER "
+            f"{path.parent.parent}"
+        ) from e
+    return path
 
 
 def latest_pts_run_path_for_machine(

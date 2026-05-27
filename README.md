@@ -139,6 +139,15 @@ both = collect_all()
 
 **训练 / 分析脚本中的 glob**：与采集目录对齐的规则集中在 **`moebench.dataset_globs`**（UnixBench：``*/run-*.json``；PTS `cpu`：``*_cpu_*/run-*.json``；PTS `pts/nvidia-gpu-compute`：``*_pts_nvidia-gpu-compute_*/run-*.json``）。多数 CLI 在省略 `--glob-pattern` 时会按 benchmark + `--pts-suite` 自动解析。
 
+**按主机训练与实验目录**（`moebench.dataset_machines`）：默认 **`--machine`** 为当前主机 slug（与采集会话目录前缀一致）。训练 / 网格 / 探针只读本机会话；跨机批量训练需 **`--all-machines`**（grid）或显式 **`--machine <slug>`**。
+
+| 用途 | 路径 |
+|------|------|
+| 探针实验 JSON | `dataset/experiments/<hostname>/`（`machine_experiments_dir()`） |
+| 探针训练集与模型 | `dataset/models/<hostname>/`（`machine_models_dir()`） |
+| Router×Recon 3×3 网格 | `dataset/experiments/router_recon_grid_<套件>_<hostname>_<UTC>/`（也可用 `--out-parent` 放到 `experiments/<hostname>/` 下） |
+| 完整采集 run | `dataset/<hostname>_…/run-*.json`（仍在 `dataset/` 根下，便于 glob） |
+
 ### 命令
 
 ```bash
@@ -500,19 +509,58 @@ python3 scripts/run_router_reconstruct_model_grid.py \
 三次调用须共用同一 **`--out-parent`**（先手动建目录并传入）：
 
 ```bash
-export GRID_UB="$PWD/dataset/experiments/my_grid_unixbench"
+MACHINE="$(python3 -c 'from moebench.dataset_machines import local_host_slug; print(local_host_slug())')"
+export GRID_UB="$PWD/dataset/experiments/$MACHINE/my_grid_unixbench"
 mkdir -p "$GRID_UB"
 python3 scripts/run_router_reconstruct_model_grid.py --benchmark unixbench --dataset-root dataset \
-  --out-parent "$GRID_UB" --stage routers --auto-install
+  --machine "$MACHINE" --out-parent "$GRID_UB" --stage routers --auto-install
 python3 scripts/run_router_reconstruct_model_grid.py --benchmark unixbench --dataset-root dataset \
-  --out-parent "$GRID_UB" --stage reconstructors --auto-install
+  --machine "$MACHINE" --out-parent "$GRID_UB" --stage reconstructors --auto-install
 python3 scripts/run_router_reconstruct_model_grid.py --benchmark unixbench --dataset-root dataset \
-  --out-parent "$GRID_UB" --stage grid --sudo --auto-install
+  --machine "$MACHINE" --out-parent "$GRID_UB" --stage grid --sudo --auto-install
 ```
 
 PTS 将 `--benchmark phoronix --pts-suite …` 与上例相同即可。仅重跑 9 次组合时：`--stage grid --out-parent <已有目录>`。
 
 产物：每次运行默认在 `dataset/experiments/router_recon_grid_unixbench_<hostname>_<UTC>/`、`router_recon_grid_cpu_<hostname>_<UTC>/` 等（目录名含主机 slug）；若指定了 `--out-parent` 则落在该目录下（含 `trained_models/` 与各 `exp_*.json`、`grid_summary.json`）。`grid_summary.json` 含 **`machine`** 字段。
+
+若希望与探针路线一样按主机分子目录，可在运行前设定并传入 `--out-parent`：
+
+```bash
+MACHINE="$(python3 -c 'from moebench.dataset_machines import local_host_slug; print(local_host_slug())')"
+GRID_DIR="dataset/experiments/$MACHINE/router_recon_grid_unixbench_$(date -u +%Y%m%dT%H%M%SZ)"
+mkdir -p "$GRID_DIR"
+python3 scripts/run_router_reconstruct_model_grid.py \
+  --benchmark unixbench --dataset-root dataset \
+  --out-parent "$GRID_DIR" --auto-install
+```
+
+### 短探针 + eBPF 推断（每子项 3–5 秒，三套件）
+
+与「Router + 完整子测试 + Reconstruction」并行：**UnixBench、PTS CPU、PTS GPU** 均可使用同一套探针流程（默认只用**本机** `dataset/` 会话作标签）。
+
+| 模式 | 含义 |
+|------|------|
+| **`--probe-mode micro`**（默认） | 按子项类别跑 **微负载** 3–5s + eBPF（快，压力近似） |
+| **`--probe-mode real`** | **`timeout` 包裹的真实子项**：`perl Run -c 1 <test>` 或 `phoronix-test-suite run <profile>`，同时采 eBPF |
+
+**为何 5 秒往往拿不到「官方分数」？**  
+UnixBench 许多子项内部固定 **多轮采样 / 10–30s+**（如 `execl`、`fstime`），5 秒会被 `timeout` 杀掉，报告里通常 **没有完整 Index**。  
+**可以**单独跑某一真实子项并在 5 秒结束——已实现为 `--probe-mode real`；eBPF 对应的是 **真实基准进程**，训练标签仍来自你之前 **完整采集** 的 `dataset/` run。5 秒内若碰巧跑完（个别极快子项），`real_run.partial_result` 里可能有分数。
+
+| 步骤 | 脚本 | 作用 |
+|------|------|------|
+| **1. 数据采集** | `scripts/probe_collect.py` | 对本机历史完整 run 逐子项做短探针，写出 `probe_dataset.json`（特征 + 标签） |
+| **2. 模型训练** | `scripts/probe_train.py` | 由探针数据集训练 LightGBM / XGBoost，导出 `.pkl` |
+| **3. 完整实验** | `scripts/probe_experiment.py` | 在线对每个子项再探针 → 预测 suite，与本机最近一次完整 run 对比误差 |
+
+**三套件须分开做**：UnixBench、PTS CPU、PTS GPU 各走一遍上述三步；完整分步命令见下文 **「阶段 6：路线 B」**。仓库内另有 `scripts/run_probe_three_suites.sh` 可批量调用，**本文档主流程不依赖该脚本**。
+
+未指定 ``-o`` 时：`probe_collect.py` → ``dataset/models/<主机>/probe_dataset_*.json``；`probe_experiment.py` → ``dataset/experiments/<主机>/probe_<套件>_<UTC>.json``。
+
+**从别的机器拷回数据时**：只需带上本机的 `dataset/<host>_*/run-*.json` 会话目录；探针与 grid 会在本机 `experiments/<host>/`、`models/<host>/` 下重新生成，不会与别的主机产物混在一起。
+
+实现：`moebench/probe/`（`real_runner.py`、`collector.py`、`ebpf_features.py` 等）。
 
 ### 运行（推断 + 执行 Top-K 子测试）
 
@@ -766,11 +814,32 @@ cd /home/cxc/MoEBench
 ./scripts/install_ml_python_deps.sh
 ```
 
-## 完整可复制粘贴实验流程（从零到论文离线 CV）
+## 完整可复制粘贴实验流程（从零到论文离线 CV + 探针路线）
 
-以下假设仓库路径为 `/home/cxc/MoEBench`，按需修改 `MOEBENCH_ROOT`。**顺序**：依赖与环境 → 三套件数据采集 →（可选）PTS 专家分析 → **按套件分别**：三种路由 → 三种重建 → 3×3 组合对比 → **最后**论文补充离线 CV。
+以下假设仓库路径为 `/home/cxc/MoEBench`，按需修改 `MOEBENCH_ROOT`。
 
-**说明**：三套件的组合对比是 **三条独立命令**（UnixBench、PTS CPU、PTS GPU），请按顺序分别执行；每套内已由 `run_router_reconstruct_model_grid.py` 保证「路由 → 重建 → 9 次组合」顺序。**在 8 台机器上**：每台机器先完成阶段 1 采集，再在本机执行阶段 3–5（默认 `--machine` 为本机，无需手填）。若需将三阶段拆成多次 shell 调用，见上文「方式 B」与脚本的 **`--stage routers|reconstructors|grid`**。
+### 两条并行路线（三套件各自独立）
+
+| 路线 | 思路 | 主要脚本 | 典型产物 |
+|------|------|----------|----------|
+| **A. Router × Reconstruction** | `xi` → 路由选 Top-K 子项 → 部分跑分 → 重建预测 suite | `run_router_reconstruct_model_grid.py` | `dataset/experiments/router_recon_grid_*_<host>_<UTC>/`（9× `exp_*.json` + `grid_summary.json`） |
+| **B. 短探针 + eBPF** | 每子项 3–5s 探针 + eBPF → 预测子项分数 → 聚合 suite | `probe_collect.py` → `probe_train.py` → `probe_experiment.py`（**每套件分三步**） | `dataset/models/<host>/probe_*.pkl`、`dataset/experiments/<host>/probe_*.json` |
+
+**推荐顺序**：阶段 0 依赖 → 阶段 1 三套件**完整采集**（两条路线的标签来源）→（可选）阶段 2 PTS 专家分析 → 阶段 3–5 路线 A（各套件 3×3 grid）→ 阶段 6 路线 B（**按套件** 6.1 → 6.2 → 6.3，每套件内 collect → train → experiment）→ 阶段 7 论文离线 CV。
+
+**多机（如 8 台）**：每台机器独立完成阶段 1，再在本机跑阶段 3–6；默认 `--machine` 为当前主机 slug，无需手填。把整棵 `dataset/` 拷到另一台机器时，只会读写 `experiments/<本机>/` 与 `models/<本机>/`，不会覆盖他机目录。
+
+**环境变量（全流程通用）**：
+
+```bash
+export MOEBENCH_ROOT="/home/cxc/MoEBench"
+export MACHINE="$(python3 -c 'from moebench.dataset_machines import local_host_slug; print(local_host_slug())')"
+export EXP_DIR="$MOEBENCH_ROOT/dataset/experiments/$MACHINE"
+export MODEL_DIR="$MOEBENCH_ROOT/dataset/models/$MACHINE"
+mkdir -p "$EXP_DIR" "$MODEL_DIR"
+```
+
+阶段 3–5 的 grid 若需与探针同目录，对每次 grid 设置不同的 `--out-parent "$EXP_DIR/router_recon_grid_<套件>_$(date -u +%Y%m%dT%H%M%SZ)"`（见上文「路由 × 重建模型组合对比」）。阶段 3–5 也可拆成多次 shell：见 **`--stage routers|reconstructors|grid`** 与「方式 B」。
 
 ### 阶段 0：依赖
 
@@ -788,24 +857,31 @@ sudo apt install zip
 cd phoronix-test-suite
 sudo ./install-sh
 phoronix-test-suite install cpu
+phoronix-test-suite install pts/nvidia-gpu-compute   # 阶段 1 / 5 / 6 的 GPU 套件需要
 ```
 
-（Phoronix Test Suite 请按官方文档安装；首次批量跑前建议执行 **`phoronix-test-suite batch-setup`**。）
+（Phoronix Test Suite 请按官方文档安装；首次批量跑前建议执行 **`phoronix-test-suite batch-setup`**。GPU 套件需本机 NVIDIA 驱动与对应 PTS 测试依赖。）
 
-### 阶段 1：三套件数据采集
+### 阶段 1：三套件数据采集（路线 A / B 共用）
+
+完整跑分提供 **yi / ti** 真值；探针路线与 PTS grid 的 ground truth 均来自此处。建议每机至少 **3–5 轮**（`-n 5`）；时间紧可先 `-n 2` 试通流程。
 
 ```bash
 cd "$MOEBENCH_ROOT"
+# 若未 export，可在此再次设置 MACHINE / EXP_DIR / MODEL_DIR（见上文）
 
-# UnixBench → dataset/<host>_<UTC>/run-*.json
+# UnixBench → dataset/<MACHINE>_<UTC>/run-*.json
 python3 -m moebench.unixbench --dataset-root dataset -n 5
 
-# PTS CPU → dataset/<host>_cpu_<UTC>/run-*.json
+# PTS CPU → dataset/<MACHINE>_cpu_<UTC>/run-*.json
 python3 -m moebench.phoronix --dataset-root dataset --suite cpu --pts-mode batch-run -n 5
 
-# PTS GPU → dataset/<host>_pts_nvidia-gpu-compute_<UTC>/run-*.json
+# PTS GPU → dataset/<MACHINE>_pts_nvidia-gpu-compute_<UTC>/run-*.json
+# （需 NVIDIA 驱动、已 phoronix-test-suite install pts/nvidia-gpu-compute）
 python3 -m moebench.phoronix --dataset-root dataset --suite pts/nvidia-gpu-compute --pts-mode batch-run -n 5
 ```
+
+需要更高权限采集 **xi**（perf / eBPF）时，在对应命令后加 **`--sudo`**（不要用 `sudo python3`，见 FAQ）。
 
 ### 阶段 2（可选）：PTS 专家分析
 
@@ -816,7 +892,7 @@ python3 scripts/phoronix_expert_analyze.py --dataset-root dataset --pts-suite cp
 python3 scripts/phoronix_expert_analyze.py --dataset-root dataset --pts-suite pts/nvidia-gpu-compute --out-dir dataset
 ```
 
-### 阶段 3：UnixBench — 路由 → 重建 → 3×3 组合（单独执行）
+### 阶段 3：路线 A — UnixBench 3×3 grid（单独执行）
 
 ```bash
 cd "$MOEBENCH_ROOT"
@@ -824,10 +900,13 @@ cd "$MOEBENCH_ROOT"
 python3 scripts/run_router_reconstruct_model_grid.py \
   --benchmark unixbench \
   --dataset-root dataset \
+  --machine "$MACHINE" \
   --auto-install
+# 可选：--sudo（UnixBench 实验内采 xi）
+# 可选：--out-parent "$EXP_DIR/router_recon_grid_unixbench_$(date -u +%Y%m%dT%H%M%SZ)"
 ```
 
-### 阶段 4：PTS CPU — 路由 → 重建 → 3×3 组合（单独执行）
+### 阶段 4：路线 A — PTS CPU 3×3 grid（单独执行）
 
 ```bash
 cd "$MOEBENCH_ROOT"
@@ -836,12 +915,16 @@ python3 scripts/run_router_reconstruct_model_grid.py \
   --benchmark phoronix \
   --pts-suite cpu \
   --dataset-root dataset \
+  --machine "$MACHINE" \
   --train-k-max 12 \
   --pts-mode batch-run \
   --auto-install
+# 默认用本机 dataset 已有 run 作 ground truth，不重复全量 batch-run cpu（防 OOM）
+# 需要在线全量基线时加：--live-full-baseline
+# 采 xi 需 root：--sudo-for-xi
 ```
 
-### 阶段 5：PTS GPU — 路由 → 重建 → 3×3 组合（单独执行）
+### 阶段 5：路线 A — PTS GPU 3×3 grid（单独执行）
 
 ```bash
 cd "$MOEBENCH_ROOT"
@@ -850,21 +933,273 @@ python3 scripts/run_router_reconstruct_model_grid.py \
   --benchmark phoronix \
   --pts-suite pts/nvidia-gpu-compute \
   --dataset-root dataset \
+  --machine "$MACHINE" \
   --train-k-max 12 \
   --pts-mode batch-run \
   --auto-install
 ```
 
-（若采集 xi 需 root，在上述命令中追加 **`--sudo-for-xi`**。）
+**路线 A 产物**：默认 `dataset/experiments/router_recon_grid_<套件>_<MACHINE>_<UTC>/`，含 `trained_models/`、`exp_<router>__<recon>.json`、`grid_summary.json`。Grid 会跳过已存在的 `exp_*.json`；失败组合可 **`--stage grid --out-parent <原目录>`** 续跑。
 
-### 阶段 6：论文补充实验（离线三套件 CV）
+### 阶段 6：路线 B — 短探针 + eBPF（分套件、分步骤）
+
+**前置条件**：阶段 1 中**对应套件**的本机完整采集已完成（探针 collect 从 `run-*.json` 读标签；experiment 用本机**最近一次**同套件完整 run 作 ground truth）。
+
+**请先设置环境变量**（若全文开头已 `export` 可跳过）：
+
+```bash
+cd "$MOEBENCH_ROOT"
+export MACHINE="$(python3 -c 'from moebench.dataset_machines import local_host_slug; print(local_host_slug())')"
+export EXP_DIR="dataset/experiments/$MACHINE"
+export MODEL_DIR="dataset/models/$MACHINE"
+mkdir -p "$EXP_DIR" "$MODEL_DIR"
+```
+
+> **不要用 `sudo mkdir`** 创建 `dataset/models` 或 `dataset/experiments/<主机>`，否则目录属主为 root，写入会 `Permission denied`。若已误用 sudo，执行：`sudo chown -R $USER:$USER dataset/models dataset/experiments/$MACHINE`
+
+**探针参数（三套件通用，可按需 export）**：
+
+| 变量 / 参数 | 默认 | 说明 |
+|-------------|------|------|
+| `--probe-mode micro` | 微负载 | 快；按子项类别跑近似压力 + eBPF |
+| `--probe-mode real` | — | `timeout` 包裹的真实 UnixBench / PTS 子项 + eBPF（更慢） |
+| `--probe-duration-s` | `4` | 每子项探针时长（秒），建议 3–5 |
+| `--max-runs` | `0`（全部） | collect 时最多用几个历史完整 run；试跑可设 `2` |
+| `--machine` | 当前主机 | 只读本机会话数据 |
+| `--no-ebpf` | 关 | 跳过 bpftrace（无 root 时可加） |
+
+以下命令默认 **`--probe-mode micro --probe-duration-s 4`**。改用真实子项时，将三步中的 `--probe-mode micro` 改为 **`--probe-mode real`**（并视情况把 `--probe-duration-s` 设为 `5`）。
+
+---
+
+#### 6.1 UnixBench（三步）
+
+**6.1.1 数据采集** — 遍历本机 `dataset/<MACHINE>_*/run-*.json`，对每个子项执行短探针，生成训练集：
+
+```bash
+cd "$MOEBENCH_ROOT"
+
+python3 scripts/probe_collect.py \
+  --benchmark unixbench \
+  --dataset-root dataset \
+  --machine "$MACHINE" \
+  --probe-mode micro \
+  --probe-duration-s 4 \
+  --max-runs 0 \ 
+  -o "$MODEL_DIR/probe_dataset_unixbench.json"
+```
+
+检查：终端打印 `num_samples`；JSON 内含 `samples[]`（每项含 `probe_vector` 与来自完整 run 的标签）。
+
+**6.1.2 模型训练** — 由探针数据集训练子项 → 分数映射模型：
+
+```bash
+python3 scripts/probe_train.py \
+  --probe-dataset "$MODEL_DIR/probe_dataset_unixbench.json" \
+  --model-out "$MODEL_DIR/probe_unixbench_lgbm.pkl" \
+  --model-type lightgbm \
+  --auto-install
+
+python3 scripts/probe_train.py \
+  --probe-dataset "$MODEL_DIR/probe_dataset_unixbench.json" \
+  --model-out "$MODEL_DIR/probe_unixbench_xgb.pkl" \
+  --model-type xgboost \
+  --auto-install
+```
+
+可选 XGBoost：`--model-type xgboost --model-out "$MODEL_DIR/probe_unixbench_xgb.pkl"`。
+
+**6.1.3 完整实验** — 在线对每个 UnixBench 子项再探针、预测，并与本机最近一次完整 UnixBench run 的 suite 对比：
+
+```bash
+python3 scripts/probe_experiment.py \
+  --probe-model "$MODEL_DIR/probe_unixbench_lgbm.pkl" \
+  --dataset-root dataset \
+  --machine "$MACHINE" \
+  --probe-mode micro \
+  --probe-duration-s 4 \
+  -o "$EXP_DIR/probe_unixbench_lgbm.json"
+
+python3 scripts/probe_experiment.py \
+  --probe-model "$MODEL_DIR/probe_unixbench_xgb.pkl" \
+  --dataset-root dataset \
+  --machine "$MACHINE" \
+  --probe-mode micro \
+  --probe-duration-s 4 \
+  -o "$EXP_DIR/probe_unixbench_xgb.json"
+```
+
+查看输出 JSON 中的 `predicted_suite`、`ground_truth_suite`、`suite_comparison`（相对/绝对误差）。未写 `-o` 时默认写入 `$EXP_DIR/probe_unixbench_<UTC>.json`。
+
+---
+
+#### 6.2 PTS CPU（三步）
+
+**前置**：阶段 1 已产生 `dataset/<MACHINE>_cpu_*/run-*.json`。
+
+**6.2.1 数据采集**
+
+```bash
+cd "$MOEBENCH_ROOT"
+
+python3 scripts/probe_collect.py \
+  --benchmark phoronix \
+  --pts-suite cpu \
+  --dataset-root dataset \
+  --machine "$MACHINE" \
+  --probe-mode micro \
+  --probe-duration-s 4 \
+  --max-runs 0 \
+  -o "$MODEL_DIR/probe_dataset_pts_cpu.json"
+```
+
+**6.2.2 模型训练**
+
+PTS 各 profile 的 `primary_value` 量级差极大，训练时会**自动**使用 **`log1p` 标签** + **每 profile 一个回归器**（`estimator_mode: per_test`）。旧版 `.pkl` 需删掉并重训；训练输出 JSON 应含 `"label_transform": "log1p"`。collect 尽量 `--max-runs 0` 覆盖本机多个 `_cpu_` 会话。
+
+```bash
+python3 scripts/probe_train.py \
+  --probe-dataset "$MODEL_DIR/probe_dataset_pts_cpu.json" \
+  --model-out "$MODEL_DIR/probe_pts_cpu_lgbm.pkl" \
+  --model-type lightgbm \
+  --auto-install
+
+python3 scripts/probe_train.py \
+  --probe-dataset "$MODEL_DIR/probe_dataset_pts_cpu.json" \
+  --model-out "$MODEL_DIR/probe_pts_cpu_xgb.pkl" \
+  --model-type xgboost \
+  --auto-install
+```
+
+**6.2.3 完整实验**（ground truth 为本机最近一次 `yi.suite == cpu` 的完整 run）
+
+```bash
+python3 scripts/probe_experiment.py \
+  --probe-model "$MODEL_DIR/probe_pts_cpu_lgbm.pkl" \
+  --dataset-root dataset \
+  --machine "$MACHINE" \
+  --probe-mode micro \
+  --probe-duration-s 4 \
+  -o "$EXP_DIR/probe_pts_cpu_lgbm.json"
+
+python3 scripts/probe_experiment.py \
+  --probe-model "$MODEL_DIR/probe_pts_cpu_xgb.pkl" \
+  --dataset-root dataset \
+  --machine "$MACHINE" \
+  --probe-mode micro \
+  --probe-duration-s 4 \
+  -o "$EXP_DIR/probe_pts_cpu_xgb.json"
+```
+
+---
+
+#### 6.3 PTS GPU（`pts/nvidia-gpu-compute`，三步）
+
+**前置**：阶段 1 已产生 `dataset/<MACHINE>_pts_nvidia-gpu-compute_*/run-*.json`，且本机 NVIDIA / PTS GPU 套件可用。
+
+**6.3.1 数据采集**
+
+```bash
+cd "$MOEBENCH_ROOT"
+
+python3 scripts/probe_collect.py \
+  --benchmark phoronix \
+  --pts-suite pts/nvidia-gpu-compute \
+  --dataset-root dataset \
+  --machine "$MACHINE" \
+  --probe-mode micro \
+  --probe-duration-s 4 \
+  --max-runs 0 \
+  -o "$MODEL_DIR/probe_dataset_pts_gpu.json"
+```
+
+**6.3.2 模型训练**
+
+与 PTS CPU 相同：自动 `log1p` + `per_test`；需重新训练后再做实验。
+
+```bash
+python3 scripts/probe_train.py \
+  --probe-dataset "$MODEL_DIR/probe_dataset_pts_gpu.json" \
+  --model-out "$MODEL_DIR/probe_pts_gpu_lgbm.pkl" \
+  --model-type lightgbm \
+  --auto-install
+
+python3 scripts/probe_train.py \
+  --probe-dataset "$MODEL_DIR/probe_dataset_pts_gpu.json" \
+  --model-out "$MODEL_DIR/probe_pts_gpu_xgb.pkl" \
+  --model-type xgboost \
+  --auto-install
+```
+
+**6.3.3 完整实验**
+
+```bash
+python3 scripts/probe_experiment.py \
+  --probe-model "$MODEL_DIR/probe_pts_gpu_lgbm.pkl" \
+  --dataset-root dataset \
+  --machine "$MACHINE" \
+  --probe-mode micro \
+  --probe-duration-s 4 \
+  -o "$EXP_DIR/probe_pts_gpu_lgbm.json"
+
+python3 scripts/probe_experiment.py \
+  --probe-model "$MODEL_DIR/probe_pts_gpu_xgb.pkl" \
+  --dataset-root dataset \
+  --machine "$MACHINE" \
+  --probe-mode micro \
+  --probe-duration-s 4 \
+  -o "$EXP_DIR/probe_pts_gpu_xgb.json"
+```
+
+---
+
+**路线 B 产物（按套件，均在 `$MODEL_DIR` / `$EXP_DIR`）**
+
+| 套件 | 训练集 | 模型 | 实验报告 |
+|------|--------|------|----------|
+| UnixBench | `probe_dataset_unixbench.json` | `probe_unixbench_lgbm.pkl` | `probe_unixbench_lgbm.json` |
+| PTS CPU | `probe_dataset_pts_cpu.json` | `probe_pts_cpu_lgbm.pkl` | `probe_pts_cpu_lgbm.json` |
+| PTS GPU | `probe_dataset_pts_gpu.json` | `probe_pts_gpu_lgbm.pkl` | `probe_pts_gpu_lgbm.json` |
+
+**执行顺序建议**：完成 6.1 全部三步 → 再 6.2 → 再 6.3；某一套件失败时可单独重跑该套件的某一步（例如只改 collect 的 `--max-runs` 后重训再实验）。
+
+**试跑 / 真实子项**：首次可先把各套件 collect 的 `--max-runs` 设为 `2`；确认流程后再改为 `0` 用全部历史 run。真实子项探针将三步中的 `--probe-mode micro` 改为 `real`，并把 `--probe-duration-s` 设为 `5`（仍须保留阶段 1 的完整 run 作标签）。
+
+若曾把探针 JSON 放在 `dataset/experiments/probe_*.json`（旧布局）：
+
+```bash
+mkdir -p "$EXP_DIR"
+mv dataset/experiments/probe_*.json "$EXP_DIR/" 2>/dev/null || true
+```
+
+### 阶段 7：论文补充实验（离线三套件 CV）
 
 ```bash
 cd "$MOEBENCH_ROOT"
 
 ./scripts/run_paper_cv_three_suites.sh
+# 或：OUT=dataset/paper_cv_full.json ./scripts/run_paper_cv_three_suites.sh
 ```
 
-**产物路径**：各套件网格默认在 `dataset/experiments/router_recon_grid_unixbench_<hostname>_<UTC>/` 等（目录名随主机与时间戳变化），内含 `trained_models/`、`exp_<路由>__<重建>.json`、`grid_summary.json`（含 `machine`）。阶段 6 论文离线 CV 为**跨会话/跨机器**补充实验，与默认「本机训练本机测」流程独立；见 `scripts/run_paper_cv_three_suites.sh`。
+阶段 7 在**已有** `run-*.json` 上做离线交叉验证，**不**重新跑 UnixBench / PTS；可与阶段 3–6 并行规划，但通常放在采集完成之后。默认 glob 可跨会话；与「本机 `--machine` 训练」的 grid / 探针相互独立。
 
-**耗时**：阶段 3–5 各含 9 次完整基准运行，总耗时会很长；可先缩小 `-n` 采集轮次或仅用 **`--stage`** 分天执行。
+### 产物一览（本机 `<MACHINE>`）
+
+```text
+dataset/
+  <MACHINE>_<UTC>/run-*.json
+  <MACHINE>_cpu_<UTC>/run-*.json
+  <MACHINE>_pts_nvidia-gpu-compute_<UTC>/run-*.json
+  experiments/
+    <MACHINE>/                          # 路线 B
+      probe_unixbench_lgbm.json
+      probe_pts_cpu_lgbm.json
+      probe_pts_gpu_lgbm.json
+    router_recon_grid_unixbench_<MACHINE>_<UTC>/   # 路线 A（默认位置）
+  models/
+    <MACHINE>/                          # 路线 B
+      probe_dataset_unixbench.json
+      probe_unixbench_lgbm.pkl
+```
+
+**耗时提示**：UnixBench grid 含 9 次「部分 + 全量」在线跑分，耗时长；PTS grid **默认不**重复 9 次全量 `cpu`/`gpu` 套件。路线 B 的 collect 对每个历史 run × 每个子项执行短探针，耗时会随 `--max-runs` 与子项数量线性增长；试跑时在各套件 collect 步骤使用 `--max-runs 2`。阶段 3–5 可用 grid 的 **`--stage`** 分天执行；阶段 6 按 6.1 → 6.2 → 6.3 分套件、分天执行即可。

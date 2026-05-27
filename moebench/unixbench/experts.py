@@ -88,6 +88,10 @@ def expert_template(test_id: str, expert_index: int) -> dict[str, Any]:
     }
 
 
+def category_for_test(test_id: str) -> ExpertCategory:
+    return _CATEGORY.get(test_id, "CPU")
+
+
 def build_expert_catalog(test_ids: tuple[str, ...] | list[str] | None = None) -> list[dict[str, Any]]:
     ids = list(test_ids) if test_ids is not None else list(INDEX_SUITE_TEST_IDS)
     return [expert_template(tid, i + 1) for i, tid in enumerate(ids)]
