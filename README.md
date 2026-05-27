@@ -472,7 +472,7 @@ python3 scripts/run_router_model_ablation.py \
 **按机器训练（默认）**：训练与 3×3 网格实验**只使用本机采集的数据**（会话目录名前缀为 `<hostname>_…`）。未指定 **`--machine`** 时自动取当前主机名（与采集时 `host_slug()` 一致）；在每台机器上分别执行同一条 grid 命令即可。若 `dataset/` 里有多台机器的数据且要在**一台机器上批量跑全部主机**，可加 **`--all-machines`**（每台主机单独输出目录）。显式指定某台：`--machine iZbp1glgt48i9a8d49embxZ`。
 
 - **UnixBench**：驱动 `experiment_router_reconstruct_vs_full.py`；可加 **`--sudo`**（采集 xi）。
-- **PTS**：**必须**指定 **`--benchmark phoronix --pts-suite <套件>`**（与采集时 `yi.suite` 一致，如 `cpu`、`pts/nvidia-gpu-compute`）；驱动 `experiment_router_reconstruct_vs_full_pts.py`；全量基线默认与 `--pts-suite` 相同，可用 **`--suite-full`** 覆盖；需要 root 采 xi 时用 **`--sudo-for-xi`**。PTS 训练建议 **`--train-k-max 12`**（勿超过该套件 profile 数）。
+- **PTS**：**必须**指定 **`--benchmark phoronix --pts-suite <套件>`**（与采集时 `yi.suite` 一致，如 `cpu`、`pts/nvidia-gpu-compute`）；驱动 `experiment_router_reconstruct_vs_full_pts.py`；全量基线默认与 `--pts-suite` 相同，可用 **`--suite-full`** 覆盖；需要 root 采 xi 时用 **`--sudo-for-xi`**。PTS 训练建议 **`--train-k-max 12`**（勿超过该套件 profile 数）。**Grid 默认不再重复跑全量 PTS**（用本机 `dataset/` 已采集 run 作 ground truth，避免 9× 全量 `cpu` 套件导致 OOM/SIGKILL）；若需在线全量基线，加 **`--live-full-baseline`**。Grid 阶段会**跳过已有 `exp_*.json`**，失败组合可 **`--stage grid --out-parent <目录>`** 续跑。
 
 **三个测试套件请分三次执行**（每次复制一块即可），不要合并成一条命令。
 

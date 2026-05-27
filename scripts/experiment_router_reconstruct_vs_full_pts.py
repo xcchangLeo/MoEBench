@@ -25,6 +25,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from moebench import collect_all
+from moebench.dataset_machines import latest_pts_run_path_for_machine, resolve_training_machine
 from moebench.phoronix.pipeline import (
     _export_result_json,
     _pts_argv_as_installing_user,
@@ -36,6 +37,7 @@ from moebench.phoronix.pipeline import (
     safe_session_tag,
 )
 from moebench.phoronix.training_data import (
+    full_suite_wall_seconds_pts,
     primary_time_from_pts_export,
     primary_value_from_export,
 )
@@ -205,6 +207,23 @@ def main() -> int:
         default=2,
         help="Minimum number of full-export profiles required for ground-truth suite mean (default: 2)",
     )
+    ap.add_argument(
+        "--ground-truth-from-dataset",
+        action="store_true",
+        help="Use collected full-suite PTS export from dataset/ as ground truth (skip live full run)",
+    )
+    ap.add_argument(
+        "--machine",
+        type=str,
+        default="",
+        help="With --ground-truth-from-dataset: host slug for session filter (default: current hostname)",
+    )
+    ap.add_argument(
+        "--ground-truth-run",
+        type=str,
+        default="",
+        help="With --ground-truth-from-dataset: explicit run JSON path (overrides --machine lookup)",
+    )
     ap.add_argument("--auto-install", action="store_true")
     args = ap.parse_args()
 
@@ -307,23 +326,53 @@ def main() -> int:
         return 2
     pred = predict_from_partial(recon, xi, executed, return_uncertainty=False)
 
-    raw_full = f"moebench_pts_exp_full_{session}_{stamp}"
-    name_full = pts_clean_save_name(safe_session_tag(raw_full))
-    env_f = pts_subprocess_env()
-    env_f["TEST_RESULTS_NAME"] = name_full
-    env_f["TEST_RESULTS_IDENTIFIER"] = name_full
-    env_f["TEST_RESULTS_DESCRIPTION"] = "MoEBench full cpu baseline"
-    cmd_full = _pts_argv_as_installing_user(pts_exe, [args.pts_mode, args.suite_full])
-    print("+", " ".join(cmd_full), file=sys.stderr)
-    t2 = time.perf_counter()
-    rc2 = subprocess.call(cmd_full, env=env_f)
-    t_full = time.perf_counter() - t2
-    if rc2 != 0:
-        print(f"Full PTS failed rc={rc2}", file=sys.stderr)
-        return rc2
+    ground_truth_source = "live_full_run"
+    ground_truth_run_path: str | None = None
+    if args.ground_truth_from_dataset:
+        machine = resolve_training_machine(args.machine or None)
+        if args.ground_truth_run.strip():
+            gt_path = Path(args.ground_truth_run).resolve()
+        else:
+            gt_path = latest_pts_run_path_for_machine(
+                Path(args.dataset_root),
+                machine=machine,
+                pts_suite=args.suite_full,
+            )
+        with open(gt_path, encoding="utf-8") as f:
+            ds_gt = json.load(f)
+        full_export = (ds_gt.get("yi") or {}).get("pts_export") or {}
+        if not full_export:
+            print(f"Ground-truth run missing yi.pts_export: {gt_path}", file=sys.stderr)
+            return 2
+        t_full_val = full_suite_wall_seconds_pts(ds_gt, test_ids=tuple(test_ids))
+        t_full = float(t_full_val) if t_full_val is not None else 0.0
+        rc2 = 0
+        name_full = f"dataset:{gt_path.name}"
+        full_path = gt_path
+        ground_truth_source = "dataset_collection"
+        ground_truth_run_path = str(gt_path)
+        print(
+            f"[ground-truth] using collected run {gt_path} (skip live full PTS; t_full≈{t_full:.1f}s)",
+            file=sys.stderr,
+        )
+    else:
+        raw_full = f"moebench_pts_exp_full_{session}_{stamp}"
+        name_full = pts_clean_save_name(safe_session_tag(raw_full))
+        env_f = pts_subprocess_env()
+        env_f["TEST_RESULTS_NAME"] = name_full
+        env_f["TEST_RESULTS_IDENTIFIER"] = name_full
+        env_f["TEST_RESULTS_DESCRIPTION"] = "MoEBench full cpu baseline"
+        cmd_full = _pts_argv_as_installing_user(pts_exe, [args.pts_mode, args.suite_full])
+        print("+", " ".join(cmd_full), file=sys.stderr)
+        t2 = time.perf_counter()
+        rc2 = subprocess.call(cmd_full, env=env_f)
+        t_full = time.perf_counter() - t2
+        if rc2 != 0:
+            print(f"Full PTS failed rc={rc2}", file=sys.stderr)
+            return rc2
 
-    full_path = out_dir / "full_export_pts.json"
-    full_export = _export_result_json(pts_exe, name_full, full_path)
+        full_path = out_dir / "full_export_pts.json"
+        full_export = _export_result_json(pts_exe, name_full, full_path)
 
     aligned_ids, id_map, missing_ids = _align_recon_ids_to_export(test_ids, full_export)
     if missing_ids:
@@ -376,6 +425,8 @@ def main() -> int:
         "suite_target_mode": suite_target_mode,
         "predicted_subtests": pred.get("subtest_index"),
         "pts_result_ids": {"partial": name_partial, "full": name_full},
+        "ground_truth_source": ground_truth_source,
+        "ground_truth_run_path": ground_truth_run_path,
         "target_alignment": {
             "requested_test_ids": list(test_ids),
             "aligned_test_ids_for_ground_truth": list(aligned_ids),

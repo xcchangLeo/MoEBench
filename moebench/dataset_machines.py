@@ -118,3 +118,22 @@ def resolve_training_machine(explicit: str | None) -> str:
     if explicit and explicit.strip():
         return explicit.strip()
     return local_host_slug()
+
+
+def latest_pts_run_path_for_machine(
+    dataset_root: str | Path,
+    *,
+    machine: str,
+    pts_suite: str,
+) -> Path:
+    """Most recently modified PTS run JSON for ``machine`` and ``pts_suite``."""
+    from moebench.phoronix.training_data import collect_phoronix_run_paths
+
+    glob_pat = glob_for_machine(benchmark="phoronix", machine=machine, pts_suite=pts_suite)
+    paths = collect_phoronix_run_paths(
+        dataset_root,
+        glob_pattern=glob_pat,
+        pts_suite=pts_suite,
+    )
+    return max(paths, key=lambda p: p.stat().st_mtime)
+

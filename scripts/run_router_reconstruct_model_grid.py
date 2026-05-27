@@ -58,11 +58,25 @@ def _preferred_python() -> str:
     return sys.executable
 
 
-def _run(cmd: list[str], *, dry_run: bool) -> None:
+def _run(cmd: list[str], *, dry_run: bool, check: bool = True) -> int:
     print("+", " ".join(cmd), file=sys.stderr)
     if dry_run:
-        return
-    subprocess.run(cmd, check=True)
+        return 0
+    proc = subprocess.run(cmd)
+    if check and proc.returncode != 0:
+        raise subprocess.CalledProcessError(proc.returncode, cmd)
+    return int(proc.returncode)
+
+
+def _experiment_json_ok(path: Path) -> bool:
+    if not path.is_file():
+        return False
+    try:
+        with open(path, encoding="utf-8") as f:
+            d = json.load(f)
+        return bool(d.get("schema"))
+    except Exception:
+        return False
 
 
 ROUTER_VENV = REPO_ROOT / ".venv-moebench-router"
@@ -243,6 +257,16 @@ def main() -> int:
         type=str,
         default="",
         help="Extra argv token(s) for the experiment script (quoted; rarely needed)",
+    )
+    ap.add_argument(
+        "--live-full-baseline",
+        action="store_true",
+        help="PTS grid: run live full suite for ground truth (default: use collected dataset run)",
+    )
+    ap.add_argument(
+        "--force-rerun",
+        action="store_true",
+        help="Grid stage: re-run experiments even if exp_*.json already exists",
     )
     args = ap.parse_args()
     python_exe = _ensure_ml_python(args.auto_install)
@@ -444,6 +468,7 @@ def _run_for_machine(
     exp_script = EXPERIMENT_UB if args.benchmark == "unixbench" else EXPERIMENT_PTS
 
     rows: list[dict[str, Any]] = []
+    grid_failures: list[str] = []
     if do_grid:
         for r_mt, r_fn in ROUTER_SPECS:
             for c_mt, c_fn in RECON_SPECS:
@@ -457,6 +482,21 @@ def _run_for_machine(
                 if not recon_ckpt.is_file() and not args.dry_run:
                     print(f"Missing reconstruct checkpoint: {recon_ckpt}", file=sys.stderr)
                     return 2
+                if (
+                    not args.dry_run
+                    and not args.force_rerun
+                    and _experiment_json_ok(exp_out)
+                ):
+                    print(f"[grid] skip existing {exp_out.name}", file=sys.stderr)
+                    rows.append(
+                        {
+                            "router_type": r_mt,
+                            "reconstruct_type": c_mt,
+                            "skipped": True,
+                            **summarize(exp_out),
+                        }
+                    )
+                    continue
                 cmd = [
                     py,
                     str(exp_script),
@@ -476,11 +516,22 @@ def _run_for_machine(
                             args.pts_mode,
                             "--suite-full",
                             suite_full,
+                            "--machine",
+                            machine,
                         ]
                     )
+                    if not args.live_full_baseline:
+                        cmd.append("--ground-truth-from-dataset")
                 cmd.extend(exp_tokens)
-                _run(cmd, dry_run=args.dry_run)
+                rc = _run(cmd, dry_run=args.dry_run, check=False)
+                if rc != 0:
+                    grid_failures.append(f"{tag} (exit {rc})")
+                    print(f"[grid] experiment failed: {tag} rc={rc}", file=sys.stderr)
+                    continue
                 if not args.dry_run:
+                    if not _experiment_json_ok(exp_out):
+                        grid_failures.append(f"{tag} (no valid output json)")
+                        continue
                     row = {
                         "router_type": r_mt,
                         "reconstruct_type": c_mt,
@@ -513,6 +564,7 @@ def _run_for_machine(
         "routers": [m for m, _ in ROUTER_SPECS],
         "reconstructors": [m for m, _ in RECON_SPECS],
         "ranking_note": "Sorted by suite_abs_err then suite_rel_err (lower is better).",
+        "grid_failures": grid_failures,
         "per_combination": rows,
         "ranked": ranked,
     }
@@ -525,6 +577,12 @@ def _run_for_machine(
         print(json.dumps(report, indent=2, ensure_ascii=False))
         if not args.dry_run:
             print(f"\nWrote summary: {summary_path}", file=sys.stderr)
+        if grid_failures:
+            print(
+                f"[grid] {len(grid_failures)} experiment(s) failed: {', '.join(grid_failures)}",
+                file=sys.stderr,
+            )
+            return 1
     elif not args.dry_run:
         print(f"Stage {args.stage} finished; artifacts under {out_dir}", file=sys.stderr)
     return 0
