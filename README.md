@@ -625,91 +625,64 @@ python3 scripts/reconstruct_train_eval.py \
   --export-model dataset/models/reconstruct_mlp.pt
 ```
 
-## 论文补充实验（离线 CV：UnixBench + PTS CPU + PTS GPU）
+## 论文补充实验（三项：Top-K / 路由策略 / xi 消融）
 
-面向投稿实证：`scripts/paper_reconstruct_cv_extras.py` 在**已有数据集 JSON**上做离线交叉验证（**不**重新跑 UnixBench / PTS）。默认 **`--suites unixbench,phoronix_cpu,phoronix_gpu`**，一次输出三套件的汇总 JSON（schema **`moebench.paper_reconstruct_cv_extras.v2`**，顶层 `suite_results[]` 每项对应一套 benchmark）。
+在 **路线 A 主实验（3×3 grid）** 完成后，从各套件的 `grid_summary.json` 选定 **最优路由 checkpoint**（及对应的重建 **model-type**，如 `lightgbm` / `xgboost`）。以下三项均在 **已有 `run-*.json`** 上做 **留一会话交叉验证（LOSO）**，**不重新跑** UnixBench / PTS。
 
-| 能力 | 说明 |
-|------|------|
-| **三套件** | **UnixBench**（`moebench.unixbench.dataset.v1`）；**PTS CPU**（`yi.suite == cpu`）；**PTS GPU**（`yi.suite == pts/nvidia-gpu-compute`）。各自可用独立 glob 收集 `run-*.json`。 |
-| **评估子集策略** | `random`、`fixed_first_k`、`fixed_cpu_mix` / `fixed_io_mix`（UnixBench 优先 CPU/IO 子项；PTS 上无匹配 id 时退化为「canonical profile 顺序前缀」）、`greedy_slowest` / `greedy_fastest`（UB：`ti` 单副本 key `1`；PTS：`ti.by_test_id.time_s_total`）、`router`（见下） |
-| **router** | 三套套件需 **分别** 训练路由：`--router-model-unixbench`、`--router-model-pts-cpu`、`--router-model-pts-gpu`。也可用 **`--router-model`**（仅等价于 UnixBench，兼容旧用法）。`policies` 含 `router` 时，**凡在本次 `--suites` 中选中的套件都必须提供对应 checkpoint**，否则会报错退出。 |
-| **xi 消融** | `full`、`static_hw_only`、`no_perf_pmu`、`no_dynamic_proc`、`no_gpu`（三套共用同一向量化与消融逻辑） |
-| **PTS suite 标量** | `--pts-suite-target logmean`（默认，与导出重建模型常用设定一致）或 `arithmetic_mean` |
-| **CV 划分** | `leave_one_session_out`（按会话目录名留出）；仅有一条会话时会 **按套件** 回退 `random_fold` |
-| **K 扫描** | `--k-sweep 1,2,3,4,5` |
-| **额外指标** | `median_bucket_accuracy_suite`（suite 中位数分桶一致性） |
+论文指标与表格设计见根目录 **`论文实验指标与流程总结.md`**。
 
-**一键跑三套件**（可通过环境变量改 glob / CV / 输出路径）：
+### 前置：导出最优路由路径（每台机器各一套）
 
 ```bash
-cd /path/to/MoEBench
-./scripts/run_paper_cv_three_suites.sh
-# 或例如：
-OUT=dataset/paper_cv_full.json CV_MODE=random_fold FOLDS=5 ./scripts/run_paper_cv_three_suites.sh
+# 示例：从 grid 目录 trained_models/ 或 grid_summary 中确认最优组合后设置
+export ROUTER_UNIXBENCH="$MOEBENCH_ROOT/dataset/experiments/router_recon_grid_unixbench_<MACHINE>_<UTC>/trained_models/router_gnn.pt"
+export ROUTER_PTS_CPU="$MOEBENCH_ROOT/dataset/experiments/router_recon_grid_cpu_<MACHINE>_<UTC>/trained_models/router_lightgbm.pkl"
+export ROUTER_PTS_GPU="$MOEBENCH_ROOT/dataset/experiments/router_recon_grid_pts_nvidia-gpu-compute_<MACHINE>_<UTC>/trained_models/router_gnn.pt"
+# 重建模型类型须与 grid 最优组合一致（供离线 CV 训练重建头）
+export MODEL_TYPE=lightgbm   # 或 xgboost / mlp
 ```
 
-**等价 Python（明确三套 glob）**：
+### 补充实验 1：Top-K 扫描（三套件）
+
+在 **路由 Top-K 策略**、**完整 xi** 下扫描 `K=1,2,…`；输出每 K 的 suite MAE、时间节省比例与 **balanced score**（越小越好），并生成 `*_summary.json` 中的 **推荐 K**。
 
 ```bash
-cd /path/to/MoEBench
-
-python3 scripts/paper_reconstruct_cv_extras.py \
-  --dataset-root dataset \
-  --suites unixbench,phoronix_cpu,phoronix_gpu \
-  --glob-unixbench '*/run-*.json' \
-  --glob-pts-cpu '*_cpu_*/run-*.json' \
-  --glob-pts-gpu '*_pts_nvidia-gpu-compute_*/run-*.json' \
-  --cv-mode leave_one_session_out \
-  --folds 5 \
-  --policies random,fixed_first_k,fixed_cpu_mix,greedy_slowest,greedy_fastest \
-  --xi-ablations full \
-  --pts-suite-target logmean \
-  --eval-partial-k 3 \
-  --report-json dataset/paper_cv_three_suites.json
+cd "$MOEBENCH_ROOT"
+chmod +x scripts/run_paper_topk_three_suites.sh
+K_SWEEP=1,2,3,4,5,6 MODEL_TYPE="$MODEL_TYPE" ./scripts/run_paper_topk_three_suites.sh
+# 产出：dataset/paper_supplementary/topk_three_suites.json
+#       dataset/paper_supplementary/topk_three_suites_summary.json
 ```
 
-**仅跑其中一类**：
+### 补充实验 2：路由 / 子集策略对比（三套件）
+
+在固定 **`EVAL_K`**（建议用补充实验 1 的推荐 K，默认 `3`）下比较：`random`、`fixed_first_k`、`fixed_cpu_mix`、`fixed_io_mix`、`greedy_slowest`、`greedy_fastest`、`router`。
 
 ```bash
-python3 scripts/paper_reconstruct_cv_extras.py --dataset-root dataset --suites unixbench \
-  --glob-unixbench '*/run-*.json' --report-json dataset/paper_cv_ub_only.json
-
-python3 scripts/paper_reconstruct_cv_extras.py --dataset-root dataset --suites phoronix_cpu \
-  --glob-pts-cpu '*_cpu_*/run-*.json' --report-json dataset/paper_cv_pts_cpu_only.json
-
-python3 scripts/paper_reconstruct_cv_extras.py --dataset-root dataset --suites phoronix_gpu \
-  --glob-pts-gpu '*_pts_nvidia-gpu-compute_*/run-*.json' --report-json dataset/paper_cv_pts_gpu_only.json
+EVAL_K=3 MODEL_TYPE="$MODEL_TYPE" ./scripts/run_paper_policy_compare_three_suites.sh
+# 产出：dataset/paper_supplementary/policy_compare_three_suites.json
+#       dataset/paper_supplementary/policy_compare_three_suites_summary.json
 ```
 
-**含 router 的三套件对比**（示例路径请换成你训练生成的文件）：
+### 补充实验 3：xi 特征组消融与重要性（三套件）
+
+固定 **路由策略** 与 **EVAL_K**；比较 xi 组：`full`、`static_hw_only`、`no_perf_pmu`、`no_dynamic_proc`、`no_gpu`。summary 中 **`importance_ranking`** 按「去掉该组后 MAE 上升幅度」排序。
 
 ```bash
-python3 scripts/paper_reconstruct_cv_extras.py \
-  --dataset-root dataset \
-  --suites unixbench,phoronix_cpu,phoronix_gpu \
-  --policies random,router \
-  --router-model-unixbench dataset/unixbench_router/router_gnn.pt \
-  --router-model-pts-cpu dataset/pts_router/router_gnn.pt \
-  --router-model-pts-gpu dataset/pts_nvidia_gpu_router/router_gnn.pt \
-  --eval-partial-k 5 \
-  --report-json dataset/paper_cv_three_suites_router.json
+EVAL_K=3 MODEL_TYPE="$MODEL_TYPE" ./scripts/run_paper_xi_ablation_three_suites.sh
+# 产出：dataset/paper_supplementary/xi_ablation_three_suites.json
+#       dataset/paper_supplementary/xi_ablation_three_suites_summary.json
 ```
 
-**Pareto（多 K）**：
+### 单独汇总已有 JSON
 
 ```bash
-python3 scripts/paper_reconstruct_cv_extras.py \
-  --dataset-root dataset \
-  --suites unixbench,phoronix_cpu,phoronix_gpu \
-  --cv-mode random_fold \
-  --folds 5 \
-  --k-sweep 1,2,3,4,5,6 \
-  --policies random,fixed_first_k \
-  --report-json dataset/paper_cv_k_sweep_three_suites.json
+python3 scripts/paper_summarize_supplementary.py --mode topk --input dataset/paper_supplementary/topk_three_suites.json -o /tmp/topk_sum.json
+python3 scripts/paper_summarize_supplementary.py --mode policy --input dataset/paper_supplementary/policy_compare_three_suites.json -o /tmp/policy_sum.json
+python3 scripts/paper_summarize_supplementary.py --mode xi_ablation --input dataset/paper_supplementary/xi_ablation_three_suites.json -o /tmp/xi_sum.json
 ```
 
-说明：某一套件有效样本 **&lt; 2** 或 glob 无匹配时，该套件会记入 `suite_errors`，其余套件仍写入 `suite_results`。若三套件全部失败则退出码非 0。实现模块：`moebench/paper_eval/`（`subset_policies.py`、`xi_ablation.py`）。
+底层引擎：`scripts/paper_reconstruct_cv_extras.py`（`moebench/paper_eval/`）。旧入口 `run_paper_cv_three_suites.sh` 已弃用，请使用以上三个脚本。
 
 ## 完整实验：Router + Reconstruction vs Full
 
@@ -823,9 +796,9 @@ cd /home/cxc/MoEBench
 | 路线 | 思路 | 主要脚本 | 典型产物 |
 |------|------|----------|----------|
 | **A. Router × Reconstruction** | `xi` → 路由选 Top-K 子项 → 部分跑分 → 重建预测 suite | `run_router_reconstruct_model_grid.py` | `dataset/experiments/router_recon_grid_*_<host>_<UTC>/`（9× `exp_*.json` + `grid_summary.json`） |
-| **B. 短探针 + eBPF** | 每子项 3–5s 探针 + eBPF → 预测子项分数 → 聚合 suite | `probe_collect.py` → `probe_train.py` → `probe_experiment.py`（**每套件分三步**） | `dataset/models/<host>/probe_*.pkl`、`dataset/experiments/<host>/probe_*.json` |
+| **B. 短探针 + eBPF** | 每子项 3–5s 探针 + eBPF → 预测子项分数 → 聚合 suite | `probe_collect.py` → `probe_train.py` → `probe_experiment.py`（**每套件分三步**） | `dataset/models/<host>/probe_*.pkl`、`dataset/experiments/<host>/probe_*.json`；**E3：LightGBM vs XGBoost** |
 
-**推荐顺序**：阶段 0 依赖 → 阶段 1 三套件**完整采集**（两条路线的标签来源）→（可选）阶段 2 PTS 专家分析 → 阶段 3–5 路线 A（各套件 3×3 grid）→ 阶段 6 路线 B（**按套件** 6.1 → 6.2 → 6.3，每套件内 collect → train → experiment）→ 阶段 7 论文离线 CV。
+**推荐顺序**：阶段 0 依赖 → 阶段 1 三套件**完整采集** → 阶段 3–5 **路线 A 主实验**（三套件各 3×3 grid，5 台机器）→ 阶段 7 **论文补充三项**（Top-K、策略对比、xi 消融）→ 阶段 6 **路线 B**（三套件 × LightGBM/XGBoost 对比，5 台机器）。（阶段 2 PTS 专家分析为可选。）
 
 **多机（如 8 台）**：每台机器独立完成阶段 1，再在本机跑阶段 3–6；默认 `--machine` 为当前主机 slug，无需手填。把整棵 `dataset/` 拷到另一台机器时，只会读写 `experiments/<本机>/` 与 `models/<本机>/`，不会覆盖他机目录。
 
@@ -941,9 +914,9 @@ python3 scripts/run_router_reconstruct_model_grid.py \
 
 **路线 A 产物**：默认 `dataset/experiments/router_recon_grid_<套件>_<MACHINE>_<UTC>/`，含 `trained_models/`、`exp_<router>__<recon>.json`、`grid_summary.json`。Grid 会跳过已存在的 `exp_*.json`；失败组合可 **`--stage grid --out-parent <原目录>`** 续跑。
 
-### 阶段 6：路线 B — 短探针 + eBPF（分套件、分步骤）
+### 阶段 6：路线 B — 短探针 + eBPF（分套件、分步骤；主实验 E3：LightGBM vs XGBoost）
 
-**前置条件**：阶段 1 中**对应套件**的本机完整采集已完成（探针 collect 从 `run-*.json` 读标签；experiment 用本机**最近一次**同套件完整 run 作 ground truth）。
+**前置条件**：阶段 1 中**对应套件**的本机完整采集已完成（探针 collect 从 `run-*.json` 读标签；experiment 用本机**最近一次**同套件完整 run 作 ground truth）。每套件训练 **LightGBM 与 XGBoost** 各一份模型并各跑一次 experiment，供 5 台机器汇总对比。
 
 **请先设置环境变量**（若全文开头已 `export` 可跳过）：
 
@@ -1006,8 +979,6 @@ python3 scripts/probe_train.py \
   --model-type xgboost \
   --auto-install
 ```
-
-可选 XGBoost：`--model-type xgboost --model-out "$MODEL_DIR/probe_unixbench_xgb.pkl"`。
 
 **6.1.3 完整实验** — 在线对每个 UnixBench 子项再探针、预测，并与本机最近一次完整 UnixBench run 的 suite 对比：
 
@@ -1157,9 +1128,9 @@ python3 scripts/probe_experiment.py \
 
 | 套件 | 训练集 | 模型 | 实验报告 |
 |------|--------|------|----------|
-| UnixBench | `probe_dataset_unixbench.json` | `probe_unixbench_lgbm.pkl` | `probe_unixbench_lgbm.json` |
-| PTS CPU | `probe_dataset_pts_cpu.json` | `probe_pts_cpu_lgbm.pkl` | `probe_pts_cpu_lgbm.json` |
-| PTS GPU | `probe_dataset_pts_gpu.json` | `probe_pts_gpu_lgbm.pkl` | `probe_pts_gpu_lgbm.json` |
+| UnixBench | `probe_dataset_unixbench.json` | `probe_unixbench_{lgbm,xgb}.pkl` | `probe_unixbench_{lgbm,xgb}.json` |
+| PTS CPU | `probe_dataset_pts_cpu.json` | `probe_pts_cpu_{lgbm,xgb}.pkl` | `probe_pts_cpu_{lgbm,xgb}.json` |
+| PTS GPU | `probe_dataset_pts_gpu.json` | `probe_pts_gpu_{lgbm,xgb}.pkl` | `probe_pts_gpu_{lgbm,xgb}.json` |
 
 **执行顺序建议**：完成 6.1 全部三步 → 再 6.2 → 再 6.3；某一套件失败时可单独重跑该套件的某一步（例如只改 collect 的 `--max-runs` 后重训再实验）。
 
@@ -1172,16 +1143,28 @@ mkdir -p "$EXP_DIR"
 mv dataset/experiments/probe_*.json "$EXP_DIR/" 2>/dev/null || true
 ```
 
-### 阶段 7：论文补充实验（离线三套件 CV）
+### 阶段 7：论文补充实验（Top-K + 路由策略 + xi 消融）
+
+**前置**：阶段 3–5 完成，并从各套件 `grid_summary.json` 确定最优路由 checkpoint（见上文「论文补充实验」）。
 
 ```bash
 cd "$MOEBENCH_ROOT"
+export ROUTER_UNIXBENCH="..."   # 三套件最优路由 .pkl/.pt
+export ROUTER_PTS_CPU="..."
+export ROUTER_PTS_GPU="..."
+export MODEL_TYPE=lightgbm      # 与 grid 最优重建类型一致
 
-./scripts/run_paper_cv_three_suites.sh
-# 或：OUT=dataset/paper_cv_full.json ./scripts/run_paper_cv_three_suites.sh
+# 1) Top-K（得到推荐 K 后用于 2、3）
+./scripts/run_paper_topk_three_suites.sh
+
+# 2) 策略对比（EVAL_K 建议用步骤 1 的推荐值）
+EVAL_K=3 ./scripts/run_paper_policy_compare_three_suites.sh
+
+# 3) xi 消融 + 重要性排序
+EVAL_K=3 ./scripts/run_paper_xi_ablation_three_suites.sh
 ```
 
-阶段 7 在**已有** `run-*.json` 上做离线交叉验证，**不**重新跑 UnixBench / PTS；可与阶段 3–6 并行规划，但通常放在采集完成之后。默认 glob 可跨会话；与「本机 `--machine` 训练」的 grid / 探针相互独立。
+产出目录：`dataset/paper_supplementary/`（每项含原始报告 `*.json` 与 `*_summary.json`）。5 台机器各跑一遍后，在论文表中按主机聚合 MAE / 推荐 K / 推荐策略即可。
 
 ### 产物一览（本机 `<MACHINE>`）
 
