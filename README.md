@@ -562,6 +562,41 @@ UnixBench 许多子项内部固定 **多轮采样 / 10–30s+**（如 `execl`、
 
 实现：`moebench/probe/`（`real_runner.py`、`collector.py`、`ebpf_features.py` 等）。
 
+### UnixBench 资源占用波形（Full / 路线 A / 路线 B）
+
+在跑分过程中以约 **0.5s** 间隔采样 **CPU 利用率** 与 **内存占用比例**（`/proc/stat`、`/proc/meminfo`），生成三幅对比曲线：
+
+| 模式 | 监控对象 |
+|------|----------|
+| **full** | 全量 `perl Run -c 1` |
+| **route_a** | 路由 Top-K 选出的 **部分 UnixBench**（不含重建推理耗时） |
+| **route_b** | 各子项 **短探针**（默认 micro，约 4s/子项） |
+
+```bash
+cd /home/cxc/MoEBench
+export MACHINE="$(python3 -c 'from moebench.dataset_machines import local_host_slug; print(local_host_slug())')"
+export EXP_DIR="$PWD/dataset/experiments/$MACHINE"
+GRID="dataset/experiments/router_recon_grid_unixbench_${MACHINE}_20260524T140119Z"   # 按实际 grid 目录修改
+
+python3 scripts/run_unixbench_resource_waveform_compare.py \
+  --modes full,route_a,route_b \
+  --router-model "$GRID/trained_models/router_lgbm.pkl" \
+  --probe-model "dataset/models/$MACHINE/probe_unixbench_lgbm.pkl" \
+  --top-k 3 \
+  --interval-s 0.5 \
+  --output-dir "$EXP_DIR/ub_resource_waveforms" \
+  --auto-install
+```
+
+**产出**（在 `--output-dir` 下）：
+
+- `trace_full.json` / `trace_route_a.json` / `trace_route_b.json`：原始时序
+- `resource_waveforms.json`：汇总
+- `resource_waveforms_grid.png`：2×3 子图（CPU + 内存 × 三模式）
+- `resource_waveforms_overlay.png`：三曲线叠加对比
+
+全量 UnixBench 约 **20–40 分钟**；试跑可加 **`--quick`**（仅 2 个子项，勿用于论文图）。仅从已有 JSON 重绘：`--plot-from "$EXP_DIR/ub_resource_waveforms/resource_waveforms.json"`。
+
 ### 运行（推断 + 执行 Top-K 子测试）
 
 ```bash
