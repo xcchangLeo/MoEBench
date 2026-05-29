@@ -993,7 +993,7 @@ python3 scripts/probe_collect.py \
   --machine "$MACHINE" \
   --probe-mode micro \
   --probe-duration-s 4 \
-  --max-runs 0 \ 
+  --max-runs 0 \
   -o "$MODEL_DIR/probe_dataset_unixbench.json"
 ```
 

@@ -8,7 +8,6 @@ from typing import Any
 import numpy as np
 
 from moebench.router.feature_vectorizer import XiVectorizer
-from moebench.router.neural_routers import SimpleExpertGNN, SubsetSelectionRouter
 
 
 def softmax_list(scores: list[float]) -> list[float]:
@@ -67,6 +66,8 @@ def predict_expert_scores(router_meta: dict[str, Any], xi: dict[str, Any]) -> tu
     elif model_type == "subset_sel":
         import torch
 
+        from moebench.router.neural_routers import SubsetSelectionRouter
+
         hidden = int(router_meta.get("subset_hidden", 64))
         net = SubsetSelectionRouter(xi_dim, n_experts, hidden)
         net.load_state_dict(router_meta["state_dict"])
@@ -77,6 +78,8 @@ def predict_expert_scores(router_meta: dict[str, Any], xi: dict[str, Any]) -> tu
         scores = [float(x) for x in logits.tolist()]
     elif model_type == "gnn_expert":
         import torch
+
+        from moebench.router.neural_routers import SimpleExpertGNN
 
         hidden = int(router_meta.get("gnn_hidden", 64))
         emb_dim = int(router_meta.get("gnn_emb_dim", 12))

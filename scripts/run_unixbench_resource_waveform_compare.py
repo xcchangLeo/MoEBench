@@ -29,11 +29,79 @@ from moebench.unixbench.experts import INDEX_SUITE_TEST_IDS, UNIXBENCH_PARALLEL_
 
 SCHEMA_COMPARE = "moebench.experiment.unixbench_resource_waveforms.v1"
 
+ML_VENV_PY = REPO_ROOT / ".venv-moebench-router" / "bin" / "python3"
+INSTALL_ML_DEPS = REPO_ROOT / "scripts" / "install_ml_python_deps.sh"
 
-def _load_router_meta(model_fp: Path) -> dict[str, Any]:
+
+def _import_ok(module: str, py: str | None = None) -> bool:
+    interpreter = py or sys.executable
+    return subprocess.run([interpreter, "-c", f"import {module}"], capture_output=True).returncode == 0
+
+
+def _ml_modules_for_args(args: argparse.Namespace) -> list[str]:
+    mods: list[str] = []
+    modes = {m.strip() for m in args.modes.split(",") if m.strip()}
+    if "route_a" in modes:
+        router = args.router_model.strip()
+        if router:
+            suf = Path(router).suffix.lower()
+            if suf in (".pkl", ".pickle", ".dat"):
+                mods.append("lightgbm")
+            elif suf == ".pt":
+                mods.append("torch")
+    if "route_b" in modes:
+        probe = args.probe_model.strip()
+        if probe:
+            name = Path(probe).name.lower()
+            mods.append("xgboost" if "xgb" in name else "lightgbm")
+    return list(dict.fromkeys(mods))
+
+
+def _ensure_ml_interpreter(*, need_modules: list[str], auto_install: bool) -> None:
+    if os.environ.get("MOEBENCH_ML_BOOTSTRAPPED") == "1" or not need_modules:
+        return
+    missing = [m for m in need_modules if not _import_ok(m)]
+    if not missing:
+        return
+
+    venv_py = str(ML_VENV_PY)
+    if ML_VENV_PY.is_file() and all(_import_ok(m, venv_py) for m in missing):
+        print(f"[waveform] re-exec with project venv: {venv_py}", file=sys.stderr)
+        os.environ["MOEBENCH_ML_BOOTSTRAPPED"] = "1"
+        os.execv(venv_py, [venv_py, *sys.argv])
+
+    if auto_install and INSTALL_ML_DEPS.is_file():
+        install_args = ["bash", str(INSTALL_ML_DEPS), "--no-torch"]
+        if not os.environ.get("CONDA_PREFIX"):
+            install_args.append("--use-venv")
+        print(f"[waveform] bootstrapping ML deps: {' '.join(install_args)}", file=sys.stderr)
+        subprocess.check_call(install_args)
+        if ML_VENV_PY.is_file() and all(_import_ok(m, venv_py) for m in missing):
+            os.environ["MOEBENCH_ML_BOOTSTRAPPED"] = "1"
+            os.execv(venv_py, [venv_py, *sys.argv])
+
+    raise SystemExit(
+        "Missing Python modules: "
+        + ", ".join(missing)
+        + ".\nRun:\n  bash scripts/install_ml_python_deps.sh --no-torch --use-venv\nThen:\n  "
+        + f"{ML_VENV_PY} {' '.join(sys.argv)}"
+    )
+
+
+def _load_router_meta(model_fp: Path, *, auto_install: bool = False) -> dict[str, Any]:
     if model_fp.suffix in (".pkl", ".pickle", ".dat"):
-        with open(model_fp, "rb") as f:
-            return pickle.load(f)
+        try:
+            with open(model_fp, "rb") as f:
+                return pickle.load(f)
+        except ModuleNotFoundError as e:
+            missing = str(e).split("'")[1] if "'" in str(e) else ""
+            if missing and auto_install:
+                from moebench.pip_install import ensure_importable
+
+                ensure_importable(missing, auto_install=True)
+                with open(model_fp, "rb") as f:
+                    return pickle.load(f)
+            raise
     import torch
 
     try:
@@ -101,7 +169,7 @@ def capture_route_a(
     warmup_s: float,
     test_ids: list[str] | None,
 ) -> dict[str, Any]:
-    router_meta = _load_router_meta(router_model)
+    router_meta = _load_router_meta(router_model, auto_install=False)
     k = int(top_k if top_k is not None else router_meta.get("top_k", 3))
 
     xi: dict[str, Any] = {}
@@ -196,7 +264,7 @@ def main() -> int:
         help="Only run dhry2reg+whetstone-double (fast smoke; not for paper figures)",
     )
     ap.add_argument("-o", "--output-dir", type=str, default="")
-    ap.add_argument("--auto-install", action="store_true", help="pip install matplotlib if missing")
+    ap.add_argument("--auto-install", action="store_true", help="Auto-install matplotlib / ML deps if missing")
     ap.add_argument("--no-plot", action="store_true")
     ap.add_argument(
         "--plot-from",
@@ -205,6 +273,7 @@ def main() -> int:
         help="Only plot from existing resource_waveforms.json (skip capture)",
     )
     args = ap.parse_args()
+    _ensure_ml_interpreter(need_modules=_ml_modules_for_args(args), auto_install=args.auto_install)
 
     if args.plot_from.strip():
         with open(args.plot_from, encoding="utf-8") as f:

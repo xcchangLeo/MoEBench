@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import json
 import pickle
-import subprocess
 import sys
 from pathlib import Path
 
@@ -15,12 +14,9 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from moebench.dataset_machines import ensure_machine_output_dir
+from moebench.ml_venv import ensure_ml_interpreter
+from moebench.pip_install import ensure_importable
 from moebench.probe.model_train import train_probe_bundle
-
-
-def _maybe_pip(auto: bool, pkg: str) -> None:
-    if auto:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", pkg])
 
 
 def main() -> int:
@@ -42,19 +38,15 @@ def main() -> int:
     )
     args = ap.parse_args()
 
+    ensure_ml_interpreter(
+        need_modules=[args.model_type],
+        auto_install=args.auto_install,
+        label="probe_train",
+    )
+    ensure_importable(args.model_type, auto_install=args.auto_install)
+
     with open(args.probe_dataset, encoding="utf-8") as f:
         ds = json.load(f)
-
-    if args.model_type == "lightgbm":
-        try:
-            import lightgbm  # noqa: F401
-        except ImportError:
-            _maybe_pip(args.auto_install, "lightgbm")
-    elif args.model_type == "xgboost":
-        try:
-            import xgboost  # noqa: F401
-        except ImportError:
-            _maybe_pip(args.auto_install, "xgboost")
 
     try:
         bundle = train_probe_bundle(
