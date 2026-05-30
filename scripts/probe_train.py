@@ -16,6 +16,28 @@ if str(REPO_ROOT) not in sys.path:
 from moebench.dataset_machines import ensure_machine_output_dir
 from moebench.ml_venv import ensure_ml_interpreter
 from moebench.pip_install import ensure_importable
+
+
+def _early_ml_modules() -> list[str]:
+    mods = ["numpy"]
+    argv = sys.argv[1:]
+    for i, a in enumerate(argv):
+        if a == "--model-type" and i + 1 < len(argv):
+            mods.append(argv[i + 1])
+            return mods
+        if a.startswith("--model-type="):
+            mods.append(a.split("=", 1)[1])
+            return mods
+    mods.append("lightgbm")
+    return mods
+
+
+ensure_ml_interpreter(
+    need_modules=_early_ml_modules(),
+    auto_install="--auto-install" in sys.argv,
+    label="probe_train",
+)
+
 from moebench.probe.model_train import train_probe_bundle
 
 
@@ -38,11 +60,6 @@ def main() -> int:
     )
     args = ap.parse_args()
 
-    ensure_ml_interpreter(
-        need_modules=[args.model_type],
-        auto_install=args.auto_install,
-        label="probe_train",
-    )
     ensure_importable(args.model_type, auto_install=args.auto_install)
 
     with open(args.probe_dataset, encoding="utf-8") as f:

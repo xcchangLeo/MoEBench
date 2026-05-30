@@ -21,6 +21,30 @@ from moebench.dataset_machines import (
     resolve_training_machine,
 )
 from moebench.ml_venv import ensure_ml_interpreter
+
+
+def _ml_modules_for_probe(model_path: str) -> list[str]:
+    name = Path(model_path).name.lower()
+    backend = "xgboost" if "xgb" in name else "lightgbm"
+    return ["numpy", "sklearn", backend]
+
+
+def _early_ml_modules() -> list[str]:
+    argv = sys.argv[1:]
+    for i, a in enumerate(argv):
+        if a == "--probe-model" and i + 1 < len(argv):
+            return _ml_modules_for_probe(argv[i + 1])
+        if a.startswith("--probe-model="):
+            return _ml_modules_for_probe(a.split("=", 1)[1])
+    return ["numpy", "sklearn", "lightgbm"]
+
+
+ensure_ml_interpreter(
+    need_modules=_early_ml_modules(),
+    auto_install="--auto-install" in sys.argv,
+    label="probe_experiment",
+)
+
 from moebench.probe.collector import collect_subtest_probe
 from moebench.probe.inference import load_probe_bundle, predict_subtest
 from moebench.probe.suite_aggregate import aggregate_suite_index, suite_error_report
@@ -62,12 +86,6 @@ def _ground_truth_pts(
     return suite, str(latest), tids
 
 
-def _ml_modules_for_probe(model_path: str) -> list[str]:
-    name = Path(model_path).name.lower()
-    backend = "xgboost" if "xgb" in name else "lightgbm"
-    return ["numpy", "sklearn", backend]
-
-
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--probe-model", type=str, required=True, help="Trained probe bundle .pkl")
@@ -85,12 +103,6 @@ def main() -> int:
     ap.add_argument("--auto-install", action="store_true", help="Bootstrap project ML venv if deps missing")
     ap.add_argument("-o", "--output", type=str, default="")
     args = ap.parse_args()
-
-    ensure_ml_interpreter(
-        need_modules=_ml_modules_for_probe(args.probe_model),
-        auto_install=args.auto_install,
-        label="probe_experiment",
-    )
 
     machine = resolve_training_machine(args.machine or None)
     bundle = load_probe_bundle(args.probe_model)

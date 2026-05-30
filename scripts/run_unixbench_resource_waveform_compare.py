@@ -20,26 +20,26 @@ if str(REPO_ROOT) not in sys.path:
 
 from moebench import collect_all
 from moebench.dataset_machines import machine_experiments_dir, resolve_training_machine
+from moebench.ml_venv import ensure_ml_interpreter
 from moebench.monitoring.plot_waveforms import plot_waveform_grid, plot_waveform_overlay
 from moebench.monitoring.resource_monitor import ResourceMonitor, trace_dict
-from moebench.probe.collector import collect_subtest_probe
-from moebench.probe.inference import load_probe_bundle
-from moebench.router.inference import predict_expert_scores, select_top_k_from_probs
 from moebench.unixbench.experts import INDEX_SUITE_TEST_IDS, UNIXBENCH_PARALLEL_COPIES
 
 SCHEMA_COMPARE = "moebench.experiment.unixbench_resource_waveforms.v1"
 
-ML_VENV_PY = REPO_ROOT / ".venv-moebench-router" / "bin" / "python3"
-INSTALL_ML_DEPS = REPO_ROOT / "scripts" / "install_ml_python_deps.sh"
 
-
-def _import_ok(module: str, py: str | None = None) -> bool:
-    interpreter = py or sys.executable
-    return subprocess.run([interpreter, "-c", f"import {module}"], capture_output=True).returncode == 0
+def _cli_flag(flag: str) -> str:
+    argv = sys.argv[1:]
+    for i, a in enumerate(argv):
+        if a == flag and i + 1 < len(argv):
+            return argv[i + 1].strip()
+        if a.startswith(flag + "="):
+            return a.split("=", 1)[1].strip()
+    return ""
 
 
 def _ml_modules_for_args(args: argparse.Namespace) -> list[str]:
-    mods: list[str] = []
+    mods: list[str] = ["numpy"]
     modes = {m.strip() for m in args.modes.split(",") if m.strip()}
     if "route_a" in modes:
         router = args.router_model.strip()
@@ -57,35 +57,24 @@ def _ml_modules_for_args(args: argparse.Namespace) -> list[str]:
     return list(dict.fromkeys(mods))
 
 
-def _ensure_ml_interpreter(*, need_modules: list[str], auto_install: bool) -> None:
-    if os.environ.get("MOEBENCH_ML_BOOTSTRAPPED") == "1" or not need_modules:
-        return
-    missing = [m for m in need_modules if not _import_ok(m)]
-    if not missing:
-        return
+def _early_ml_modules() -> list[str]:
+    class _Args:
+        modes = _cli_flag("--modes") or "full,route_a,route_b"
+        router_model = _cli_flag("--router-model")
+        probe_model = _cli_flag("--probe-model")
 
-    venv_py = str(ML_VENV_PY)
-    if ML_VENV_PY.is_file() and all(_import_ok(m, venv_py) for m in missing):
-        print(f"[waveform] re-exec with project venv: {venv_py}", file=sys.stderr)
-        os.environ["MOEBENCH_ML_BOOTSTRAPPED"] = "1"
-        os.execv(venv_py, [venv_py, *sys.argv])
+    return _ml_modules_for_args(_Args())  # type: ignore[arg-type]
 
-    if auto_install and INSTALL_ML_DEPS.is_file():
-        install_args = ["bash", str(INSTALL_ML_DEPS), "--no-torch"]
-        if not os.environ.get("CONDA_PREFIX"):
-            install_args.append("--use-venv")
-        print(f"[waveform] bootstrapping ML deps: {' '.join(install_args)}", file=sys.stderr)
-        subprocess.check_call(install_args)
-        if ML_VENV_PY.is_file() and all(_import_ok(m, venv_py) for m in missing):
-            os.environ["MOEBENCH_ML_BOOTSTRAPPED"] = "1"
-            os.execv(venv_py, [venv_py, *sys.argv])
 
-    raise SystemExit(
-        "Missing Python modules: "
-        + ", ".join(missing)
-        + ".\nRun:\n  bash scripts/install_ml_python_deps.sh --no-torch --use-venv\nThen:\n  "
-        + f"{ML_VENV_PY} {' '.join(sys.argv)}"
-    )
+ensure_ml_interpreter(
+    need_modules=_early_ml_modules(),
+    auto_install="--auto-install" in sys.argv,
+    label="waveform",
+)
+
+from moebench.probe.collector import collect_subtest_probe
+from moebench.probe.inference import load_probe_bundle
+from moebench.router.inference import predict_expert_scores, select_top_k_from_probs
 
 
 def _load_router_meta(model_fp: Path, *, auto_install: bool = False) -> dict[str, Any]:
@@ -273,7 +262,6 @@ def main() -> int:
         help="Only plot from existing resource_waveforms.json (skip capture)",
     )
     args = ap.parse_args()
-    _ensure_ml_interpreter(need_modules=_ml_modules_for_args(args), auto_install=args.auto_install)
 
     if args.plot_from.strip():
         with open(args.plot_from, encoding="utf-8") as f:

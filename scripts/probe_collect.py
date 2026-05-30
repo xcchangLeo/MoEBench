@@ -14,7 +14,15 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from moebench.dataset_machines import ensure_machine_output_dir, machine_models_dir, resolve_training_machine
+from moebench.ml_venv import ensure_ml_interpreter
 from moebench.phoronix.pipeline import safe_session_tag
+
+ensure_ml_interpreter(
+    need_modules=["numpy"],
+    auto_install="--auto-install" in sys.argv,
+    label="probe_collect",
+)
+
 from moebench.probe.training_data import collect_probe_dataset
 
 
@@ -43,6 +51,11 @@ def main() -> int:
         help="micro: category workload; real: timeout-wrapped real UnixBench/PTS subtest",
     )
     ap.add_argument("--no-ebpf", action="store_true")
+    ap.add_argument(
+        "--auto-install",
+        action="store_true",
+        help="Bootstrap project ML venv (scripts/install_ml_python_deps.sh) if numpy is missing",
+    )
     ap.add_argument("-o", "--output", type=str, default="", help="Output JSON path")
     ap.add_argument(
         "--max-runs",
