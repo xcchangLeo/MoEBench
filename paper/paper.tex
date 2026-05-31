@@ -71,15 +71,17 @@
 %%\acmBooktitle{Woodstock '18: ACM Symposium on Neural Gaze Detection,
 %%  June 03--05, 2018, Woodstock, NY}
 \acmISBN{978-1-4503-XXXX-X/2018/06}
-
-
+\usepackage{xspace}
+\usepackage{multirow}
+\usepackage{subcaption}
+\usepackage{booktabs}
 %%
 %% Submission ID.
 %% Use this when submitting an article to a sponsored event. You'll
 %% receive a unique submission ID from the organizers
 %% of the event, and this ID should be used as the parameter to this command.
 %%\acmSubmissionID{123-A56-BU3}
-
+\newcommand{\ourmethod}{\textsc{MoEBench}\xspace}
 %%
 %% For managing citations, it is recommended to use bibliography
 %% files in BibTeX format.
@@ -113,7 +115,7 @@
 %%
 %% The "title" command has an optional parameter,
 %% allowing the author to define a "short title" to be used in page headers.
-\title[MoEBench]{MoEBench: Lightweight System Benchmarking via Conditional Expert Execution and Score Reconstruction}
+\title[\ourmethod]{\ourmethod: Lightweight System Benchmarking via Conditional Expert Execution and Score Reconstruction}
 
 %%
 %% The "author" command and its associated commands are used to define
@@ -203,674 +205,763 @@
 \maketitle
 
 \section{Introduction}
-Understanding and comparing computer systems relies heavily on
-benchmark suites such as UnixBench and the Phoronix Test Suite (PTS).
-These suites expose many heterogeneous workloads---often treated as
-independent ``experts''---that collectively characterize CPU, memory,
-I/O, concurrency, and accelerator behavior.
-Running the full suite repeatedly is costly for regression testing,
-capacity planning, and exploratory studies on shared infrastructure,
-yet skipping workloads risks blind spots when a condensed summary
-score is still required.
+Benchmark suites~\cite{PTS,smith2011byte,kopytov2004sysbench} characterize modern computing platforms by running standardized workloads across processors, memory, storage, system software, and accelerators to produce a repeatable performance profile beyond any single measurement. Such suites are widely used in performance-critical infrastructure workflows, including cloud instance comparison~\cite{aslanpour2020performance,lenk2011you,hwang2015cloud,marieska2011performance,papadopoulos2019methodological,moschetta2012ofbench,alhamazani2015cross}, monitoring~\cite{baruwal2016smart,}, and performance autotuning~\cite{wang2023keentune,openeuler_atune_readme_zh,chen2024autoos,sun2025kconfigtune}. However, the same breadth that makes benchmark suites useful also makes them costly to execute in full. Comprehensive suites often contain many heterogeneous workloads, each consuming wall-clock time and contending for CPU cores, memory bandwidth, storage bandwidth, or accelerator resources. While this cost may be acceptable for occasional offline evaluation, it becomes difficult to amortize when benchmarking must be repeated across many machines, instance types, software revisions, configurations, or time intervals. In deployed or shared environments, full-suite execution can also perturb the system being measured by competing for resources, interfering with co-located workloads, or changing thermal and frequency states. Moreover, conventional suites largely follow an all-or-nothing execution model: they run a fixed set of workloads and produce meaningful results only after the full run completes.
 
-We present \emph{MoEBench}, a benchmarking methodology and toolchain
-that treats standard suite components as experts in a sparse execution
-regime: conditioned on a snapshot of machine state, a \emph{router}
-selects a small subset of workloads to run, and a \emph{reconstruction}
-model predicts missing results and an aggregate suite-level score from
-partial observations.
-This design echoes mixture-of-experts intuition---only a fraction of
-experts activate per query---but applies it to reproducible,
-commodity benchmark pipelines rather than neural forward passes.
 
-MoEBench contributes: (1) a structured feature representation of static
-and dynamic Linux state (including optional PMU and GPU telemetry)
-paired with unified dataset schemas for UnixBench and PTS;
-(2) trainable routers (gradient-boosted rankers, MLPs, subset
-selection heads, and lightweight graph-style expert routers) that map
-state to expert relevance;
-(3) multi-output reconstructors that infer full-suite indices from
-partial runs, with optional uncertainty estimates to guide additional
-executions when confidence is low;
-and (4) an offline evaluation harness comparing learned policies to
-random, fixed, and greedy baselines across UnixBench, PTS CPU, and PTS
-GPU suites under cross-validation and leave-session-out splits.
 
-Our goal is not to replace exhaustive benchmarking where it is
-mandatory, but to reduce wall-clock cost while preserving actionable
-aggregate scores for settings where repeated full-suite runs dominate
-operational overhead.
+
+
+We present \ourmethod, a benchmarking methodology and toolchain that reframes full-suite execution as a selective-measurement and reconstruction problem.
+Given a snapshot of the target machine state, combining conventional system information with low-overhead runtime signals gathered through eBPF. Conditioned on this
+snapshot, a router selects a small subset of suite components to execute. A reconstruction model then uses the resulting partial observations to predict the missing component results and recover the aggregate suite-level score. This design reduces cost in two complementary ways: horizontally, by executing only a compact set of informative workloads; and vertically, by replacing unexecuted measurements with model-based prediction. The approach is inspired by the sparse activation principle of mixture-of-experts models, but applies that intuition to reproducible commodity benchmark pipelines rather than neural forward passes.
+
+
+
+
+\section{Background and Motivation}
+
+\subsection{Benchmark Suites}
+
+Benchmark suites provide reproducible and quantifiable measurements for comparing system performance across machines, configurations, and software versions. Rather than relying on a single workload, a suite decomposes system performance into multiple components, each targeting a specific workload pattern or subsystem, such as computation, memory, storage, networking, process control, or inter-process communication. We denote a suite as
+\[
+\mathcal{B}=\{b_1,b_2,\ldots,b_N\},
+\]
+where \(b_i\) is the \(i\)-th component.
+
+For a system state \(s\), the full result of component \(b_i\) is
+\[
+y_i = f_i(s,T_i,\epsilon_i),
+\]
+where \(T_i\) is the execution budget required by the original benchmark protocol and \(\epsilon_i\) denotes measurement noise. A full-suite run produces
+\[
+\mathbf{y}=[y_1,y_2,\ldots,y_N],
+\]
+and, when defined by the benchmark framework, an aggregate score
+\[
+Y=A(\mathbf{y}).
+\]
+
+The cost of full-suite benchmarking comes from two sources: the number of components and the duration of each component. Formally,
+\[
+C_{\mathrm{full}}=\sum_{i=1}^{N}C_i(T_i).
+\]
+This cost can be substantial for suites with many components or long measurement intervals. However, not all observations are equally informative. Components may stress overlapping subsystems and therefore exhibit correlated results, while short executions may already expose the rate or latency trend of a full run. This motivates our design goal: estimate the full component vector and aggregate score using only sparse component observations and short execution windows.
+
+
+\subsection{Motivation}
+\paragraph{Observation 1: Full execution is expensive.}
+In Unix-like operating systems, we use UnixBench as a representative full-suite system benchmark. Originating from the BYTE UNIX benchmark suite, UnixBench remains a widely used open-source benchmark for evaluating system-level performance. It has been adopted in practical system tuning projects such as A-Tune~\cite{openeuler_atune_readme_zh} and KeenTune~\cite{wang2023keentune}. Figure~\ref{fig:tuning_breakdown_pies} reports the time breakdown of a typical KeenTune auto-tuning task. The results show that UnixBench evaluation dominates the overall tuning process, while the model tuning time accounts for only a small fraction. Since auto-tuning usually invokes the benchmark repeatedly to compare different configurations, the accumulated evaluation overhead quickly becomes unacceptable(Table~\ref{tab:fullsuite_execution_time}). Also, running the full suite consumes substantial system resources and can interfere with co-located applications. This makes full execution unsuitable for production-time detection.
+
+\begin{figure}[t]
+    \centering
+
+    \begin{subfigure}[b]{0.48\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/tuning_breakdown_pies_4x3.pdf}
+        \caption{
+        Time breakdown of two representative KeenTune tasks.
+        }
+        \label{fig:tuning_breakdown_pies}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\linewidth}
+        \centering
+        \small
+        \begin{tabular}{lcc}
+        \toprule
+        Machine & UnixBench & PTS CPU \\
+        \midrule
+        2U8G  & 1679 s & 5424 s  \\
+        4U8G  & 1677 s & 26667 s \\
+        4U16G & 1676 s & 31756 s \\
+        8U8G  & 1678 s & 1930 s  \\
+        32U128G & 1701s & 15414s \\
+        \bottomrule
+        \end{tabular}
+        \caption{
+        Full-suite benchmark execution time across machines.
+        }
+        \label{tab:fullsuite_execution_time}
+    \end{subfigure}
+
+    \caption{
+    Execution-time cost of benchmark-driven tuning and full-suite benchmark evaluation.
+    }
+    \label{fig:tuning_and_fullsuite_cost}
+\end{figure}
+\paragraph{Observation 2: Full-suite scores are often unnecessary.}
+A full-suite benchmark usually aggregates the results of many heterogeneous components into a single overall score. However, for a specific workload or tuning objective, this aggregate score may not be the most meaningful optimization target. For example, a web service is usually more sensitive to request handling, process scheduling, networking, and memory behavior, while a compilation workload is more sensitive to process creation, filesystem activity, and CPU throughput. Optimizing the overall score may therefore waste measurements on components that have little relevance to the target workload, or even obscure the performance changes of the components that matter.
+
+\paragraph{Observation 3: Metrics converge before full completion.}
+Even when benchmark evaluation is needed, executing a selected component to completion is not always necessary. Many components are iterative rate tests rather than one-shot tasks. For example, Dhrystone and Whetstone in UnixBench~\cite{smith2011byte} repeatedly execute integer and floating-point operation kernels and report an operation rate. In these components, the final metric is computed from accumulated work over an execution interval. Therefore, a short prefix already contains direct information about the same rate that will be reported at the end of the full run. If the prefix rate becomes stable, continuing the benchmark mainly reduces statistical uncertainty rather than changing the measured quantity itself. This suggests that benchmark execution can be reduced vertically by estimating full-run metrics from short-run observations.
+
+
 
 \section{Methods}
 \label{sec:methods}
 
-\subsection{Problem Setting}
-Let a benchmark suite define a fixed ordered set of experts
-$\mathcal{E}=\{e_1,\ldots,e_n\}$, each corresponding to a runnable
-workload with measurable outcome $y_i$ (e.g., UnixBench subtest index
-or PTS primary result value) and recorded wall time $t_i$.
-A full run yields $\mathbf{y}=(y_1,\ldots,y_n)$ and an aggregate
-suite score $S$ (e.g., UnixBench System Benchmarks Index or a scalar
-summary over PTS profiles).
-Given a fresh machine state vector $\mathbf{x}$ (derived from static
-and dynamic telemetry collected once per session), MoEBench selects a
-subset $\mathcal{K}\subset\mathcal{E}$ with $|\mathcal{K}|=k \ll n$,
-executes only workloads in $\mathcal{K}$, observes their outcomes and
-times, and predicts $\hat{\mathbf{y}}$ and $\hat{S}$.
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{image.png}
+    \caption{Enter Caption}
+    \label{fig:placeholder}
+\end{figure}
 
-\subsection{System State Features}
-MoEBench collects $\mathbf{x}$ from a single structured snapshot
-\texttt{xi} divided into \emph{static} fields (CPU topology and caches,
-memory and storage topology, scheduler sysctl knobs, GPU firmware and
-PCIe capabilities where present) and \emph{dynamic} fields obtained after
-a short warmup (processor utilization and load, memory-bandwidth
-proxy, optional \texttt{perf} counters, optional eBPF-derived signals,
-and instantaneous GPU utilization when NVIDIA hardware is available).
-Missing privileged telemetry degrades gracefully: dynamic blocks record
-degradation hints while preserving comparable numeric layouts for
-downstream models.
-All fields are flattened by a deterministic vectorizer so that exported
-models remain reproducible across runs.
 
-\subsection{Experts and Datasets}
-Each expert carries identifiers aligned with the runner's invocation
-keys (UnixBench test IDs or PTS profile identifiers).
-Dataset JSON merges \texttt{xi}, full outcomes \texttt{yi}, per-expert
-times \texttt{ti}, and expert metadata for UnixBench or PTS sessions.
-Multi-run sessions support variance analysis; suite-specific exports
-ensure CPU and GPU PTS suites can coexist under one repository layout.
+\subsection{Overview}
+\label{subsec:method-overview}
 
-\subsection{Routing Models}
-The router estimates relevance scores for experts given $\mathbf{x}$.
-Implementations include pairwise ranking with gradient-boosted trees,
-plain MLP regressors per expert, differentiable subset-selection heads,
-and a compact expert interaction network that combines $\mathbf{x}$
-with learned expert embeddings before softmax normalization.
-At inference, MoEBench selects Top-$k$ experts by probability or score.
-Routers are trained from historical full-suite logs so that supervision
-reflects actual measured outcomes on diverse hardware.
+\ourmethod approximates a complete benchmark run by observing only a small subset of informative sub-benchmarks. 
+Given a target system, it first collects a system feature vector \(x\), which captures static platform properties and lightweight runtime state. 
+A router then ranks the benchmark subtests and selects a small subset for observation (Section~\ref{subsec:router}). 
+The selected subtests are executed normally or evaluated through a fixed-duration probe (Section~\ref{subsec:time-bounded-probing}). 
+The observed results are encoded as sparse score-time pairs and passed to a reconstructor, which predicts all subtest scores and the aggregate suite score (Section~\ref{subsec:reconstructor}).
 
-\subsection{Reconstruction Models}
-The reconstructor consumes $\mathbf{x}$ together with a sparse mask and
-the executed experts' $(y_i,t_i)$ triplets laid out in suite order.
-Tree ensembles (e.g., LightGBM, XGBoost) or MLPs predict all missing
-targets and the suite aggregate in one multi-output regression step.
-An optional uncertainty head estimates expected absolute residuals per
-target; high-uncertainty experts can be executed incrementally in an
-active refinement loop that trades extra runtime for improved
-accuracy.
+\ourmethod separates offline training from online evaluation. 
+During offline training, complete benchmark runs provide supervision for all model components. 
+The router learns to identify informative subtests, the probe estimator learns to predict full subtest scores from short-window telemetry, and the reconstructor learns to recover full-suite results from partial observations. 
+During online evaluation, the trained models are reused on a new target system, so \ourmethod only needs to profile the system and observe the selected subtests instead of running the entire benchmark suite.
 
-\subsection{Training and Evaluation Protocol}
-Training augments fully observed sessions by randomly sampling partial
-subsets to mimic sparse executions at scale.
-Evaluation compares predicted versus measured aggregates under
-cross-validation folds or leave-one-session-out splits to approximate
-generalization across machines.
-Beyond learned routers, MoEBench reports baselines that sample subsets
-uniformly at random, take lexicographic prefixes, prioritize UnixBench
-CPU- or I/O-heavy defaults when applicable, greedily favor high or low
-local wall times, or replay a trained router checkpoint.
-For Phoronix suites, greedy timing uses consolidated per-profile
-seconds from dataset telemetry rather than UnixBench parallel-copy
-keys.
-Optional feature ablations zero structured groups (e.g., PMU-only or
-GPU-only channels) to quantify the value of each sensing modality.
 
-\subsection{End-to-End Workflow}
-On a target host MoEBench first collects $\mathbf{x}$, runs the routed
-partial suite, reconstructs $\hat{S}$, and optionally compares against
-a full reference run when ground truth is required.
-Scripts emit JSON traces linking models, timings, and errors for
-artifact review.
 
-% --- Remove everything between here and \section{Acknowledgments} when preparing the final paper ---
-\section{Template Overview}
-As noted in the introduction, the ``\verb|acmart|'' document class can
-be used to prepare many different kinds of documentation --- a
-double-anonymous initial submission of a full-length technical paper, a
-two-page SIGGRAPH Emerging Technologies abstract, a ``camera-ready''
-journal article, a SIGCHI Extended Abstract, and more --- all by
-selecting the appropriate {\itshape template style} and {\itshape
-  template parameters}.
+\begin{table*}[t]
+\centering
+\caption{Purpose-oriented feature groups organized by collection stage. Pre-run signals form the system context \(\mathbf{x}_i\), while in-run probe signals form the probe vector \(\mathbf{p}_{i,j}\).}
+\label{tab:feature_collection}
+\small
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.10}
+\begin{tabular}{p{0.08\linewidth}| p{0.17\linewidth} p{0.27\linewidth} p{0.42\linewidth}}
+\toprule
+\textbf{Stage} & \textbf{Signal type} & \textbf{Purpose} & \textbf{Examples} \\
+\midrule
 
-This document will explain the major features of the document
-class. For further information, the {\itshape \LaTeX\ User's Guide} is
-available from
-\url{https://www.acm.org/publications/proceedings-template}.
+\multirow{3}{=}{Pre-run}
+& Static host profile
+& Identify stable host configuration.
+& CPU topology, NUMA layout, memory size, compiler versions \\
 
-\subsection{Template Styles}
+& System pressure
+& Capture transient pre-run load.
+& CPU/GPU utilization, iowait, load average, runnable tasks \\
 
-The primary parameter given to the ``\verb|acmart|'' document class is
-the {\itshape template style} which corresponds to the kind of publication
-or SIG publishing the work. This parameter is enclosed in square
-brackets and is a part of the {\verb|documentclass|} command:
-\begin{verbatim}
-  \documentclass[STYLE]{acmart}
-\end{verbatim}
+& PMU / perf
+& Characterize microarchitectural behavior.
+& IPC, cycles/s, instructions/s, cache/branch miss ratios \\
 
-Journals use one of three template styles. All but three ACM journals
-use the {\verb|acmsmall|} template style:
+\midrule
+
+\multirow{5}{=}{In-run}
+& Probe progress
+& Record observed benchmark progress.
+& Configured probing duration, elapsed wall-clock time \\
+
+& eBPF-based tracing
+& Observe prefix-level kernel activity.
+& Scheduling-switch rate, syscall-entry rate, eBPF availability \\
+
+& Resource usage
+& Summarize prefix resource usage.
+& User/system/idle CPU ratio, minor faults, major faults \\
+
+& Workload identity
+& Provide workload semantic context.
+& CPU, memory, I/O, thread, syscall, GPU category \\
+
+& Probe flags
+& Mark probe mode and failures.
+& Micro workload flag, real-component flag, timeout flag \\
+
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Feature Collection and Engineering}
+
+Feature collection provides the contextual information required to reduce benchmark cost while preserving the ability to estimate full-suite performance. The framework observes three factors that affect measured performance: what the machine is, what state the machine is in, and how a benchmark behaves during its initial execution prefix.
+
+For the $i$-th benchmark run, we define the system context vector as
+$$
+\mathbf{x}_i = [\mathbf{x}_i^{\mathrm{static}}, \mathbf{x}_i^{\mathrm{dynamic}}]
+$$
+where $\mathbf{x}_i^{\mathrm{static}}$ describes stable host properties (e.g., CPU topology, total memory, OS versions) and $\mathbf{x}_i^{\mathrm{dynamic}}$ captures the transient runtime state before benchmark execution (e.g., system load, hardware counters). The vector $\mathbf{x}_i$ is collected once before a full-suite run and is used by both the benchmark router and the early-stopping estimator.
+
+During short-run probing, the framework further collects a probe-specific vector $\mathbf{p}_{i,j}$ for benchmark component $b_j$. Unlike $\mathbf{x}_i$, which describes the global context of the $i$-th run, $\mathbf{p}_{i,j}$ summarizes the execution prefix of a specific component, capturing wall-clock time, context-switch rates, and categorical identifiers. Table~\ref{tab:feature_collection} summarizes these feature groups by collection stage and purpose.
+
+\paragraph{Feature Processing and Domain-Aware Scaling.}
+Raw system telemetry cannot be directly fed into the models. Instead of applying global statistical normalization (e.g., MinMax or standard scaling) which obscures physical limits across heterogeneous machines, \ourmethod employs domain-aware semantic scaling. Static hardware capacities (e.g., total CPU cores, memory sizes converted to uniform units) preserve their original magnitudes to explicitly inform the model of the system's ceiling. Dynamic metrics are transformed into stable ratios or rates: transient CPU utilization and I/O wait times are mapped to percentage ratios, while monotonically increasing counters (e.g., page faults, context switches, PMU instructions) are converted to per-second rates. Categorical variables, such as workload types or probe flags, are handled via one-hot encoding. All missing values are zero-filled to maintain a deterministic tensor shape for inference.
+
+\paragraph{Cost-Aware Collection and Fallbacks.}
+Extracting high-fidelity telemetry, such as PMU (Performance Monitoring Unit) events or eBPF traces, incurs overhead and relies on specific kernel configurations. Rather than statistically pruning these informative features, \ourmethod adopts an engineering-driven fallback strategy to balance extraction cost and prediction accuracy. If high-overhead \texttt{perf} counters are unavailable or blocked by the hypervisor, the collector safely degrades to standard \texttt{/proc} statistics. Similarly, if eBPF tracing is disabled or GPU telemetry is absent on CPU-only instances, the framework zero-masks the corresponding vector dimensions. This robust collection pipeline ensures that the benchmarking methodology remains lightweight and executable across strictly isolated cloud tenants or bare-metal machines without crashing the evaluation process.
+
+
+\subsection{Router: Conditional Expert Selection}
+\label{subsec:router}
+
+A full benchmark suite contains inherent redundancy. Although each sub-benchmark targets a specific subsystem, their results are jointly determined by the underlying system state---such as CPU throughput, memory hierarchy, and scheduler behavior. For example, in UnixBench, \texttt{dhry2reg} and \texttt{whetstone-double} reflect computation, while \texttt{pipe} and \texttt{syscall} reflect OS-level overheads. Because these sub-benchmarks are different projections of the same system configuration, a carefully selected subset preserves sufficient information to estimate the behavior of the full suite.
+
+However, the most informative subset is not statically fixed. A CPU-bound configuration may require different representative tests than an I/O-bound configuration. \ourmethod formulates benchmark acceleration as a conditional selection problem: given the current system feature vector $x$, dynamically select a small subset of sub-benchmarks that provides the highest utility for reconstructing the full-suite result.
+
+\paragraph{Mixture-of-Experts Formulation and Learning-to-Rank.}
+We adopt a mixture-of-experts view, treating each independently executable sub-benchmark as a measurement expert within a fixed pool:
+$$
+\mathcal{E}=\{e_1, e_2, \ldots, e_n\}
+$$
+Each expert is represented as $e_i=(\texttt{test\_id}_i, r_i, c_i)$, where $r_i$ is the observed score and $c_i$ is its execution cost.
+
+Crucially, \ourmethod does not treat routing as a standard multi-class classification problem. The goal is not to assign a single ``best'' label to a system state, but to evaluate the conditional relevance of \textit{all} available tests and select the Top-$K$ subset. Given $x$, the router assigns a relevance score to each expert, $s_i=f_{\theta}(x, e_i)$, and converts these into selection probabilities:
+$$
+p_i=\frac{\exp(s_i)}{\sum_{j=1}^{n}\exp(s_j)}
+$$
+\ourmethod then isolates the Top-$K$ experts to execute:
+$$
+\mathcal{S}_K(x)=\operatorname{TopK}_{e_i \in \mathcal{E}} p_i
+$$
+
+\paragraph{Model Exploration and Lightweight Architecture.}
+To capture the non-linear interactions between system features and benchmark behavior, \ourmethod explores three lightweight routing architectures, intentionally bypassing heavy Large Language Models (LLMs) or exhaustive AutoML searches to ensure inference latency remains negligible compared to physical execution times:
 \begin{itemize}
-\item {\texttt{acmsmall}}: The default journal template style.
-\item {\texttt{acmlarge}}: Used by JOCCH and TAP.
-\item {\texttt{acmtog}}: Used by TOG.
+    \item \textbf{Gradient-Boosted Ranker (LightGBM):} Optimized directly for ranking using LambdaRank (optimizing NDCG), transforming expert relevance into a per-query rank.
+    \item \textbf{Multi-Layer Perceptron (MLP):} A streamlined 2-layer network trained with pointwise MSE to predict individual expert relevance.
+    \item \textbf{Graph Neural Network (GNN):} Utilizes learned expert embeddings and graph message passing to capture dependencies between different sub-benchmarks.
 \end{itemize}
 
-The majority of conference proceedings documentation will use the {\verb|acmconf|} template style.
+We explicitly contrast these learning-based routers against static heuristics. Strategies such as \texttt{greedy\_fastest} (always selecting tests with the shortest wall-clock time), \texttt{greedy\_slowest}, or fixed CPU/I/O mixes fail to adapt to unseen system states. By conditioning selection on real-time telemetry, the router avoids wasting time on globally fast but locally uninformative tests.
+
+\paragraph{End-to-End Evaluation and the Accuracy-Cost Trade-off.}
+Router models are not evaluated in isolation based solely on their training loss. Instead, \ourmethod utilizes a $3 \times 3$ grid evaluation (combining the 3 Router variants with 3 Reconstructor models) to assess end-to-end performance. The ultimate selection metric is the final reconstructed suite error (MAE and RMSE) produced by the combined pipeline.
+
+This design frames benchmark acceleration as an explicit accuracy-cost trade-off, managed through two mechanisms:
+\begin{enumerate}
+    \item \textbf{Top-$K$ Sweep:} By evaluating configurations from $K=1$ through full set, the system balances the execution time saved against the reconstruction error. A combined balanced score penalizes configurations that yield high error or fail to deliver meaningful time savings.
+    \item \textbf{Uncertainty-Guided Active Refinement:} A fixed Top-$K$ budget may be insufficient for highly anomalous systems. After executing the initial subset, the reconstruction model predicts the full-suite score $\hat{y}_{\mathrm{suite}}$ alongside its statistical uncertainty $\sigma_{\mathrm{suite}}$. If the uncertainty exceeds a predefined threshold ($\sigma_{\mathrm{suite}} \leq \tau_{\sigma}$), \ourmethod dynamically selects the unexecuted expert with the highest predicted variance:
+    $$
+    e_{\mathrm{next}}=\arg\max_{e_i \notin \mathcal{S}} \sigma_i
+    $$
+    This extra test is executed, merged into the observation vector, and the reconstruction is invoked again, repeating until confidence is achieved or the execution budget is exhausted.
+\end{enumerate}
+
+\subsection{Time-Bounded Probing}
+\label{subsec:time-bounded-probing}
+
+In addition to reducing the number of executed sub-benchmarks, \ourmethod further reduces the evaluation cost of each selected expert through time-bounded probing. Instead of running an iterative sub-benchmark until its official loop completes, \ourmethod executes a short probe for a predefined time window and leverages the collected telemetry to estimate the full sub-benchmark score. 
+
+This mechanism differs fundamentally from confidence-based adaptive early stopping. The probe duration is strictly clamped within a fixed, safe operational window (e.g., $1$ to $30$ seconds) to avoid runaway executions caused by anomalous inputs. \ourmethod does not repeatedly query a model to decide whether to halt; rather, it enforces a hard wall-clock limit and uses a supervised estimator to map the truncated execution signature to the final benchmark score.
+
+\paragraph{Dual-Mode Probing: Micro and Real.}
+To accommodate diverse benchmark characteristics, \ourmethod supports two probing modes:
 \begin{itemize}
-\item {\texttt{sigconf}}: The default proceedings template style.
-\item{\texttt{sigchi}}: Used for SIGCHI conference articles.
-\item{\texttt{sigplan}}: Used for SIGPLAN conference articles.
+    \item \textbf{Micro-probe Mode:} The system executes a lightweight, category-aligned synthetic workload (e.g., CPU-intensive, syscall-intensive). This mode avoids invoking the heavy initialization logic of the original benchmark, providing a low-overhead approximation of the targeted subsystem.
+    \item \textbf{Real-probe Mode:} \ourmethod invokes the original benchmark component but wraps it in a strict system-level timeout (e.g., \texttt{timeout <duration\_s + margin>}). If the subtest fails to complete within the budget, it is forcibly terminated.
 \end{itemize}
 
-\subsection{Template Parameters}
-
-In addition to specifying the {\itshape template style} to be used in
-formatting your work, there are a number of {\itshape template parameters}
-which modify some part of the applied template style. A complete list
-of these parameters can be found in the {\itshape \LaTeX\ User's Guide.}
-
-Frequently-used parameters, or combinations of parameters, include:
+\paragraph{Engineering Robustness over Outlier Rejection.}
+Unlike conventional ML pipelines that aggressively discard truncated executions, timeouts, or noisy runs as statistical outliers, \ourmethod embraces these execution anomalies as measurable system states. In production environments, telemetry collection is often imperfect due to permission restrictions or heavy load. \ourmethod handles these gracefully:
 \begin{itemize}
-\item {\texttt{anonymous,review}}: Suitable for a ``double-anonymous''
-  conference submission. Anonymizes the work and includes line
-  numbers. Use with the \texttt{\string\acmSubmissionID} command to print the
-  submission's unique ID on each page of the work.
-\item{\texttt{authorversion}}: Produces a version of the work suitable
-  for posting by the author.
-\item{\texttt{screen}}: Produces colored hyperlinks.
+    \item \textbf{Encoding Truncation as Features:} If a real probe is killed by the timeout, the event is not discarded. Instead, flags such as \texttt{real\_timed\_out}, \texttt{workload\_rc} (return code), and elapsed wall-clock time are explicitly encoded into the feature vector. The model learns to interpret the telemetry context of a forcefully truncated run.
+    \item \textbf{Graceful Degradation for eBPF:} If high-fidelity eBPF tracing is unavailable (due to kernel restrictions or missing tools), the framework does not crash. It flags \texttt{ebpf\_available = 0} and zero-masks the relevant dimensions, allowing the estimator to infer based solely on standard \texttt{/proc} counters.
+    \item \textbf{Rate Conversion:} To ensure telemetry is comparable regardless of the exact elapsed probe duration, monotonically increasing metrics (e.g., eBPF \texttt{sched\_switch} or \texttt{syscall\_enter}) are converted to per-second rates prior to vectorization.
 \end{itemize}
 
-This document uses the following string as the first command in the
-source file:
-\begin{verbatim}
-\documentclass[sigconf]{acmart}
-\end{verbatim}
+\paragraph{Label Stabilization and Inference.}
+The probe model is trained using historical full benchmark runs. During training construction, samples lacking valid ground-truth labels from full runs are safely filtered out. For benchmark suites with massive scoring variances across different hardware generations (e.g., Phoronix Test Suite), the primary prediction targets undergo $\log(1+x)$ (log1p) scaling to stabilize the loss gradients. Furthermore, to prevent overfitting on sparse data, the framework enforces a minimum sample threshold for per-test estimators. 
 
-\section{Modifications}
+At inference time, \ourmethod simply executes the bounded probe, processes the robust feature vector, and predicts the scaled full-run score. This design changes the cost of evaluating selected subtests from an unpredictable, unbounded benchmark duration to a fixed and highly controllable probing budget.
 
-Modifying the template --- including but not limited to: adjusting
-margins, typeface sizes, line spacing, paragraph and list definitions,
-and the use of the \verb|\vspace| command to manually adjust the
-vertical spacing between elements of your work --- is not allowed.
+\subsection{Reconstructor: Full-Suite Result Recovery}
+\label{subsec:reconstructor}
 
-{\bfseries Your document will be returned to you for revision if
-  modifications are discovered.}
+After the router selects and executes a small subset of sub-benchmarks, \ourmethod relies on a reconstructor to recover the full benchmark outcome. The reconstructor addresses the sparse observation problem: given the current system feature vector and the partial subtest results, it acts as a multi-output regression model to simultaneously predict the scores of all unexecuted sub-benchmarks as well as the aggregate suite score.
 
-\section{Typefaces}
+\paragraph{Input Representation and Multi-Output Target.}
+To make sparse benchmark results consumable by a fixed-size tensor, \ourmethod encodes all sub-benchmarks in a canonical order. Each sub-benchmark is represented by a 3-tuple: $z_i = (m_i, v_i, t_i)$, where $m_i \in \{0,1\}$ is a binary observation mask, $v_i$ is the observed score (if executed), and $t_i$ is the observed execution time. For unexecuted tests, the tuple is zero-filled. 
+The final input vector concatenates the system context $x$ with the masked partial observations:
+$$
+X = [x,\, m_1, v_1, t_1,\, \ldots,\, m_n, v_n, t_n]
+$$
+The output target is the complete benchmark profile derived from historical full runs: $Y = [r_1, r_2, \ldots, r_n, S]$, where $S$ is the final reported index. For tree-based models (e.g., LightGBM, XGBoost), \ourmethod wraps the base regressor with a multi-output strategy to train an independent regressor per target dimension.
 
-The ``\verb|acmart|'' document class requires the use of the
-``Libertine'' typeface family. Your \TeX\ installation should include
-this set of packages. Please do not substitute other typefaces. The
-``\verb|lmodern|'' and ``\verb|ltimes|'' packages should not be used,
-as they will override the built-in typeface families.
+\paragraph{Training via Simulated Sparse Execution.}
+Historical datasets exclusively contain complete benchmark runs. To teach the reconstructor how to recover full results from sparse router selections, \ourmethod employs a dynamic masking augmentation strategy during training. Each complete historical run is expanded into multiple simulated partial observations. For each augmentation pass, the framework uniformly samples a subset size $k \in [k_{\min}, k_{\max}]$, randomly selects $k$ subtests to act as the "executed" set, and masks the rest. This robust augmentation exposes the model to diverse sparsity patterns, preventing it from over-relying on any single subtest.
 
-\section{Title Information}
+\paragraph{Scale Compression for Heterogeneous Targets.}
+Comprehensive suites like the Phoronix Test Suite (PTS) aggregate highly heterogeneous workloads whose primary metrics span drastically different magnitudes (e.g., millions of operations per second vs. sub-millisecond latencies). To prevent workloads with massive numerical scales from dominating the loss gradients, \ourmethod applies domain-aware scale compression. Target variables spanning large orders of magnitude undergo $\log(1+x)$ transformations, and repeated profile outcomes are aggregated via log-mean. This stabilizes the training process without requiring complex, instance-weighted loss functions.
 
-The title of your work should use capital letters appropriately -
-\url{https://capitalizemytitle.com/} has useful rules for
-capitalization. Use the {\verb|title|} command to define the title of
-your work. If your work has a subtitle, define it with the
-{\verb|subtitle|} command.  Do not insert line breaks in your title.
+\paragraph{Uncertainty Estimation over Forced Rebalancing.}
+A common challenge in system telemetry is the long-tail distribution of machine states; certain hardware configurations or severe contention scenarios appear rarely in the training data. Instead of forcefully rebalancing the dataset using synthetic oversampling or focal loss---which risks distorting the natural distribution of system states---\ourmethod embraces a system-level fail-safe: uncertainty estimation. 
 
-If your title is lengthy, you must define a short version to be used
-in the page headers, to prevent overlapping text. The \verb|title|
-command has a ``short title'' parameter:
-\begin{verbatim}
-  \title[short title]{full title}
-\end{verbatim}
+Rather than blindly trusting predictions on rare machine states, \ourmethod trains the reconstructor to quantify its own confidence. For MLP implementations, \ourmethod utilizes a heteroscedastic network architecture trained via Gaussian Negative Log-Likelihood (NLL) to output both the predicted mean and a log-variance for each subtest. For tree-based models, \ourmethod trains an auxiliary residual model on the primary model's absolute training errors (i.e., $|y - \hat{y}|$) to serve as a proxy for variance ($\sigma$). 
 
-\section{Authors and Affiliations}
+Consequently, if the reconstructor encounters an anomalous, out-of-distribution system state, it will output a high uncertainty variance. As described in Section~\ref{subsec:router}, this uncertainty directly triggers the active refinement loop, instructing the system to physically execute more subtests rather than relying on a low-confidence prediction.
 
-Each author must be defined separately for accurate metadata
-identification.  As an exception, multiple authors may share one
-affiliation. Authors' names should not be abbreviated; use full first
-names wherever possible. Include authors' e-mail addresses whenever
-possible.
 
-Grouping authors' names or e-mail addresses, or providing an ``e-mail
-alias,'' as shown below, is not acceptable:
-\begin{verbatim}
-  \author{Brooke Aster, David Mehldau}
-  \email{dave,judy,steve@university.edu}
-  \email{firstname.lastname@phillips.org}
-\end{verbatim}
 
-The \verb|authornote| and \verb|authornotemark| commands allow a note
-to apply to multiple authors --- for example, if the first two authors
-of an article contributed equally to the work.
+\section{Evaluation}
+\label{sec:evaluation}
 
-If your author list is lengthy, you must define a shortened version of
-the list of authors to be used in the page headers, to prevent
-overlapping text. The following command should be placed just after
-the last \verb|\author{}| definition:
-\begin{verbatim}
-  \renewcommand{\shortauthors}{McCartney, et al.}
-\end{verbatim}
-Omitting this command will force the use of a concatenated list of all
-of the authors' names, which may result in overlapping text in the
-page headers.
+\subsection{Experimental Setup}
+\label{subsec:exp-setup}
 
-The article template's documentation, available at
-\url{https://www.acm.org/publications/proceedings-template}, has a
-complete explanation of these commands and tips for their effective
-use.
+We evaluate \ourmethod on five heterogeneous Linux hosts.
+UnixBench and \textsc{PTS-CPU} are evaluated on all five machines; \textsc{PTS-GPU} is evaluated only on H1 (32U128G), the sole host equipped with an NVIDIA GPU---the remaining four hosts are CPU-only and do not run GPU workloads.
+Our evaluation is organized around two complementary acceleration routes.
+\textbf{Route~A} combines conditional expert selection with score reconstruction: a router chooses a Top-$K$ subset of sub-benchmarks, executes them, and a reconstructor predicts the full-suite score from partial observations.
+\textbf{Route~B} applies time-bounded probing: each sub-benchmark is observed through a short execution window (with optional eBPF telemetry), and per-component scores are estimated and aggregated into a suite-level prediction.
+Unless stated otherwise, each host trains and evaluates only on its own collected runs, so reported results reflect per-machine generalization rather than cross-host pooling.
+All numeric results in the tables below are left as placeholders and will be filled after the full experimental campaign completes.
 
-Note that authors' addresses are mandatory for journal articles.
+\subsubsection{Testbeds}
+\label{subsubsec:testbeds}
 
-\section{Rights Information}
+We deploy \ourmethod on five Linux machines spanning a wide range of CPU and memory capacities.
+Table~\ref{tab:testbeds} summarizes the hardware configuration of each host and the benchmark suites executed on it.
+H1 (32 logical CPUs, 128\,GiB RAM, NVIDIA GPU) serves as the development server and is the only machine on which \textsc{PTS-GPU} is run; H2--H5 are smaller CPU-only instances used for UnixBench and \textsc{PTS-CPU} evaluation.
+All machines share the same software stack (kernel, compiler toolchain, and benchmark versions) modulo platform-specific GPU drivers on H1.
+We label hosts by a compact \texttt{CPU$\times$RAM} shorthand used throughout this section and in Section~2.
 
-Authors of any work published by ACM will need to complete a rights
-form. Depending on the kind of work, and the rights management choice
-made by the author, this may be copyright transfer, permission,
-license, or an OA (open access) agreement.
-
-Regardless of the rights management choice, the author will receive a
-copy of the completed rights form once it has been submitted. This
-form contains \LaTeX\ commands that must be copied into the source
-document. When the document source is compiled, these commands and
-their parameters add formatted text to several areas of the final
-document:
-\begin{itemize}
-\item the ``ACM Reference Format'' text on the first page.
-\item the ``rights management'' text on the first page.
-\item the conference information in the page header(s).
-\end{itemize}
-
-Rights information is unique to the work; if you are preparing several
-works for an event, make sure to use the correct set of commands with
-each of the works.
-
-The ACM Reference Format text is required for all articles over one
-page in length, and is optional for one-page articles (abstracts).
-
-\section{CCS Concepts and User-Defined Keywords}
-
-Two elements of the ``acmart'' document class provide powerful
-taxonomic tools for you to help readers find your work in an online
-search.
-
-The ACM Computing Classification System ---
-\url{https://www.acm.org/publications/class-2012} --- is a set of
-classifiers and concepts that describe the computing
-discipline. Authors can select entries from this classification
-system, via \url{https://dl.acm.org/ccs/ccs.cfm}, and generate the
-commands to be included in the \LaTeX\ source.
-
-User-defined keywords are a comma-separated list of words and phrases
-of the authors' choosing, providing a more flexible way of describing
-the research being presented.
-
-CCS concepts and user-defined keywords are required for for all
-articles over two pages in length, and are optional for one- and
-two-page articles (or abstracts).
-
-\section{Sectioning Commands}
-
-Your work should use standard \LaTeX\ sectioning commands:
-\verb|\section|, \verb|\subsection|, \verb|\subsubsection|,
-\verb|\paragraph|, and \verb|\subparagraph|. The sectioning levels up to
-\verb|\subsusection| should be numbered; do not remove the numbering
-from the commands.
-
-Simulating a sectioning command by setting the first word or words of
-a paragraph in boldface or italicized text is {\bfseries not allowed.}
-
-Below are examples of sectioning commands.
-
-\subsection{Subsection}
-\label{sec:subsection}
-
-This is a subsection.
-
-\subsubsection{Subsubsection}
-\label{sec:subsubsection}
-
-This is a subsubsection.
-
-\paragraph{Paragraph}
-
-This is a paragraph.
-
-\subparagraph{Subparagraph}
-
-This is a subparagraph.
-
-\section{Tables}
-
-The ``\verb|acmart|'' document class includes the ``\verb|booktabs|''
-package --- \url{https://ctan.org/pkg/booktabs} --- for preparing
-high-quality tables.
-
-Table captions are placed {\itshape above} the table.
-
-Because tables cannot be split across pages, the best placement for
-them is typically the top of the page nearest their initial cite.  To
-ensure this proper ``floating'' placement of tables, use the
-environment \textbf{table} to enclose the table's contents and the
-table caption.  The contents of the table itself must go in the
-\textbf{tabular} environment, to be aligned properly in rows and
-columns, with the desired horizontal and vertical rules.  Again,
-detailed instructions on \textbf{tabular} material are found in the
-\textit{\LaTeX\ User's Guide}.
-
-Immediately following this sentence is the point at which
-Table~\ref{tab:freq} is included in the input file; compare the
-placement of the table here with the table in the printed output of
-this document.
-
-\begin{table}
-  \caption{Frequency of Special Characters}
-  \label{tab:freq}
-  \begin{tabular}{ccl}
-    \toprule
-    Non-English or Math&Frequency&Comments\\
-    \midrule
-    \O & 1 in 1,000& For Swedish names\\
-    $\pi$ & 1 in 5& Common in math\\
-    \$ & 4 in 5 & Used in business\\
-    $\Psi^2_1$ & 1 in 40,000& Unexplained usage\\
-  \bottomrule
+\begin{table}[t]
+\centering
+\caption{Evaluation testbeds. Five Linux hosts with heterogeneous CPU and memory capacity. \textsc{PTS-GPU} runs only on H1.}
+\label{tab:testbeds}
+\small
+\begin{tabular}{lcccp{0.22\linewidth}p{0.18\linewidth}}
+\toprule
+\textbf{Host ID} & \textbf{vCPU} & \textbf{RAM (GiB)} & \textbf{Label} & \textbf{GPU} & \textbf{Suites} \\
+\midrule
+H1 & 32 & 128 & 32U128G & NVIDIA & UB, \textsc{PTS-CPU}, \textsc{PTS-GPU} \\
+H2 & 2  & 8   & 2U8G   & ---    & UB, \textsc{PTS-CPU} \\
+H3 & 4  & 8   & 4U8G   & ---    & UB, \textsc{PTS-CPU} \\
+H4 & 4  & 16  & 4U16G  & ---    & UB, \textsc{PTS-CPU} \\
+H5 & 8  & 8   & 8U8G   & ---    & UB, \textsc{PTS-CPU} \\
+\bottomrule
 \end{tabular}
 \end{table}
 
-To set a wider table, which takes up the whole width of the page's
-live area, use the environment \textbf{table*} to enclose the table's
-contents and the table caption.  As with a single-column table, this
-wide table will ``float'' to a location deemed more
-desirable. Immediately following this sentence is the point at which
-Table~\ref{tab:commands} is included in the input file; again, it is
-instructive to compare the placement of the table here with the table
-in the printed output of this document.
+\paragraph{Software environment.}
+Each host uses a Linux kernel with standard \texttt{perf} and optional \texttt{bpftrace} support where permitted.
+System feature collection (\(\mathbf{x}\)) uses a fixed warmup window of 3\,s, \texttt{/proc} sampling interval of 0.5\,s, and a 64\,MiB in-process warmup working set unless noted otherwise.
+When \texttt{perf} PMU counters are blocked (e.g., due to \texttt{kernel.perf\_event\_paranoid}), the collector degrades to \texttt{/proc}-based proxies without aborting the pipeline.
+For GPU workloads on H1, NVIDIA driver and OpenCL inventory are collected when available; on CPU-only hosts (H2--H5), GPU dimensions are zero-masked at inference time.
 
-\begin{table*}
-  \caption{Some Typical Commands}
-  \label{tab:commands}
-  \begin{tabular}{ccl}
-    \toprule
-    Command &A Number & Comments\\
-    \midrule
-    \texttt{{\char'134}author} & 100& Author \\
-    \texttt{{\char'134}table}& 300 & For tables\\
-    \texttt{{\char'134}table*}& 400& For wider tables\\
-    \bottomrule
-  \end{tabular}
+\paragraph{Per-host training protocol.}
+For every host \(h \in \{\mathrm{H1},\ldots,\mathrm{H5}\}\), we collect benchmark datasets locally and train all models using only runs whose session tags match \(h\).
+H1 trains and evaluates on UnixBench, \textsc{PTS-CPU}, and \textsc{PTS-GPU}; H2--H5 train and evaluate on UnixBench and \textsc{PTS-CPU} only.
+This isolates each machine's router, reconstructor, and probe models from other hosts' data distributions.
+Cross-host comparison therefore reflects how \ourmethod behaves under different hardware ceilings rather than a single global model transferred across machines.
+
+\subsubsection{Benchmark Suites}
+\label{subsubsec:benchmark-suites}
+
+We evaluate on three benchmark suites that stress complementary subsystems.
+UnixBench and \textsc{PTS-CPU} are run on all five hosts; \textsc{PTS-GPU} is restricted to H1 because the other four machines lack discrete GPUs.
+
+\begin{itemize}
+    \item \textbf{UnixBench (UB).} A classic system-level suite with 12 single-copy subtests (\(N=12\)), including CPU kernels (\texttt{dhry2reg}, \texttt{whetstone-double}), I/O (\texttt{fstime}, \texttt{fsbuffer}, \texttt{fsdisk}), and OS/interaction workloads (\texttt{pipe}, \texttt{context1}, \texttt{spawn}, \texttt{syscall}, \texttt{shell1}, \texttt{shell8}).
+    We run UnixBench with a single parallel copy (\texttt{perl Run -c 1}), matching the \ourmethod{} collection protocol.
+    The aggregate metric is the \emph{System Benchmarks Index Score}.
+    Evaluated on all five hosts.
+
+    \item \textbf{Phoronix Test Suite --- CPU (\textsc{PTS-CPU}).} The standard \texttt{cpu} suite with approximately 13 profiles covering compilation, cryptography, compression, and numerical kernels.
+    Profile-level primary values span large dynamic ranges; suite aggregation follows log-mean over profiles, consistent with our reconstructor training target.
+    Evaluated on all five hosts.
+
+    \item \textbf{Phoronix Test Suite --- GPU (\textsc{PTS-GPU}).} The \texttt{pts/nvidia-gpu-compute} suite, executed only on H1 (32U128G), which has a suitable NVIDIA GPU and installed PTS profiles.
+    This suite complements CPU-centric evaluation with OpenCL/GPU compute workloads and is omitted on H2--H5.
+\end{itemize}
+
+For Route~A end-to-end grid experiments on PTS, ground-truth full-suite scores are taken from previously collected full runs on the same host (offline replay), avoiding repeated full-suite online execution that can cause excessive wall time or resource exhaustion.
+UnixBench grid experiments execute both partial and full runs online unless otherwise noted.
+
+\subsubsection{Collected Data}
+\label{subsubsec:collected-data}
+
+\paragraph{Phase~1: Full-suite collection (shared by Routes~A and~B).}
+On each host, we collect multiple complete benchmark sessions (typically 3--5 rounds per session) for every suite applicable to that host (UnixBench and \textsc{PTS-CPU} on all five hosts; \textsc{PTS-GPU} on H1 only).
+Each run record stores:
+(i)~system context \(\mathbf{x}\) (static + dynamic features),
+(ii)~per-component results \(\mathbf{y}\) and timings \(\mathbf{t}\),
+and (iii)~expert metadata (component identifiers, categories, and titles).
+These runs provide supervision for router training, reconstructor training, probe label construction, and ground-truth evaluation.
+
+\paragraph{Phase~2: Route~A model training and grid evaluation.}
+For each applicable suite on each host, we train three router architectures (LightGBM ranker, MLP, GNN-expert) and three reconstructors (XGBoost, LightGBM, MLP), then evaluate all \(3 \times 3 = 9\) end-to-end combinations.
+Each combination produces one experiment report with predicted suite score, actual full-suite score, partial execution time, and full execution time (or dataset-replay ground truth for PTS).
+
+\paragraph{Phase~3: Route~B probe pipeline.}
+For each applicable suite on each host, we build a probe dataset by executing short probes (default 4\,s per component, micro-probe mode) over historical full runs on the same host, train two regressors (LightGBM and XGBoost; PTS uses log1p labels with per-profile estimators), and run an online experiment that re-probes all components and compares the predicted suite score against the most recent full run on that host.
+
+\paragraph{Phase~4: Supplementary offline studies (Route~A, best combination).}
+After selecting the best router--reconstructor pair per suite from Phase~2 on each applicable host, we conduct three supplementary studies on stored runs only (leave-one-session-out cross-validation, no re-execution):
+Top-$K$ sweep, routing-policy comparison, and system-feature ablation.
+For \textsc{PTS-GPU}, supplementary studies use H1 data only.
+
+\subsubsection{Metrics}
+\label{subsubsec:metrics}
+
+\paragraph{Accuracy.}
+For suite-level score \(\hat{S}\) and ground truth \(S\), we report:
+\emph{absolute error} \(| \hat{S} - S |\),
+\emph{relative error} \(| \hat{S} - S | / \max(|S|, \epsilon)\),
+and rank-correlation metrics (Spearman/Kendall) where cross-run ranking is meaningful.
+For offline cross-validation studies, we also report out-of-fold MAE and RMSE on the suite dimension.
+
+\paragraph{Cost.}
+We measure \emph{wall-clock time} of benchmark execution:
+\(T_{\mathrm{partial}}\) for the executed subset,
+\(T_{\mathrm{full}}\) for the complete suite (or dataset-replay equivalent),
+and \emph{fraction saved} \((T_{\mathrm{full}} - T_{\mathrm{partial}}) / T_{\mathrm{full}}\).
+Route~B additionally reports total probe wall time and per-component probe duration.
+
+\paragraph{Combined trade-off score.}
+For Top-$K$ and routing-policy studies, we rank configurations using a \emph{balanced score} that penalizes high suite MAE and low time savings (lower is better), enabling Pareto-style comparison between accuracy and cost.
+
+\paragraph{Aggregation across hosts.}
+For UnixBench and \textsc{PTS-CPU}, we summarize each metric by mean (and optionally standard deviation) over the five testbeds unless a table explicitly reports per-host columns.
+For \textsc{PTS-GPU}, all reported values come from H1 (32U128G) only.
+Statistical significance testing will be reported where applicable after all runs complete.
+
+\subsection{Overall Effectiveness}
+\label{subsec:overall-effectiveness}
+
+We first ask whether \ourmethod can approximate full-suite scores with substantially lower execution cost than running every component to completion.
+For each applicable host--suite pair, we compare:
+\textbf{(i)} full-suite execution (baseline),
+\textbf{(ii)} Route~A with the best \(3 \times 3\) combination selected from the grid on that host,
+and \textbf{(iii)} Route~B with the better of LightGBM vs.\ XGBoost probe models on that host.
+
+Table~\ref{tab:overall-effectiveness} reports suite-level relative error, partial and full wall times, and time saved.
+UnixBench and \textsc{PTS-CPU} rows aggregate over five hosts; \textsc{PTS-GPU} rows report H1 (32U128G) only.
+We expect Route~A to dominate when partial sub-benchmark execution remains informative for reconstruction, while Route~B should achieve the lowest execution footprint when short probes suffice.
+
+\begin{table*}[t]
+\centering
+\caption{Overall effectiveness. UnixBench and \textsc{PTS-CPU}: mean over five hosts. \textsc{PTS-GPU}: H1 (32U128G) only. Best Route~A and Route~B configurations are selected per host from the model-combination and probe-model studies. Numeric cells are placeholders.}
+\label{tab:overall-effectiveness}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llcccccc}
+\toprule
+\textbf{Suite} & \textbf{Method} &
+\textbf{Rel.\ err. (\%)} &
+\(T_{\mathrm{partial}}\) (s) &
+\(T_{\mathrm{full}}\) (s) &
+\textbf{Saved (\%)} &
+\textbf{MAE} &
+\textbf{Spearman} \\
+\midrule
+\multirow{3}{*}{UnixBench}
+ & Full suite   & 0 & --- & --- & 0 & --- & --- \\
+ & Route~A      & --- & --- & --- & --- & --- & --- \\
+ & Route~B      & --- & --- & --- & --- & --- & --- \\
+\midrule
+\multirow{3}{*}{\textsc{PTS-CPU}}
+ & Full suite   & 0 & --- & --- & 0 & --- & --- \\
+ & Route~A      & --- & --- & --- & --- & --- & --- \\
+ & Route~B      & --- & --- & --- & --- & --- & --- \\
+\midrule
+\multirow{3}{*}{\textsc{PTS-GPU}}
+ & Full suite   & 0 & --- & --- & 0 & --- & --- \\
+ & Route~A      & --- & --- & --- & --- & --- & --- \\
+ & Route~B      & --- & --- & --- & --- & --- & --- \\
+\bottomrule
+\end{tabular}
 \end{table*}
 
-Always use midrule to separate table header rows from data rows, and
-use it only for this purpose. This enables assistive technologies to
-recognise table headers and support their users in navigating tables
-more easily.
+\subsection{Model Combination Study}
+\label{subsec:model-combination}
 
-\section{Math Equations}
-You may want to display math equations in three distinct styles:
-inline, numbered or non-numbered display.  Each of the three are
-discussed in the next sections.
+Route~A depends on both the router and the reconstructor.
+We exhaustively evaluate the Cartesian product of three routers \(\{\text{LightGBM}, \text{MLP}, \text{GNN}\}\) and three reconstructors \(\{\text{XGBoost}, \text{LightGBM}, \text{MLP}\}\), yielding nine combinations per applicable host--suite pair.
+Table~\ref{tab:model-combination-ub} shows UnixBench results (mean over five hosts); Table~\ref{tab:model-combination-pts-cpu} shows \textsc{PTS-CPU} (mean over five hosts); Table~\ref{tab:model-combination-pts-gpu} shows \textsc{PTS-GPU} on H1 only.
+Each cell will report mean suite relative error and mean partial execution time under the corresponding aggregation scope.
 
-\subsection{Inline (In-text) Equations}
-A formula that appears in the running text is called an inline or
-in-text formula.  It is produced by the \textbf{math} environment,
-which can be invoked with the usual
-\texttt{{\char'134}begin\,\ldots{\char'134}end} construction or with
-the short form \texttt{\$\,\ldots\$}. You can use any of the symbols
-and structures, from $\alpha$ to $\omega$, available in
-\LaTeX~\cite{Lamport:LaTeX}; this section will simply show a few
-examples of in-text equations in context. Notice how this equation:
-\begin{math}
-  \lim_{n\rightarrow \infty}x=0
-\end{math},
-set here in in-line math style, looks slightly different when
-set in display style.  (See next section).
+\begin{table*}[t]
+\centering
+\caption{Route~A model combination study on UnixBench. Rows: routers; columns: reconstructors. Values: mean suite relative error (\%) / mean partial time (s) over five hosts. Placeholders.}
+\label{tab:model-combination-ub}
+\small
+\begin{tabular}{l|ccc}
+\toprule
+\textbf{Router $\backslash$ Reconstructor} & \textbf{XGBoost} & \textbf{LightGBM} & \textbf{MLP} \\
+\midrule
+LightGBM  & --- / --- & --- / --- & --- / --- \\
+MLP       & --- / --- & --- / --- & --- / --- \\
+GNN-expert & --- / --- & --- / --- & --- / --- \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
-\subsection{Display Equations}
-A numbered display equation---one set off by vertical space from the
-text and centered horizontally---is produced by the \textbf{equation}
-environment. An unnumbered display equation is produced by the
-\textbf{displaymath} environment.
+\begin{table}[t]
+\centering
+\caption{Route~A model combination on \textsc{PTS-CPU} (mean over five hosts). Placeholders.}
+\label{tab:model-combination-pts-cpu}
+\small
+\begin{tabular}{l|ccc}
+\toprule
+\textbf{Router $\backslash$ Recon.} & XGB & LGBM & MLP \\
+\midrule
+LightGBM  & --- & --- & --- \\
+MLP       & --- & --- & --- \\
+GNN       & --- & --- & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-Again, in either environment, you can use any of the symbols and
-structures available in \LaTeX\@; this section will just give a couple
-of examples of display equations in context.  First, consider the
-equation, shown as an inline equation above:
-\begin{equation}
-  \lim_{n\rightarrow \infty}x=0
-\end{equation}
-Notice how it is formatted somewhat differently in
-the \textbf{displaymath}
-environment.  Now, we'll enter an unnumbered equation:
-\begin{displaymath}
-  \sum_{i=0}^{\infty} x + 1
-\end{displaymath}
-and follow it with another numbered equation:
-\begin{equation}
-  \sum_{i=0}^{\infty}x_i=\int_{0}^{\pi+2} f
-\end{equation}
-just to demonstrate \LaTeX's able handling of numbering.
+\begin{table}[t]
+\centering
+\caption{Route~A model combination on \textsc{PTS-GPU} (H1 / 32U128G only). Placeholders.}
+\label{tab:model-combination-pts-gpu}
+\small
+\begin{tabular}{l|ccc}
+\toprule
+\textbf{Router $\backslash$ Recon.} & XGB & LGBM & MLP \\
+\midrule
+LightGBM  & --- & --- & --- \\
+MLP       & --- & --- & --- \\
+GNN       & --- & --- & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-\section{Figures}
+We will identify the \emph{best combination} per suite (lowest suite error subject to meaningful time savings) and use its router checkpoint for the supplementary studies in Sections~\ref{subsec:topk-tradeoff}--\ref{subsec:feature-ablation}.
 
-The ``\verb|figure|'' environment should be used for figures. One or
-more images can be placed within a figure. If your figure contains
-third-party material, you must clearly identify it as such, as shown
-in the example below.
-\begin{figure}[h]
-  \centering
-  \includegraphics[width=\linewidth]{sample-franklin}
-  \caption{1907 Franklin Model D roadster. Photograph by Harris \&
-    Ewing, Inc. [Public domain], via Wikimedia
-    Commons. (\url{https://goo.gl/VLCRBB}).}
-  \Description{A woman and a girl in white dresses sit in an open car.}
-\end{figure}
+\subsection{Accuracy--Cost Trade-off}
+\label{subsec:topk-tradeoff}
 
-Your figures should contain a caption which describes the figure to
-the reader.
+Given the best router from Section~\ref{subsec:model-combination}, we sweep the subset size \(K \in \{1,2,3,4,5,6\}\) (capped by the number of components in each suite).
+For each \(K\), the router selects Top-\(K\) experts, partial results are observed, and the reconstructor predicts the suite score.
+Evaluation uses leave-one-session-out cross-validation on each host's historical runs, with the router providing subset selection at inference time.
+UnixBench and \textsc{PTS-CPU} results are aggregated over five hosts; \textsc{PTS-GPU} results are from H1 only.
 
-Figure captions are placed {\itshape below} the figure.
+\begin{table*}[t]
+\centering
+\caption{Top-$K$ sweep using the best router--reconstructor pair per suite (offline CV). UnixBench and \textsc{PTS-CPU}: mean over five hosts. \textsc{PTS-GPU}: H1 only. \textbf{Bal.} = balanced score (lower is better). Placeholders.}
+\label{tab:topk-sweep}
+\small
+\begin{tabular}{llcccccc}
+\toprule
+\textbf{Suite} & \(K\) & \textbf{MAE} & \textbf{RMSE} & \textbf{Spearman} & \textbf{Saved (\%)} & \textbf{Bal.} & \textbf{Rank} \\
+\midrule
+\multirow{6}{*}{UnixBench}
+ & 1 & --- & --- & --- & --- & --- & --- \\
+ & 2 & --- & --- & --- & --- & --- & --- \\
+ & 3 & --- & --- & --- & --- & --- & --- \\
+ & 4 & --- & --- & --- & --- & --- & --- \\
+ & 5 & --- & --- & --- & --- & --- & --- \\
+ & 6 & --- & --- & --- & --- & --- & --- \\
+\midrule
+\multirow{6}{*}{\textsc{PTS-CPU}}
+ & 1 & --- & --- & --- & --- & --- & --- \\
+ & 2 & --- & --- & --- & --- & --- & --- \\
+ & 3 & --- & --- & --- & --- & --- & --- \\
+ & 4 & --- & --- & --- & --- & --- & --- \\
+ & 5 & --- & --- & --- & --- & --- & --- \\
+ & 6 & --- & --- & --- & --- & --- & --- \\
+\midrule
+\multirow{6}{*}{\textsc{PTS-GPU}}
+ & 1 & --- & --- & --- & --- & --- & --- \\
+ & 2 & --- & --- & --- & --- & --- & --- \\
+ & 3 & --- & --- & --- & --- & --- & --- \\
+ & 4 & --- & --- & --- & --- & --- & --- \\
+ & 5 & --- & --- & --- & --- & --- & --- \\
+ & 6 & --- & --- & --- & --- & --- & --- \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
-Every figure should also have a figure description unless it is purely
-decorative. These descriptions convey what’s in the image to someone
-who cannot see it. They are also used by search engine crawlers for
-indexing images, and when images cannot be loaded.
+Table~\ref{tab:topk-sweep} reports, for each suite, suite MAE, mean wall-time saved fraction, and balanced score at each \(K\).
+The recommended \(K^\star\) minimizes balanced score while keeping relative error below a suite-specific tolerance (to be fixed after observing the error scale).
 
-A figure description must be unformatted plain text less than 2000
-characters long (including spaces).  {\bfseries Figure descriptions
-  should not repeat the figure caption – their purpose is to capture
-  important information that is not already provided in the caption or
-  the main text of the paper.} For figures that convey important and
-complex new information, a short text description may not be
-adequate. More complex alternative descriptions can be placed in an
-appendix and referenced in a short figure description. For example,
-provide a data table capturing the information in a bar chart, or a
-structured list representing a graph.  For additional information
-regarding how best to write figure descriptions and why doing this is
-so important, please see
-\url{https://www.acm.org/publications/taps/describing-figures/}.
+Recommended values \(K^\star_{\mathrm{UB}}\), \(K^\star_{\mathrm{CPU}}\), and \(K^\star_{\mathrm{GPU}}\) will be used as fixed subset sizes in Section~\ref{subsec:routing-strategy}.
 
-\subsection{The ``Teaser Figure''}
+\subsection{Routing Strategy Comparison}
+\label{subsec:routing-strategy}
 
-A ``teaser figure'' is an image, or set of images in one figure, that
-are placed after all author and affiliation information, and before
-the body of the article, spanning the page. If you wish to have such a
-figure in your article, place the command immediately before the
-\verb|\maketitle| command:
-\begin{verbatim}
-  \begin{teaserfigure}
-    \includegraphics[width=\textwidth]{sampleteaser}
-    \caption{figure caption}
-    \Description{figure description}
-  \end{teaserfigure}
-\end{verbatim}
+Subset selection strategy strongly influences both cost and reconstruction quality.
+At fixed \(K = K^\star\) from Section~\ref{subsec:topk-tradeoff}, we compare seven policies:
+\texttt{random} (seeded uniform subset),
+\texttt{fixed\_first\_k} (canonical order prefix),
+\texttt{fixed\_cpu\_mix} and \texttt{fixed\_io\_mix} (heuristic CPU/IO presets; on PTS, degenerates to canonical prefix when IDs do not match),
+\texttt{greedy\_slowest} and \texttt{greedy\_fastest} (by historical wall time on the held-out sample),
+and \texttt{router} (Top-$K$ from the trained router).
+All policies share the same reconstructor and cross-validation protocol.
+UnixBench and \textsc{PTS-CPU} results are aggregated over five hosts; \textsc{PTS-GPU} results are from H1 only.
 
-\section{Citations and Bibliographies}
+Table~\ref{tab:routing-policy} summarizes suite MAE, time saved, and balanced score.
+We hypothesize that \texttt{router} achieves the best trade-off by conditioning on \(\mathbf{x}\), while static heuristics fail on heterogeneous hosts (e.g., I/O-bound vs.\ CPU-bound configurations).
 
-The use of \BibTeX\ for the preparation and formatting of one's
-references is strongly recommended. Authors' names should be complete
---- use full first names (``Donald E. Knuth'') not initials
-(``D. E. Knuth'') --- and the salient identifying features of a
-reference should be included: title, year, volume, number, pages,
-article DOI, etc.
+\begin{table*}[t]
+\centering
+\caption{Routing / subset policy comparison at fixed \(K^\star\) (offline CV). UnixBench and \textsc{PTS-CPU}: mean over five hosts. \textsc{PTS-GPU}: H1 only. Placeholders.}
+\label{tab:routing-policy}
+\small
+\begin{tabular}{llcccc}
+\toprule
+\textbf{Suite} & \textbf{Policy} & \textbf{MAE} & \textbf{Saved (\%)} & \textbf{Bal.} & \textbf{Rank} \\
+\midrule
+\multirow{7}{*}{UnixBench}
+ & random          & --- & --- & --- & --- \\
+ & fixed\_first\_k & --- & --- & --- & --- \\
+ & fixed\_cpu\_mix & --- & --- & --- & --- \\
+ & fixed\_io\_mix  & --- & --- & --- & --- \\
+ & greedy\_slowest & --- & --- & --- & --- \\
+ & greedy\_fastest & --- & --- & --- & --- \\
+ & router          & --- & --- & --- & --- \\
+\midrule
+\multirow{7}{*}{\textsc{PTS-CPU}}
+ & random          & --- & --- & --- & --- \\
+ & fixed\_first\_k & --- & --- & --- & --- \\
+ & fixed\_cpu\_mix & --- & --- & --- & --- \\
+ & fixed\_io\_mix  & --- & --- & --- & --- \\
+ & greedy\_slowest & --- & --- & --- & --- \\
+ & greedy\_fastest & --- & --- & --- & --- \\
+ & router          & --- & --- & --- & --- \\
+\midrule
+\multirow{7}{*}{\textsc{PTS-GPU}}
+ & random          & --- & --- & --- & --- \\
+ & fixed\_first\_k & --- & --- & --- & --- \\
+ & fixed\_cpu\_mix & --- & --- & --- & --- \\
+ & fixed\_io\_mix  & --- & --- & --- & --- \\
+ & greedy\_slowest & --- & --- & --- & --- \\
+ & greedy\_fastest & --- & --- & --- & --- \\
+ & router          & --- & --- & --- & --- \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
-The bibliography is included in your source document with these two
-commands, placed just before the \verb|\end{document}| command:
-\begin{verbatim}
-  \bibliographystyle{ACM-Reference-Format}
-  \bibliography{bibfile}
-\end{verbatim}
-where ``\verb|bibfile|'' is the name, without the ``\verb|.bib|''
-suffix, of the \BibTeX\ file.
+\subsection{Feature Ablation Study}
+\label{subsec:feature-ablation}
 
-Citations and references are numbered by default. A small number of
-ACM publications have citations and references formatted in the
-``author year'' style; for these exceptions, please include this
-command in the {\bfseries preamble} (before the command
-``\verb|\begin{document}|'') of your \LaTeX\ source:
-\begin{verbatim}
-  \citestyle{acmauthoryear}
-\end{verbatim}
+To quantify which parts of the system context \(\mathbf{x}\) drive reconstruction accuracy, we ablate feature groups while holding the router policy and \(K^\star\) fixed.
+We evaluate five modes:
+\textbf{full} (complete \(\mathbf{x}\)),
+\textbf{static\_hw\_only} (hardware topology, memory, cache, GPU inventory; zero dynamic/PMU),
+\textbf{no\_perf\_pmu} (remove PMU-derived rates except \texttt{perf\_event\_paranoid}),
+\textbf{no\_dynamic\_proc} (remove load, fault, and bandwidth-proxy dynamics),
+and \textbf{no\_gpu} (remove GPU/OpenCL dimensions).
+For each mode, we report suite MAE and the \emph{MAE increase relative to full} \(\Delta\)MAE; larger \(\Delta\) indicates higher importance of the removed group.
+UnixBench and \textsc{PTS-CPU} results are aggregated over five hosts; \textsc{PTS-GPU} results are from H1 only.
 
+Table~\ref{tab:feature-ablation} lists results per suite under the corresponding aggregation scope.
+The importance ranking will guide which telemetry to prioritize in production deployments with restricted permissions.
 
-  Some examples.  A paginated journal article \cite{Abril07}, an
-  enumerated journal article \cite{Cohen07}, a reference to an entire
-  issue \cite{JCohen96}, a monograph (whole book) \cite{Kosiur01}, a
-  monograph/whole book in a series (see 2a in spec. document)
-  \cite{Harel79}, a divisible-book such as an anthology or compilation
-  \cite{Editor00} followed by the same example, however we only output
-  the series if the volume number is given \cite{Editor00a} (so
-  Editor00a's series should NOT be present since it has no vol. no.),
-  a chapter in a divisible book \cite{Spector90}, a chapter in a
-  divisible book in a series \cite{Douglass98}, a multi-volume work as
-  book \cite{Knuth97}, a couple of articles in a proceedings (of a
-  conference, symposium, workshop for example) (paginated proceedings
-  article) \cite{Andler79, Hagerup1993}, a proceedings article with
-  all possible elements \cite{Smith10}, an example of an enumerated
-  proceedings article \cite{VanGundy07}, an informally published work
-  \cite{Harel78}, a couple of preprints \cite{Bornmann2019,
-    AnzarootPBM14}, a doctoral dissertation \cite{Clarkson85}, a
-  master's thesis: \cite{anisi03}, an online document / world wide web
-  resource \cite{Thornburg01, Ablamowicz07, Poker06}, a video game
-  (Case 1) \cite{Obama08} and (Case 2) \cite{Novak03} and \cite{Lee05}
-  and (Case 3) a patent \cite{JoeScientist001}, work accepted for
-  publication \cite{rous08}, 'YYYYb'-test for prolific author
-  \cite{SaeediMEJ10} and \cite{SaeediJETC10}. Other cites might
-  contain 'duplicate' DOI and URLs (some SIAM articles)
-  \cite{Kirschmer:2010:AEI:1958016.1958018}. Boris / Barbara Beeton:
-  multi-volume works as books \cite{MR781536} and \cite{MR781537}. A
-  presentation~\cite{Reiser2014}. An article under
-  review~\cite{Baggett2025}. A
-  couple of citations with DOIs:
-  \cite{2004:ITE:1009386.1010128,Kirschmer:2010:AEI:1958016.1958018}. Online
-  citations: \cite{TUGInstmem, Thornburg01, CTANacmart}.
-  Artifacts: \cite{R} and \cite{UMassCitations}.
+\begin{table*}[t]
+\centering
+\caption{System-feature ablation at fixed router policy and \(K^\star\) (offline CV). UnixBench and \textsc{PTS-CPU}: mean over five hosts. \textsc{PTS-GPU}: H1 only. \(\Delta\)MAE is increase vs.\ \texttt{full}. Placeholders.}
+\label{tab:feature-ablation}
+\small
+\begin{tabular}{llccc}
+\toprule
+\textbf{Suite} & \textbf{Ablation mode} & \textbf{MAE} & \(\Delta\)MAE & \textbf{Importance rank} \\
+\midrule
+\multirow{5}{*}{UnixBench}
+ & full              & --- & 0    & --- \\
+ & static\_hw\_only  & --- & ---  & --- \\
+ & no\_perf\_pmu     & --- & ---  & --- \\
+ & no\_dynamic\_proc & --- & ---  & --- \\
+ & no\_gpu           & --- & ---  & --- \\
+\midrule
+\multirow{5}{*}{\textsc{PTS-CPU}}
+ & full              & --- & 0    & --- \\
+ & static\_hw\_only  & --- & ---  & --- \\
+ & no\_perf\_pmu     & --- & ---  & --- \\
+ & no\_dynamic\_proc & --- & ---  & --- \\
+ & no\_gpu           & --- & ---  & --- \\
+\midrule
+\multirow{5}{*}{\textsc{PTS-GPU}}
+ & full              & --- & 0    & --- \\
+ & static\_hw\_only  & --- & ---  & --- \\
+ & no\_perf\_pmu     & --- & ---  & --- \\
+ & no\_dynamic\_proc & --- & ---  & --- \\
+ & no\_gpu           & --- & ---  & --- \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
-\section{Acknowledgments}
+\subsection{Probe-Based Evaluation}
+\label{subsec:probe-evaluation}
 
-Identification of funding sources and other support, and thanks to
-individuals and groups that assisted in the research and the
-preparation of the work should be included in an acknowledgment
-section, which is placed just before the reference section in your
-document.
+Route~B replaces long sub-benchmark execution with time-bounded probing (default 4\,s per component, micro-probe mode with optional eBPF).
+We train two probe regressors---LightGBM and XGBoost---on probe features \(\mathbf{p}_{i,j}\) collected from each host's historical full runs, then evaluate online suite prediction against the latest full run on the same host.
+For PTS suites, labels use \(\log(1+x)\) scaling with per-profile estimators to handle heterogeneous metric magnitudes.
+Probe evaluation covers UnixBench and \textsc{PTS-CPU} on all five hosts and \textsc{PTS-GPU} on H1 only (11 host--suite pairs in total).
 
-This section has a special environment:
-\begin{verbatim}
-  \begin{acks}
-  ...
-  \end{acks}
-\end{verbatim}
-so that the information contained therein can be more easily collected
-during the article metadata extraction phase, and to ensure
-consistency in the spelling of the section heading.
+Table~\ref{tab:probe-models} compares LightGBM vs.\ XGBoost on suite relative error and total probe wall time.
+UnixBench and \textsc{PTS-CPU} rows aggregate over five hosts; the \textsc{PTS-GPU} row reports H1 only.
+Table~\ref{tab:probe-per-host} provides a per-host breakdown for UnixBench (all five hosts).
 
-Authors should not prepare this section as a numbered or unnumbered {\verb|\section|}; please use the ``{\verb|acks|}'' environment.
+\begin{table}[t]
+\centering
+\caption{Route~B probe model comparison. UnixBench and \textsc{PTS-CPU}: mean over five hosts. \textsc{PTS-GPU}: H1 (32U128G) only. Probe duration 4\,s/component, micro mode. Placeholders.}
+\label{tab:probe-models}
+\small
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Suite} & \textbf{Model} & \textbf{Rel.\ err. (\%)} & \textbf{MAE} & \textbf{Probe time (s)} \\
+\midrule
+\multirow{2}{*}{UnixBench}
+ & LightGBM & --- & --- & --- \\
+ & XGBoost  & --- & --- & --- \\
+\midrule
+\multirow{2}{*}{\textsc{PTS-CPU}}
+ & LightGBM & --- & --- & --- \\
+ & XGBoost  & --- & --- & --- \\
+\midrule
+\multirow{2}{*}{\textsc{PTS-GPU}}
+ & LightGBM & --- & --- & --- \\
+ & XGBoost  & --- & --- & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-\section{Appendices}
+\begin{table}[t]
+\centering
+\caption{Route~B on UnixBench: per-host suite relative error (\%). Placeholders.}
+\label{tab:probe-per-host}
+\small
+\begin{tabular}{lcc}
+\toprule
+\textbf{Host} & \textbf{LightGBM} & \textbf{XGBoost} \\
+\midrule
+32U128G & --- & --- \\
+2U8G   & --- & --- \\
+4U8G   & --- & --- \\
+4U16G  & --- & --- \\
+8U8G   & --- & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-If your work needs an appendix, add it before the
-``\verb|\end{document}|'' command at the conclusion of your source
-document.
+\subsection{Summary of Findings}
+\label{subsec:eval-summary}
 
-Start the appendix with the ``\verb|appendix|'' command:
-\begin{verbatim}
-  \appendix
-\end{verbatim}
-and note that in the appendix, sections are lettered, not
-numbered. This document has two appendices, demonstrating the section
-and subsection identification method.
+Our evaluation on five heterogeneous Linux hosts is designed to answer four questions.
+We run UnixBench and \textsc{PTS-CPU} on all five machines and \textsc{PTS-GPU} on H1 only.
+\textbf{Q1:} Can Route~A approximate full-suite scores with significantly less execution time than the baseline?
+\textbf{Q2:} Which router--reconstructor combination generalizes best per suite?
+\textbf{Q3:} How should practitioners choose \(K\), subset policy, and telemetry groups under an accuracy--cost budget?
+\textbf{Q4:} Can Route~B further reduce execution footprint via fixed-duration probing, and which probe regressor is preferable?
 
-\section{Multi-language papers}
+After all experiments complete, we will summarize findings as follows (placeholders to be replaced with measured conclusions):
 
-Papers may be written in languages other than English or include
-titles, subtitles, keywords and abstracts in different languages (as a
-rule, a paper in a language other than English should include an
-English title and an English abstract).  Use \verb|language=...| for
-every language used in the paper.  The last language indicated is the
-main language of the paper.  For example, a French paper with
-additional titles and abstracts in English and German may start with
-the following command
-\begin{verbatim}
-\documentclass[sigconf, language=english, language=german,
-               language=french]{acmart}
-\end{verbatim}
+\begin{itemize}
+    \item \textbf{Overall effectiveness (Q1).} Route~A reduces UnixBench wall time by \textbf{[TBD]\%} on average with \textbf{[TBD]\%} mean relative suite error; Route~B achieves \textbf{[TBD]\%} error at \textbf{[TBD]\,s} total probe time vs.\ \textbf{[TBD]\,s} full-suite time (Table~\ref{tab:overall-effectiveness}).
 
-The title, subtitle, keywords and abstract will be typeset in the main
-language of the paper.  The commands \verb|\translatedXXX|, \verb|XXX|
-begin title, subtitle and keywords, can be used to set these elements
-in the other languages.  The environment \verb|translatedabstract| is
-used to set the translation of the abstract.  These commands and
-environment have a mandatory first argument: the language of the
-second argument.  See \verb|sample-sigconf-i13n.tex| file for examples
-of their usage.
+    \item \textbf{Model combinations (Q2).} The best Route~A pair per suite is \textbf{[TBD router]} + \textbf{[TBD reconstructor]} for UnixBench (five hosts), \textbf{[TBD]} for \textsc{PTS-CPU} (five hosts), and \textbf{[TBD]} for \textsc{PTS-GPU} (H1 only) (Tables~\ref{tab:model-combination-ub}--\ref{tab:model-combination-pts-gpu}).
 
-\section{SIGCHI Extended Abstracts}
+    \item \textbf{Accuracy--cost trade-off (Q3a).} Recommended subset sizes are \(K^\star_{\mathrm{UB}}=\textbf{[TBD]}\), \(K^\star_{\mathrm{CPU}}=\textbf{[TBD]}\), and \(K^\star_{\mathrm{GPU}}=\textbf{[TBD]}\) on H1 (Table~\ref{tab:topk-sweep}).
 
-The ``\verb|sigchi-a|'' template style (available only in \LaTeX\ and
-not in Word) produces a landscape-orientation formatted article, with
-a wide left margin. Three environments are available for use with the
-``\verb|sigchi-a|'' template style, and produce formatted output in
-the margin:
-\begin{description}
-\item[\texttt{sidebar}:]  Place formatted text in the margin.
-\item[\texttt{marginfigure}:] Place a figure in the margin.
-\item[\texttt{margintable}:] Place a table in the margin.
-\end{description}
+    \item \textbf{Routing policies (Q3b).} The learned \texttt{router} policy outperforms static heuristics by \textbf{[TBD]} balanced-score margin on average for UnixBench and \textsc{PTS-CPU} across five hosts, and on H1 for \textsc{PTS-GPU} (Table~\ref{tab:routing-policy}).
 
-%%
-%% The acknowledgments section is defined using the "acks" environment
-%% (and NOT an unnumbered section). This ensures the proper
-%% identification of the section in the article metadata, and the
-%% consistent spelling of the heading.
-\begin{acks}
-To Robert, for the bagels and explaining CMYK and color spaces.
-\end{acks}
+    \item \textbf{Feature importance (Q3c).} Dynamic PMU/proc features contribute \textbf{[TBD]} \(\Delta\)MAE when removed; GPU/OpenCL features matter most for \textsc{PTS-GPU} on H1 (Table~\ref{tab:feature-ablation}).
 
-%%
-%% The next two lines define the bibliography style to be used, and
-%% the bibliography file.
-\bibliographystyle{ACM-Reference-Format}
+    \item \textbf{Probe route (Q4).} \textbf{[LightGBM / XGBoost]} yields lower suite error on \textbf{[TBD]} of 11 host--suite pairs (five UnixBench + five \textsc{PTS-CPU} + one \textsc{PTS-GPU}); probe-based evaluation uses \textbf{[TBD]\%} of full-suite wall time (Table~\ref{tab:probe-models}).
+\end{itemize}
+
+These results collectively demonstrate that \ourmethod makes full-suite benchmarking practical in settings where repeated, low-disruption measurement is required---including multi-machine comparison, configuration tuning, and production-adjacent monitoring---without abandoning the interpretability of established suite scores.
+
+\bibliographystyle{acm}
 \bibliography{sample-base}
-
-
-%%
-%% If your work has an appendix, this is the place to put it.
-\appendix
-
-\section{Extended Experimental Details}
-
-Additional hyperparameters, per-suite glob patterns, and artifact
-layout are documented in the accompanying repository; the core offline
-evaluation protocol is summarized in Section~\ref{sec:methods}.
-
-\section{Online Resources}
-
-Nam id fermentum dui. Suspendisse sagittis tortor a nulla mollis, in
-pulvinar ex pretium. Sed interdum orci quis metus euismod, et sagittis
-enim maximus. Vestibulum gravida massa ut felis suscipit
-congue. Quisque mattis elit a risus ultrices commodo venenatis eget
-dui. Etiam sagittis eleifend elementum.
-
-Nam interdum magna at lectus dignissim, ac dignissim lorem
-rhoncus. Maecenas eu arcu ac neque placerat aliquam. Nunc pulvinar
-massa et mattis lacinia.
-
 \end{document}
 \endinput
 %%
