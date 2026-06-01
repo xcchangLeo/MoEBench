@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import socket
+from functools import lru_cache
 from pathlib import Path
+from typing import Any
 
 from moebench.dataset_globs import (
     GLOB_UNIXBENCH_RUNS,
@@ -183,4 +186,38 @@ def latest_pts_run_path_for_machine(
         pts_suite=pts_suite,
     )
     return max(paths, key=lambda p: p.stat().st_mtime)
+
+
+def default_machines_registry_path(dataset_root: str | Path | None = None) -> Path:
+    root = Path(dataset_root).resolve() if dataset_root else Path(__file__).resolve().parents[1] / "dataset"
+    return root / "machines_registry.json"
+
+
+@lru_cache(maxsize=4)
+def load_machines_registry(
+    registry_path: str | Path | None = None,
+) -> dict[str, Any]:
+    """
+    Load ``dataset/machines_registry.json``.
+
+    Returns ``{"machines": [...], "by_slug": {slug: entry}, "by_label": {label: entry}}``.
+    """
+    path = Path(registry_path).resolve() if registry_path else default_machines_registry_path()
+    with open(path, encoding="utf-8") as f:
+        raw = json.load(f)
+    by_slug = {m["hostname_slug"]: m for m in raw.get("machines", [])}
+    by_label = {m["config_label"]: m for m in raw.get("machines", [])}
+    return {**raw, "by_slug": by_slug, "by_label": by_label}
+
+
+def machine_config_label(machine: str, *, registry_path: str | Path | None = None) -> str | None:
+    """Return config label such as ``4U8G`` for a hostname slug, or ``None``."""
+    entry = load_machines_registry(registry_path).get("by_slug", {}).get(machine.strip())
+    return entry.get("config_label") if entry else None
+
+
+def machine_paper_host_id(machine: str, *, registry_path: str | Path | None = None) -> str | None:
+    """Return paper host id such as ``H3`` for a hostname slug, or ``None``."""
+    entry = load_machines_registry(registry_path).get("by_slug", {}).get(machine.strip())
+    return entry.get("paper_host_id") if entry else None
 
