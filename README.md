@@ -474,7 +474,32 @@ python3 scripts/run_router_model_ablation.py \
 - 各模型一份完整实验 JSON：`dataset/experiments/router_ablation_<UTC>/experiment_<model>.json`（若触发回退则为 `dataset/ablation_runs/router_ablation_<UTC>/…`）
 - 汇总：同目录下的 `ablation_summary.json`（含各模型的 `suite_abs_err`、`partial_ub_s`、`full_ub_s` 等）
 
-### 路由 × 重建模型组合对比（3×3 网格，按套件分开执行）
+### Hybrid 主实验：Router + Probe + Reconstruct（3×2×3 网格，按套件分开执行）
+
+**论文主方法与主实验**。流程：`xi` → Router Top-K → **仅对选中子项**短探针（默认 4s）→ 探针预测分作为重建输入 → suite 总分；真值与全量耗时来自本机 **已有完整 run**（离线 replay，不再在线全量执行）。
+
+脚本 **`scripts/run_router_probe_reconstruct_model_grid.py`**：训练 3 路由 + 3 重建 + 2 探针（LightGBM/XGBoost），再跑 **18 次离线 Hybrid 组合**（3×2×3，`--probe-backend all` 默认）。
+
+```bash
+cd /home/cxc/MoEBench
+MACHINE="$(python3 -c 'from moebench.dataset_machines import local_host_slug; print(local_host_slug())')"
+
+# UnixBench 主实验（一条命令：train + probe + 9 组合）
+PYTHONPATH=. python3 scripts/run_router_probe_reconstruct_model_grid.py \
+  --benchmark unixbench --machine "$MACHINE" --auto-install
+
+# 若已有 Route A grid 的 trained_models/，可复用 checkpoint 只跑 Hybrid 评估：
+PYTHONPATH=. python3 scripts/run_router_probe_reconstruct_model_grid.py \
+  --benchmark unixbench --machine "$MACHINE" --stage grid \
+  --models-dir dataset/experiments/router_recon_grid_unixbench_${MACHINE}_<UTC>/trained_models \
+  --out-parent dataset/experiments/hybrid_grid_unixbench_${MACHINE}_$(date -u +%Y%m%dT%H%M%SZ)
+```
+
+产物：`dataset/experiments/hybrid_grid_<套件>_<hostname>_<UTC>/`（`exp_<router>__<recon>.json`、`grid_summary.json`）。探针模型在 `dataset/models/<hostname>/probe_*.pkl`。
+
+详细说明见 **`docs/HYBRID_METHOD.md`**。
+
+### 路由 × 重建模型组合对比（3×3 网格，Route A 消融）
 
 脚本 **`scripts/run_router_reconstruct_model_grid.py`** 在**单个基准**内按顺序执行：**3 种路由**（LightGBM、MLP、`gnn_expert`）→ **3 种重建**（XGBoost、LightGBM、MLP）→ **9 次端到端组合实验**，并生成 **`grid_summary.json`**（按 suite 误差排序）。
 
@@ -830,10 +855,11 @@ cd /home/cxc/MoEBench
 
 | 路线 | 思路 | 主要脚本 | 典型产物 |
 |------|------|----------|----------|
-| **A. Router × Reconstruction** | `xi` → 路由选 Top-K 子项 → 部分跑分 → 重建预测 suite | `run_router_reconstruct_model_grid.py` | `dataset/experiments/router_recon_grid_*_<host>_<UTC>/`（9× `exp_*.json` + `grid_summary.json`） |
-| **B. 短探针 + eBPF** | 每子项 3–5s 探针 + eBPF → 预测子项分数 → 聚合 suite | `probe_collect.py` → `probe_train.py` → `probe_experiment.py`（**每套件分三步**） | `dataset/models/<host>/probe_*.pkl`、`dataset/experiments/<host>/probe_*.json`；**E3：LightGBM vs XGBoost** |
+| **主方法 Hybrid（A+B）** | `xi` → Router Top-K → **选中子项探针（LGBM/XGB）** → 重建 suite | `run_router_probe_reconstruct_model_grid.py` | `dataset/experiments/hybrid_grid_*_<host>_<UTC>/`（18× `exp_*__probe_*.json` + `grid_summary.json`） |
+| **A. Router × Reconstruction（消融）** | `xi` → 路由选 Top-K → **部分完整跑分** → 重建 | `run_router_reconstruct_model_grid.py` | `dataset/experiments/router_recon_grid_*_<host>_<UTC>/` |
+| **B. 短探针 + eBPF（消融）** | **全子项** 3–5s 探针 → 预测子项分数 → 聚合 suite | `probe_collect.py` → `probe_train.py` → `probe_experiment.py` | `dataset/models/<host>/probe_*.pkl`、`dataset/experiments/<host>/probe_*.json` |
 
-**推荐顺序**：阶段 0 依赖 → 阶段 1 三套件**完整采集** → 阶段 3–5 **路线 A 主实验**（三套件各 3×3 grid，5 台机器）→ 阶段 7 **论文补充三项**（Top-K、策略对比、xi 消融）→ 阶段 6 **路线 B**（三套件 × LightGBM/XGBoost 对比，5 台机器）。（阶段 2 PTS 专家分析为可选。）
+**推荐顺序**：阶段 0 依赖 → 阶段 1 三套件**完整采集** → **Hybrid 主实验**（三套件各 3×2×3 grid，5 台机器）→ 阶段 7 **论文补充三项** → 阶段 6 **Route B 消融**。Route A 消融 grid 若已跑过可直接复用作对照。
 
 **多机（如 8 台）**：每台机器独立完成阶段 1，再在本机跑阶段 3–6；默认 `--machine` 为当前主机 slug，无需手填。把整棵 `dataset/` 拷到另一台机器时，只会读写 `experiments/<本机>/` 与 `models/<本机>/`，不会覆盖他机目录。
 

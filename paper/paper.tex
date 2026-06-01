@@ -115,7 +115,7 @@
 %%
 %% The "title" command has an optional parameter,
 %% allowing the author to define a "short title" to be used in page headers.
-\title[\ourmethod]{\ourmethod: Lightweight System Benchmarking via Conditional Expert Execution and Score Reconstruction}
+\title[\ourmethod]{\ourmethod: Accelerating System Benchmarking with a Robust Machine Learning Pipeline}
 
 %%
 %% The "author" command and its associated commands are used to define
@@ -137,12 +137,7 @@
 %% The abstract is a short summary of the work to be presented in the
 %% article.
 \begin{abstract}
-  A clear and well-documented \LaTeX\ document is presented as an
-  article formatted for publication by ACM in a conference proceedings
-  or journal publication. Based on the ``acmart'' document class, this
-  article presents and explains many of the common variations, as well
-  as many of the formatting elements an author may use in the
-  preparation of the documentation of their work.
+Benchmark suites are vital for evaluating computing platforms, but their comprehensive, all-or-nothing execution model incurs prohibitive time and resource costs. While replacing physical execution with machine learning (ML) predictions is a tempting alternative, applying naïve ML directly to system benchmarking fails in practice due to highly dynamic runtime contention, inflexible run-to-completion workloads, and inherently imperfect production telemetry. To address these challenges, we present \ourmethod, a lightweight benchmarking toolchain that reframes full-suite evaluation as a conditional selection and sparse reconstruction problem. Inspired by the Mixture-of-Experts principle, \ourmethod utilizes a dynamic router to select a minimal, highly informative subset of test components based on real-time system context. Instead of running these selected tests to completion, it employs time-bounded probing to extract prefix-level execution signatures. A multi-output reconstructor then recovers the complete benchmark profile from these sparse observations. Crucially, \ourmethod is engineered for real-world robustness; it embraces execution anomalies (e.g., timeouts, missing telemetry) as informative features and leverages uncertainty estimation to actively refine predictions during long-tail system states. Extensive evaluations across heterogeneous hosts demonstrate that \ourmethod accurately recovers aggregate suite scores and subtest profiles while slashing wall-clock execution time by an order of magnitude.  
 \end{abstract}
 
 %%
@@ -187,13 +182,7 @@
 %% A "teaser" image appears between the author and affiliation
 %% information and the body of the document, and typically spans the
 %% page.
-\begin{teaserfigure}
-  \includegraphics[width=\textwidth]{sampleteaser}
-  \caption{Seattle Mariners at Spring Training, 2010.}
-  \Description{Enjoying the baseball game from the third-base
-  seats. Ichiro Suzuki preparing to bat.}
-  \label{fig:teaser}
-\end{teaserfigure}
+
 
 \received{20 February 2007}
 \received[revised]{12 March 2009}
@@ -205,16 +194,60 @@
 \maketitle
 
 \section{Introduction}
-Benchmark suites~\cite{PTS,smith2011byte,kopytov2004sysbench} characterize modern computing platforms by running standardized workloads across processors, memory, storage, system software, and accelerators to produce a repeatable performance profile beyond any single measurement. Such suites are widely used in performance-critical infrastructure workflows, including cloud instance comparison~\cite{aslanpour2020performance,lenk2011you,hwang2015cloud,marieska2011performance,papadopoulos2019methodological,moschetta2012ofbench,alhamazani2015cross}, monitoring~\cite{baruwal2016smart,}, and performance autotuning~\cite{wang2023keentune,openeuler_atune_readme_zh,chen2024autoos,sun2025kconfigtune}. However, the same breadth that makes benchmark suites useful also makes them costly to execute in full. Comprehensive suites often contain many heterogeneous workloads, each consuming wall-clock time and contending for CPU cores, memory bandwidth, storage bandwidth, or accelerator resources. While this cost may be acceptable for occasional offline evaluation, it becomes difficult to amortize when benchmarking must be repeated across many machines, instance types, software revisions, configurations, or time intervals. In deployed or shared environments, full-suite execution can also perturb the system being measured by competing for resources, interfering with co-located workloads, or changing thermal and frequency states. Moreover, conventional suites largely follow an all-or-nothing execution model: they run a fixed set of workloads and produce meaningful results only after the full run completes.
+Benchmark suites~\cite{PTS,smith2011byte,kopytov2004sysbench} characterize modern computing platforms by running standardized workloads across processors, memory, storage, system software, and accelerators to produce a repeatable performance profile beyond any single measurement. Such suites are widely used in performance-critical infrastructure workflows, including cloud instance comparison~\cite{aslanpour2020performance,lenk2011you,hwang2015cloud,marieska2011performance,papadopoulos2019methodological,moschetta2012ofbench,alhamazani2015cross}, monitoring~\cite{baruwal2016smart}, and performance autotuning~\cite{wang2023keentune,openeuler_atune_readme_zh,chen2024autoos,sun2025kconfigtune}. However, the same breadth that makes benchmark suites useful also makes them costly to execute in full. 
+For instance, as illustrated in Figure~\ref{fig:tuning_and_fullsuite_cost}, benchmark evaluation can easily dominate the overall time budget of an auto-tuning task (Figure~\ref{fig:tuning_breakdown_pies}) and incur substantial wall-clock overhead across different machine configurations (Figure~\ref{tab:fullsuite_execution_time}). 
+Comprehensive suites often contain many heterogeneous workloads, each consuming wall-clock time and contending for CPU cores, memory bandwidth, storage bandwidth, or accelerator resources. While this cost may be acceptable for occasional offline evaluation, it becomes difficult to amortize when benchmarking must be repeated across many machines, instance types, software revisions, configurations, or time intervals. In deployed or shared environments, full-suite execution can also perturb the system being measured by competing for resources, interfering with co-located workloads, or changing thermal and frequency states. Moreover, conventional suites largely follow an all-or-nothing execution model: they run a fixed set of workloads and produce meaningful results only after the full run completes.
+\begin{figure}[t]
+    \centering
+
+    \begin{subfigure}[b]{0.45\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/tuning_breakdown_pies_4x3.pdf}
+        \caption{
+        Time breakdown of two representative KeenTune tasks.
+        }
+        \label{fig:tuning_breakdown_pies}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.50\linewidth}
+        \centering
+        \small
+        \begin{tabular}{lcc}
+        \toprule
+        Machine & UnixBench & PTS CPU \\
+        \midrule
+        2U8G  & 1679 s & 5424 s  \\
+        4U8G  & 1677 s & 26667 s \\
+        4U16G & 1676 s & 31756 s \\
+        8U8G  & 1678 s & 1930 s  \\
+        32U128G & 1701s & 15414s \\
+        \bottomrule
+        \end{tabular}
+        \caption{
+        Full-suite benchmark execution time across machines.
+        }
+        \label{tab:fullsuite_execution_time}
+    \end{subfigure}
+
+    \caption{
+    Execution-time cost of benchmark-driven tuning and full-suite benchmark evaluation.
+    }
+    \label{fig:tuning_and_fullsuite_cost}
+\end{figure}
 
 
 
+Because the system itself cannot magically compress the execution time of standard workloads, various approaches have attempted to mitigate this overhead. ``Static-subset'' approaches manually cherry-pick a fixed group of subtests, but they face a high barrier to generalization: a subset chosen for a CPU-bound instance falls short on an I/O-heavy machine~\cite{smith2011byte}. In the middle ground, ``zero-shot'' machine learning techniques attempt to bypass execution entirely by predicting scores based on static host configurations~\cite{wang2019predicting,tousi2022comparative}. However, they are fundamentally blind to transient runtime noise, such as LLC thrashing or background I/O contention, causing them to produce overconfident yet wildly inaccurate predictions. Among all alternatives, the most reliable solution remains running the full suite to completion, but it pays the unacceptable cost of execution delays and severe resource interference in shared environments.
 
+We take a new approach: let the benchmark be the benchmark and do not permanently truncate its workloads, but dynamically learn how to observe its minimal signature. The key to our approach is learning-driven sparse execution. Can we learn the behavior of a target system by running only a tiny fraction of the suite, and use the results to reconstruct the full performance profile with high accuracy? We introduce \ourmethod, a lightweight benchmarking toolchain that reframes full-suite evaluation as a conditional selection and sparse reconstruction problem. We show how \ourmethod helps tuning frameworks and monitoring infrastructures achieve full-suite visibility with an order of magnitude less wall-clock execution time. 
 
-We present \ourmethod, a benchmarking methodology and toolchain that reframes full-suite execution as a selective-measurement and reconstruction problem.
-Given a snapshot of the target machine state, combining conventional system information with low-overhead runtime signals gathered through eBPF. Conditioned on this
-snapshot, a router selects a small subset of suite components to execute. A reconstruction model then uses the resulting partial observations to predict the missing component results and recover the aggregate suite-level score. This design reduces cost in two complementary ways: horizontally, by executing only a compact set of informative workloads; and vertically, by replacing unexecuted measurements with model-based prediction. The approach is inspired by the sparse activation principle of mixture-of-experts models, but applies that intuition to reproducible commodity benchmark pipelines rather than neural forward passes.
+The biggest challenge for \ourmethod is to be as accurate as the traditional run-to-completion approach while operating in a highly unpredictable production environment. The key to avoiding massive time overhead is to dynamically schedule only the most informative subtests and truncate them early. However, keeping the evaluation reliable is a fundamental constraint. We need to handle incomplete execution traces, missing telemetry, and anomalous system states without letting the ML pipeline crash. To address this, \ourmethod introduces three technical contributions.
 
+First, \ourmethod converts the rigid full-suite execution into a dynamic Mixture-of-Experts (MoE) routing problem. We take advantage of the fact that many benchmark components inherently stress overlapping hardware subsystems. In this view, executing every subtest is overkill. With this intuition, \ourmethod employs a lightweight router that monitors the real-time system context (e.g., dynamic load, IPC) and computes a conditional Top-K subset of experts tailored to expose the current system's bottlenecks.
+
+Second, with the selected subset, \ourmethod employs time-bounded probing rather than run-to-completion execution. Many benchmark components are iterative rate tests where key performance metrics stabilize well before the official timeout. \ourmethod enforces a strict, short execution window to capture a prefix-level signature. Crucially, the system is engineered to embrace real-world fragility: if an I/O probe times out due to heavy contention or eBPF tracers are blocked by hypervisors, \ourmethod does not discard these as statistical anomalies. Instead, it encodes these execution failures as valid state features, ensuring robust inference without requiring perfectly clean traces.
+
+Third, \ourmethod balances the sparsity of observation with the demand for full-profile reconstruction via uncertainty estimation. While executing a sparse subset is fast, downstream tasks still expect a full-suite aggregate score. \ourmethod utilizes a multi-output reconstructor to bridge this semantic gap. More importantly, to prevent the ML model from making blindly confident predictions on rare, long-tail machine states, we integrate a confidence-aware refinement loop. If the model's predicted variance exceeds a safe threshold, it dynamically triggers active refinement to probe additional components, ensuring that extreme performance anomalies are physically verified rather than incorrectly guessed.
 
 
 
@@ -249,51 +282,25 @@ This cost can be substantial for suites with many components or long measurement
 
 
 \subsection{Motivation}
-\paragraph{Observation 1: Full execution is expensive.}
-In Unix-like operating systems, we use UnixBench as a representative full-suite system benchmark. Originating from the BYTE UNIX benchmark suite, UnixBench remains a widely used open-source benchmark for evaluating system-level performance. It has been adopted in practical system tuning projects such as A-Tune~\cite{openeuler_atune_readme_zh} and KeenTune~\cite{wang2023keentune}. Figure~\ref{fig:tuning_breakdown_pies} reports the time breakdown of a typical KeenTune auto-tuning task. The results show that UnixBench evaluation dominates the overall tuning process, while the model tuning time accounts for only a small fraction. Since auto-tuning usually invokes the benchmark repeatedly to compare different configurations, the accumulated evaluation overhead quickly becomes unacceptable(Table~\ref{tab:fullsuite_execution_time}). Also, running the full suite consumes substantial system resources and can interfere with co-located applications. This makes full execution unsuitable for production-time detection.
+% \paragraph{Observation 1: Full execution is expensive.}
+% In Unix-like operating systems, we use UnixBench as a representative full-suite system benchmark. Originating from the BYTE UNIX benchmark suite, UnixBench remains a widely used open-source benchmark for evaluating system-level performance. It has been adopted in practical system tuning projects such as A-Tune~\cite{openeuler_atune_readme_zh} and KeenTune~\cite{wang2023keentune}. Figure~\ref{fig:tuning_breakdown_pies} reports the time breakdown of a typical KeenTune auto-tuning task. The results show that UnixBench evaluation dominates the overall tuning process, while the model tuning time accounts for only a small fraction. Since auto-tuning usually invokes the benchmark repeatedly to compare different configurations, the accumulated evaluation overhead quickly becomes unacceptable(Table~\ref{tab:fullsuite_execution_time}). Also, running the full suite consumes substantial system resources and can interfere with co-located applications. This makes full execution unsuitable for production-time detection.
 
-\begin{figure}[t]
-    \centering
 
-    \begin{subfigure}[b]{0.48\linewidth}
-        \centering
-        \includegraphics[width=\linewidth]{images/tuning_breakdown_pies_4x3.pdf}
-        \caption{
-        Time breakdown of two representative KeenTune tasks.
-        }
-        \label{fig:tuning_breakdown_pies}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.48\linewidth}
-        \centering
-        \small
-        \begin{tabular}{lcc}
-        \toprule
-        Machine & UnixBench & PTS CPU \\
-        \midrule
-        2U8G  & 1679 s & 5424 s  \\
-        4U8G  & 1677 s & 26667 s \\
-        4U16G & 1676 s & 31756 s \\
-        8U8G  & 1678 s & 1930 s  \\
-        32U128G & 1701s & 15414s \\
-        \bottomrule
-        \end{tabular}
-        \caption{
-        Full-suite benchmark execution time across machines.
-        }
-        \label{tab:fullsuite_execution_time}
-    \end{subfigure}
+% \paragraph{Observation 2: Full-suite scores are often unnecessary.}
+% A full-suite benchmark usually aggregates the results of many heterogeneous components into a single overall score. However, for a specific workload or tuning objective, this aggregate score may not be the most meaningful optimization target. For example, a web service is usually more sensitive to request handling, process scheduling, networking, and memory behavior, while a compilation workload is more sensitive to process creation, filesystem activity, and CPU throughput. Optimizing the overall score may therefore waste measurements on components that have little relevance to the target workload, or even obscure the performance changes of the components that matter.
 
-    \caption{
-    Execution-time cost of benchmark-driven tuning and full-suite benchmark evaluation.
-    }
-    \label{fig:tuning_and_fullsuite_cost}
-\end{figure}
-\paragraph{Observation 2: Full-suite scores are often unnecessary.}
-A full-suite benchmark usually aggregates the results of many heterogeneous components into a single overall score. However, for a specific workload or tuning objective, this aggregate score may not be the most meaningful optimization target. For example, a web service is usually more sensitive to request handling, process scheduling, networking, and memory behavior, while a compilation workload is more sensitive to process creation, filesystem activity, and CPU throughput. Optimizing the overall score may therefore waste measurements on components that have little relevance to the target workload, or even obscure the performance changes of the components that matter.
+% \paragraph{Observation 3: Metrics converge before full completion.}
+% Even when benchmark evaluation is needed, executing a selected component to completion is not always necessary. Many components are iterative rate tests rather than one-shot tasks. For example, Dhrystone and Whetstone in UnixBench~\cite{smith2011byte} repeatedly execute integer and floating-point operation kernels and report an operation rate. In these components, the final metric is computed from accumulated work over an execution interval. Therefore, a short prefix already contains direct information about the same rate that will be reported at the end of the full run. If the prefix rate becomes stable, continuing the benchmark mainly reduces statistical uncertainty rather than changing the measured quantity itself. This suggests that benchmark execution can be reduced vertically by estimating full-run metrics from short-run observations.
 
-\paragraph{Observation 3: Metrics converge before full completion.}
-Even when benchmark evaluation is needed, executing a selected component to completion is not always necessary. Many components are iterative rate tests rather than one-shot tasks. For example, Dhrystone and Whetstone in UnixBench~\cite{smith2011byte} repeatedly execute integer and floating-point operation kernels and report an operation rate. In these components, the final metric is computed from accumulated work over an execution interval. Therefore, a short prefix already contains direct information about the same rate that will be reported at the end of the full run. If the prefix rate becomes stable, continuing the benchmark mainly reduces statistical uncertainty rather than changing the measured quantity itself. This suggests that benchmark execution can be reduced vertically by estimating full-run metrics from short-run observations.
+\paragraph{Insight 1: Sub-benchmarks Exhibit High Subsystem Redundancy.}
+Although comprehensive suites contain dozens of subtests, many of these workloads stress overlapping hardware subsystems. Our profiling reveals that seemingly diverse tasks within UnixBench—such as integer computation (\texttt{dhry2reg}), process creation (\texttt{spawn}), and inter-process communication (\texttt{pipe})—often bottleneck on the same underlying OS scheduling overheads or memory hierarchy mechanisms. Because these subtests are merely different software projections of the same underlying hardware capacity, executing all of them yields diminishing returns in information gain. This physical redundancy indicates that a carefully routed, minimal subset of experts is theoretically sufficient to expose the current system's overall performance limits.
+
+\paragraph{Insight 2: Performance Metrics Exhibit Early Convergence.}
+When full-suite execution is unavoidable, traditional methodologies mandate a rigid run-to-completion model. However, we observe that many benchmark components are fundamentally iterative rate tests. For instance, the Dhrystone and Whetstone components in UnixBench~\cite{smith2011byte} continuously execute integer and floating-point kernels over a prolonged loop. Our telemetry shows that the computed operation rate (e.g., operations per second) typically stabilizes and converges within the first few seconds of execution. Continuing the workload to its official timeout primarily reduces statistical variance rather than altering the fundamental performance metric. This insight reveals a massive opportunity for vertical cost reduction via aggressive, time-bounded probing.
+
+\paragraph{Insight 3: Production Telemetry is Inherently Fragile.}
+While the previous insights justify utilizing ML to extrapolate full scores from short, sparse probes, deploying such an ML pipeline in production reveals a fatal flaw: real-world execution is messy. In latency-critical or heavily contented cloud environments, short probes frequently timeout before returning valid application-level metrics. Furthermore, high-fidelity monitoring tools (such as eBPF or PMU performance counters) are routinely restricted by cloud hypervisors for security isolation. A standard ML pipeline treats these execution anomalies and missing feature dimensions as statistical outliers, abruptly crashing or discarding the data. This fragility underscores that an industrial-grade benchmarking toolchain must be engineered to treat timeouts and missing traces as informative system states, and must quantify prediction uncertainty to prevent wildly inaccurate estimations on out-of-distribution hardware.
+
 
 
 
@@ -302,9 +309,9 @@ Even when benchmark evaluation is needed, executing a selected component to comp
 
 \begin{figure}
     \centering
-    \includegraphics[width=1\linewidth]{image.png}
-    \caption{Enter Caption}
-    \label{fig:placeholder}
+    \includegraphics[width=1\linewidth]{images/mob.pdf}
+    \caption{Overview of the \ourmethod architecture. (1) \textbf{Host OS:} Collector aggregates static and dynamic metrics into system context. (2) \textbf{Router:} Router evaluates this context to select sparse benchmark subsets. (3) \textbf{Probing:} Selected cases undergo time-bounded probing yielding partial telemetry. (4) \textbf{Reconstructor:} Regressor predicts full profile from the encoded sparse telemetry.}
+    \label{fig:mob}
 \end{figure}
 
 
@@ -314,8 +321,9 @@ Even when benchmark evaluation is needed, executing a selected component to comp
 \ourmethod approximates a complete benchmark run by observing only a small subset of informative sub-benchmarks. 
 Given a target system, it first collects a system feature vector \(x\), which captures static platform properties and lightweight runtime state. 
 A router then ranks the benchmark subtests and selects a small subset for observation (Section~\ref{subsec:router}). 
-The selected subtests are executed normally or evaluated through a fixed-duration probe (Section~\ref{subsec:time-bounded-probing}). 
-The observed results are encoded as sparse score-time pairs and passed to a reconstructor, which predicts all subtest scores and the aggregate suite score (Section~\ref{subsec:reconstructor}).
+Each selected subtest is evaluated through a fixed-duration probe rather than a full official run (Section~\ref{subsec:time-bounded-probing}). 
+The probe-predicted scores are encoded as sparse score-time pairs and passed to a reconstructor, which predicts all subtest scores and the aggregate suite score (Section~\ref{subsec:reconstructor}).
+This \emph{router $\rightarrow$ probe $\rightarrow$ reconstruct} pipeline combines conditional subset selection with time-bounded per-component estimation, achieving lower wall-clock cost than either partial full execution or probing every component.
 
 \ourmethod separates offline training from online evaluation. 
 During offline training, complete benchmark runs provide supervision for all model components. 
@@ -429,7 +437,7 @@ To capture the non-linear interactions between system features and benchmark beh
 We explicitly contrast these learning-based routers against static heuristics. Strategies such as \texttt{greedy\_fastest} (always selecting tests with the shortest wall-clock time), \texttt{greedy\_slowest}, or fixed CPU/I/O mixes fail to adapt to unseen system states. By conditioning selection on real-time telemetry, the router avoids wasting time on globally fast but locally uninformative tests.
 
 \paragraph{End-to-End Evaluation and the Accuracy-Cost Trade-off.}
-Router models are not evaluated in isolation based solely on their training loss. Instead, \ourmethod utilizes a $3 \times 3$ grid evaluation (combining the 3 Router variants with 3 Reconstructor models) to assess end-to-end performance. The ultimate selection metric is the final reconstructed suite error (MAE and RMSE) produced by the combined pipeline.
+Router models are not evaluated in isolation based solely on their training loss. Instead, \ourmethod utilizes a $3 \times 2 \times 3$ grid evaluation (combining the 3 Router variants, 2 probe regressors, and 3 Reconstructor models) to assess end-to-end performance. The ultimate selection metric is the final reconstructed suite error (MAE and RMSE) produced by the combined pipeline.
 
 This design frames benchmark acceleration as an explicit accuracy-cost trade-off, managed through two mechanisms:
 \begin{enumerate}
@@ -504,9 +512,11 @@ Consequently, if the reconstructor encounters an anomalous, out-of-distribution 
 
 We evaluate \ourmethod on five heterogeneous Linux hosts.
 UnixBench and \textsc{PTS-CPU} are evaluated on all five machines; \textsc{PTS-GPU} is evaluated only on H1 (32U128G), the sole host equipped with an NVIDIA GPU---the remaining four hosts are CPU-only and do not run GPU workloads.
-Our evaluation is organized around two complementary acceleration routes.
-\textbf{Route~A} combines conditional expert selection with score reconstruction: a router chooses a Top-$K$ subset of sub-benchmarks, executes them, and a reconstructor predicts the full-suite score from partial observations.
-\textbf{Route~B} applies time-bounded probing: each sub-benchmark is observed through a short execution window (with optional eBPF telemetry), and per-component scores are estimated and aggregated into a suite-level prediction.
+Our \textbf{primary method and main experiment} is the integrated \textbf{Hybrid pipeline}:
+collect \(\mathbf{x}\) once, use a router to select Top-$K$ sub-benchmarks, run a short probe (default 4\,s) on \emph{only} those selected components, and reconstruct the full-suite score from the probe-predicted partial observations.
+Ground-truth full-suite scores and full-suite wall times come from previously collected complete runs on the same host (offline replay); we do \emph{not} re-execute full suites during hybrid evaluation.
+We exhaustively compare all \(3 \times 2 \times 3 = 18\) combinations of three routers, two probe regressors (LightGBM and XGBoost), and three reconstructors under this hybrid protocol on each applicable host--suite pair.
+\textbf{Route~A} (Top-$K$ \emph{full} partial execution + reconstruction) and \textbf{Route~B} (probe \emph{all} components and aggregate without reconstruction) are retained as \emph{ablation baselines} that isolate subset selection and probing, respectively.
 Unless stated otherwise, each host trains and evaluates only on its own collected runs, so reported results reflect per-machine generalization rather than cross-host pooling.
 All numeric results in the tables below are left as placeholders and will be filled after the full experimental campaign completes.
 
@@ -569,13 +579,13 @@ UnixBench and \textsc{PTS-CPU} are run on all five hosts; \textsc{PTS-GPU} is re
     This suite complements CPU-centric evaluation with OpenCL/GPU compute workloads and is omitted on H2--H5.
 \end{itemize}
 
-For Route~A end-to-end grid experiments on PTS, ground-truth full-suite scores are taken from previously collected full runs on the same host (offline replay), avoiding repeated full-suite online execution that can cause excessive wall time or resource exhaustion.
-UnixBench grid experiments execute both partial and full runs online unless otherwise noted.
+For hybrid and Route~A end-to-end grid experiments on PTS, ground-truth full-suite scores are taken from previously collected full runs on the same host (offline replay), avoiding repeated full-suite online execution that can cause excessive wall time or resource exhaustion.
+Hybrid UnixBench evaluation likewise replays historical runs for accuracy and uses dataset-recorded full-suite wall times for cost comparison.
 
 \subsubsection{Collected Data}
 \label{subsubsec:collected-data}
 
-\paragraph{Phase~1: Full-suite collection (shared by Routes~A and~B).}
+\paragraph{Phase~1: Full-suite collection (shared by all routes).}
 On each host, we collect multiple complete benchmark sessions (typically 3--5 rounds per session) for every suite applicable to that host (UnixBench and \textsc{PTS-CPU} on all five hosts; \textsc{PTS-GPU} on H1 only).
 Each run record stores:
 (i)~system context \(\mathbf{x}\) (static + dynamic features),
@@ -583,14 +593,18 @@ Each run record stores:
 and (iii)~expert metadata (component identifiers, categories, and titles).
 These runs provide supervision for router training, reconstructor training, probe label construction, and ground-truth evaluation.
 
-\paragraph{Phase~2: Route~A model training and grid evaluation.}
-For each applicable suite on each host, we train three router architectures (LightGBM ranker, MLP, GNN-expert) and three reconstructors (XGBoost, LightGBM, MLP), then evaluate all \(3 \times 3 = 9\) end-to-end combinations.
-Each combination produces one experiment report with predicted suite score, actual full-suite score, partial execution time, and full execution time (or dataset-replay ground truth for PTS).
+\paragraph{Phase~2: Hybrid main experiment (router + probe + reconstruct).}
+For each applicable suite on each host, we train three router architectures (LightGBM ranker, MLP, GNN-expert), three reconstructors (XGBoost, LightGBM, MLP), and two probe regressors (LightGBM and XGBoost).
+We evaluate all \(3 \times 2 \times 3 = 18\) hybrid combinations offline: for each historical run, the router selects Top-$K$ components, probe predictions from the selected regressor substitute for executed subtest scores on the selected subset only, and the reconstructor predicts the suite score.
+Partial wall time is estimated as \(\hat{T}_{\mathrm{xi}} + K \cdot T_{\mathrm{probe}}\) (default \(\hat{T}_{\mathrm{xi}}=3\,\mathrm{s}\), \(T_{\mathrm{probe}}=4\,\mathrm{s}\)); full-suite wall time is read from the dataset.
 
-\paragraph{Phase~3: Route~B probe pipeline.}
-For each applicable suite on each host, we build a probe dataset by executing short probes (default 4\,s per component, micro-probe mode) over historical full runs on the same host, train two regressors (LightGBM and XGBoost; PTS uses log1p labels with per-profile estimators), and run an online experiment that re-probes all components and compares the predicted suite score against the most recent full run on that host.
+\paragraph{Phase~3: Ablation --- Route~A only (partial full execution + reconstruction).}
+We repeat the \(3 \times 3\) router--reconstructor grid using \emph{actual} partial sub-benchmark execution scores (not probe predictions) on the router-selected subset, matching the original Route~A design.
 
-\paragraph{Phase~4: Supplementary offline studies (Route~A, best combination).}
+\paragraph{Phase~4: Ablation --- Route~B only (probe all components).}
+For each applicable suite on each host, we build a probe dataset by executing short probes (default 4\,s per component, micro-probe mode) over historical full runs on the same host, train two regressors (LightGBM and XGBoost), and evaluate suite prediction by probing \emph{every} component and aggregating---without router selection or reconstruction.
+
+\paragraph{Phase~5: Supplementary offline studies (Hybrid best combination).}
 After selecting the best router--reconstructor pair per suite from Phase~2 on each applicable host, we conduct three supplementary studies on stored runs only (leave-one-session-out cross-validation, no re-execution):
 Top-$K$ sweep, routing-policy comparison, and system-feature ablation.
 For \textsc{PTS-GPU}, supplementary studies use H1 data only.
@@ -626,16 +640,17 @@ Statistical significance testing will be reported where applicable after all run
 We first ask whether \ourmethod can approximate full-suite scores with substantially lower execution cost than running every component to completion.
 For each applicable host--suite pair, we compare:
 \textbf{(i)} full-suite execution (baseline),
-\textbf{(ii)} Route~A with the best \(3 \times 3\) combination selected from the grid on that host,
-and \textbf{(iii)} Route~B with the better of LightGBM vs.\ XGBoost probe models on that host.
+\textbf{(ii)} the \textbf{Hybrid pipeline} with the best \(3 \times 2 \times 3\) router--probe--reconstructor combination from the main grid on that host,
+\textbf{(iii)} Route~A (ablation: partial \emph{full} execution + reconstruction), and
+\textbf{(iv)} Route~B (ablation: probe all components without reconstruction).
 
 Table~\ref{tab:overall-effectiveness} reports suite-level relative error, partial and full wall times, and time saved.
 UnixBench and \textsc{PTS-CPU} rows aggregate over five hosts; \textsc{PTS-GPU} rows report H1 (32U128G) only.
-We expect Route~A to dominate when partial sub-benchmark execution remains informative for reconstruction, while Route~B should achieve the lowest execution footprint when short probes suffice.
+We expect Hybrid to combine Route~A's subset efficiency with Route~B's low per-component probe cost, outperforming both ablations on the accuracy--cost Pareto frontier.
 
 \begin{table*}[t]
 \centering
-\caption{Overall effectiveness. UnixBench and \textsc{PTS-CPU}: mean over five hosts. \textsc{PTS-GPU}: H1 (32U128G) only. Best Route~A and Route~B configurations are selected per host from the model-combination and probe-model studies. Numeric cells are placeholders.}
+\caption{Overall effectiveness. UnixBench and \textsc{PTS-CPU}: mean over five hosts. \textsc{PTS-GPU}: H1 (32U128G) only. Best Hybrid, Route~A, and Route~B configurations are selected per host. Numeric cells are placeholders.}
 \label{tab:overall-effectiveness}
 \small
 \setlength{\tabcolsep}{4pt}
@@ -649,20 +664,23 @@ We expect Route~A to dominate when partial sub-benchmark execution remains infor
 \textbf{MAE} &
 \textbf{Spearman} \\
 \midrule
-\multirow{3}{*}{UnixBench}
+\multirow{4}{*}{UnixBench}
  & Full suite   & 0 & --- & --- & 0 & --- & --- \\
- & Route~A      & --- & --- & --- & --- & --- & --- \\
- & Route~B      & --- & --- & --- & --- & --- & --- \\
+ & Hybrid (main)& --- & --- & --- & --- & --- & --- \\
+ & Route~A (abl.) & --- & --- & --- & --- & --- & --- \\
+ & Route~B (abl.) & --- & --- & --- & --- & --- & --- \\
 \midrule
-\multirow{3}{*}{\textsc{PTS-CPU}}
+\multirow{4}{*}{\textsc{PTS-CPU}}
  & Full suite   & 0 & --- & --- & 0 & --- & --- \\
- & Route~A      & --- & --- & --- & --- & --- & --- \\
- & Route~B      & --- & --- & --- & --- & --- & --- \\
+ & Hybrid (main)& --- & --- & --- & --- & --- & --- \\
+ & Route~A (abl.) & --- & --- & --- & --- & --- & --- \\
+ & Route~B (abl.) & --- & --- & --- & --- & --- & --- \\
 \midrule
-\multirow{3}{*}{\textsc{PTS-GPU}}
+\multirow{4}{*}{\textsc{PTS-GPU}}
  & Full suite   & 0 & --- & --- & 0 & --- & --- \\
- & Route~A      & --- & --- & --- & --- & --- & --- \\
- & Route~B      & --- & --- & --- & --- & --- & --- \\
+ & Hybrid (main)& --- & --- & --- & --- & --- & --- \\
+ & Route~A (abl.) & --- & --- & --- & --- & --- & --- \\
+ & Route~B (abl.) & --- & --- & --- & --- & --- & --- \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -670,14 +688,15 @@ We expect Route~A to dominate when partial sub-benchmark execution remains infor
 \subsection{Model Combination Study}
 \label{subsec:model-combination}
 
-Route~A depends on both the router and the reconstructor.
-We exhaustively evaluate the Cartesian product of three routers \(\{\text{LightGBM}, \text{MLP}, \text{GNN}\}\) and three reconstructors \(\{\text{XGBoost}, \text{LightGBM}, \text{MLP}\}\), yielding nine combinations per applicable host--suite pair.
+The Hybrid pipeline depends on the router, the probe regressor, and the reconstructor.
+We exhaustively evaluate the Cartesian product of three routers \(\{\text{LightGBM}, \text{MLP}, \text{GNN}\}\), two probe regressors \(\{\text{LightGBM}, \text{XGBoost}\}\), and three reconstructors \(\{\text{XGBoost}, \text{LightGBM}, \text{MLP}\}\), yielding eighteen combinations per applicable host--suite pair under the hybrid protocol (router Top-$K$ $\rightarrow$ probe on selected components $\rightarrow$ reconstruct).
 Table~\ref{tab:model-combination-ub} shows UnixBench results (mean over five hosts); Table~\ref{tab:model-combination-pts-cpu} shows \textsc{PTS-CPU} (mean over five hosts); Table~\ref{tab:model-combination-pts-gpu} shows \textsc{PTS-GPU} on H1 only.
-Each cell will report mean suite relative error and mean partial execution time under the corresponding aggregation scope.
+Each cell will report mean suite relative error and mean hybrid wall time (\(\hat{T}_{\mathrm{xi}} + K \cdot T_{\mathrm{probe}}\)) under the corresponding aggregation scope, aggregated over both probe regressors unless a table explicitly fixes one.
+The Route~A-only \(3 \times 3\) grid (partial full execution instead of probe predictions) is reported separately as an ablation in supplementary material.
 
 \begin{table*}[t]
 \centering
-\caption{Route~A model combination study on UnixBench. Rows: routers; columns: reconstructors. Values: mean suite relative error (\%) / mean partial time (s) over five hosts. Placeholders.}
+\caption{Hybrid model combination study on UnixBench (main experiment). Rows: routers; columns: reconstructors. Values: mean suite relative error (\%) / mean hybrid wall time (s) over five hosts. Placeholders.}
 \label{tab:model-combination-ub}
 \small
 \begin{tabular}{l|ccc}
@@ -693,7 +712,7 @@ GNN-expert & --- / --- & --- / --- & --- / --- \\
 
 \begin{table}[t]
 \centering
-\caption{Route~A model combination on \textsc{PTS-CPU} (mean over five hosts). Placeholders.}
+\caption{Hybrid model combination on \textsc{PTS-CPU} (mean over five hosts). Placeholders.}
 \label{tab:model-combination-pts-cpu}
 \small
 \begin{tabular}{l|ccc}
@@ -709,7 +728,7 @@ GNN       & --- & --- & --- \\
 
 \begin{table}[t]
 \centering
-\caption{Route~A model combination on \textsc{PTS-GPU} (H1 / 32U128G only). Placeholders.}
+\caption{Hybrid model combination on \textsc{PTS-GPU} (H1 / 32U128G only). Placeholders.}
 \label{tab:model-combination-pts-gpu}
 \small
 \begin{tabular}{l|ccc}
@@ -831,7 +850,12 @@ We hypothesize that \texttt{router} achieves the best trade-off by conditioning 
 
 \subsection{Feature Ablation Study}
 \label{subsec:feature-ablation}
-
+\begin{figure*}
+    \centering
+    \includegraphics[width=1\linewidth]{images/resource_waveforms_overlay.png}
+    \caption{Enter Caption}
+    \label{fig:placeholder}
+\end{figure*}
 To quantify which parts of the system context \(\mathbf{x}\) drive reconstruction accuracy, we ablate feature groups while holding the router policy and \(K^\star\) fixed.
 We evaluate five modes:
 \textbf{full} (complete \(\mathbf{x}\)),
@@ -878,10 +902,11 @@ The importance ranking will guide which telemetry to prioritize in production de
 \end{tabular}
 \end{table*}
 
-\subsection{Probe-Based Evaluation}
+\subsection{Probe-Based Evaluation (Ablation)}
 \label{subsec:probe-evaluation}
 
-Route~B replaces long sub-benchmark execution with time-bounded probing (default 4\,s per component, micro-probe mode with optional eBPF).
+Route~B (ablation) replaces long sub-benchmark execution with time-bounded probing (default 4\,s per component, micro-probe mode with optional eBPF).
+Unlike the Hybrid pipeline, Route~B probes \emph{every} component and aggregates predicted scores directly---without router subset selection or reconstruction.
 We train two probe regressors---LightGBM and XGBoost---on probe features \(\mathbf{p}_{i,j}\) collected from each host's historical full runs, then evaluate online suite prediction against the latest full run on the same host.
 For PTS suites, labels use \(\log(1+x)\) scaling with per-profile estimators to handle heterogeneous metric magnitudes.
 Probe evaluation covers UnixBench and \textsc{PTS-CPU} on all five hosts and \textsc{PTS-GPU} on H1 only (11 host--suite pairs in total).
@@ -892,7 +917,7 @@ Table~\ref{tab:probe-per-host} provides a per-host breakdown for UnixBench (all 
 
 \begin{table}[t]
 \centering
-\caption{Route~B probe model comparison. UnixBench and \textsc{PTS-CPU}: mean over five hosts. \textsc{PTS-GPU}: H1 (32U128G) only. Probe duration 4\,s/component, micro mode. Placeholders.}
+\caption{Route~B ablation: probe model comparison. UnixBench and \textsc{PTS-CPU}: mean over five hosts. \textsc{PTS-GPU}: H1 (32U128G) only. Probe duration 4\,s/component, micro mode. Placeholders.}
 \label{tab:probe-models}
 \small
 \begin{tabular}{lccccc}
@@ -937,17 +962,17 @@ Table~\ref{tab:probe-per-host} provides a per-host breakdown for UnixBench (all 
 
 Our evaluation on five heterogeneous Linux hosts is designed to answer four questions.
 We run UnixBench and \textsc{PTS-CPU} on all five machines and \textsc{PTS-GPU} on H1 only.
-\textbf{Q1:} Can Route~A approximate full-suite scores with significantly less execution time than the baseline?
-\textbf{Q2:} Which router--reconstructor combination generalizes best per suite?
+\textbf{Q1:} Can the Hybrid pipeline approximate full-suite scores with significantly less execution time than the baseline?
+\textbf{Q2:} Which router--reconstructor combination generalizes best per suite under Hybrid evaluation?
 \textbf{Q3:} How should practitioners choose \(K\), subset policy, and telemetry groups under an accuracy--cost budget?
-\textbf{Q4:} Can Route~B further reduce execution footprint via fixed-duration probing, and which probe regressor is preferable?
+\textbf{Q4:} How do Route~A and Route~B ablations compare to Hybrid, and which probe regressor is preferable for Route~B?
 
 After all experiments complete, we will summarize findings as follows (placeholders to be replaced with measured conclusions):
 
 \begin{itemize}
-    \item \textbf{Overall effectiveness (Q1).} Route~A reduces UnixBench wall time by \textbf{[TBD]\%} on average with \textbf{[TBD]\%} mean relative suite error; Route~B achieves \textbf{[TBD]\%} error at \textbf{[TBD]\,s} total probe time vs.\ \textbf{[TBD]\,s} full-suite time (Table~\ref{tab:overall-effectiveness}).
+    \item \textbf{Overall effectiveness (Q1).} Hybrid reduces UnixBench wall time by \textbf{[TBD]\%} on average with \textbf{[TBD]\%} mean relative suite error, outperforming Route~A and Route~B ablations on the accuracy--cost frontier (Table~\ref{tab:overall-effectiveness}).
 
-    \item \textbf{Model combinations (Q2).} The best Route~A pair per suite is \textbf{[TBD router]} + \textbf{[TBD reconstructor]} for UnixBench (five hosts), \textbf{[TBD]} for \textsc{PTS-CPU} (five hosts), and \textbf{[TBD]} for \textsc{PTS-GPU} (H1 only) (Tables~\ref{tab:model-combination-ub}--\ref{tab:model-combination-pts-gpu}).
+    \item \textbf{Model combinations (Q2).} The best Hybrid pair per suite is \textbf{[TBD router]} + \textbf{[TBD reconstructor]} for UnixBench (five hosts), \textbf{[TBD]} for \textsc{PTS-CPU} (five hosts), and \textbf{[TBD]} for \textsc{PTS-GPU} (H1 only) (Tables~\ref{tab:model-combination-ub}--\ref{tab:model-combination-pts-gpu}).
 
     \item \textbf{Accuracy--cost trade-off (Q3a).} Recommended subset sizes are \(K^\star_{\mathrm{UB}}=\textbf{[TBD]}\), \(K^\star_{\mathrm{CPU}}=\textbf{[TBD]}\), and \(K^\star_{\mathrm{GPU}}=\textbf{[TBD]}\) on H1 (Table~\ref{tab:topk-sweep}).
 
@@ -955,7 +980,7 @@ After all experiments complete, we will summarize findings as follows (placehold
 
     \item \textbf{Feature importance (Q3c).} Dynamic PMU/proc features contribute \textbf{[TBD]} \(\Delta\)MAE when removed; GPU/OpenCL features matter most for \textsc{PTS-GPU} on H1 (Table~\ref{tab:feature-ablation}).
 
-    \item \textbf{Probe route (Q4).} \textbf{[LightGBM / XGBoost]} yields lower suite error on \textbf{[TBD]} of 11 host--suite pairs (five UnixBench + five \textsc{PTS-CPU} + one \textsc{PTS-GPU}); probe-based evaluation uses \textbf{[TBD]\%} of full-suite wall time (Table~\ref{tab:probe-models}).
+    \item \textbf{Ablations (Q4).} Route~A and Route~B each sacrifice accuracy or cost relative to Hybrid; \textbf{[LightGBM / XGBoost]} yields lower Route~B suite error on \textbf{[TBD]} of 11 host--suite pairs (Table~\ref{tab:probe-models}).
 \end{itemize}
 
 These results collectively demonstrate that \ourmethod makes full-suite benchmarking practical in settings where repeated, low-disruption measurement is required---including multi-machine comparison, configuration tuning, and production-adjacent monitoring---without abandoning the interpretability of established suite scores.

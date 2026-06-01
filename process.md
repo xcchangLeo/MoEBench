@@ -125,7 +125,11 @@ pts cpu误差：1.03%
 pts gpu误差：2.28%
 
 ### 2.论文主实验
-目前仅剩一台机器pts cpu测试套件的最后两轮实验
+主方法为 **Hybrid（Route A + B 合并）**：xi → Router Top-K → 选中子项短探针 → 重建 suite；五机 × 三套件各 9 组模型组合对比；Route A/B 为消融。
+#### 效果（合并路线，process 记录）：
+Unixbench误差：0.44%
+pts cpu误差：1.03%
+pts gpu误差：2.28%
 
 ### 3.论文
 主要内容和实验表格已经写好，还差架构图和实验数据

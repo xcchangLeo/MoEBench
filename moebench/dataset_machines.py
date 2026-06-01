@@ -221,3 +221,52 @@ def machine_paper_host_id(machine: str, *, registry_path: str | Path | None = No
     entry = load_machines_registry(registry_path).get("by_slug", {}).get(machine.strip())
     return entry.get("paper_host_id") if entry else None
 
+
+ROUTER_RECON_CHECKPOINTS: tuple[str, ...] = (
+    "router_lgbm.pkl",
+    "router_mlp.pt",
+    "router_gnn.pt",
+    "recon_xgb.pkl",
+    "recon_lgbm.pkl",
+    "recon_mlp.pt",
+)
+
+
+def router_recon_grid_prefix(*, benchmark: str, machine: str, pts_suite: str | None = None) -> str:
+    """Directory name prefix for Route-A ``router_recon_grid_*`` folders."""
+    host = machine.strip()
+    if benchmark == "unixbench":
+        return f"router_recon_grid_unixbench_{host}_"
+    if benchmark == "phoronix":
+        from moebench.phoronix.pipeline import safe_session_tag
+
+        tok = safe_session_tag(str(pts_suite or "cpu").replace("/", "_"))
+        return f"router_recon_grid_{tok}_{host}_"
+    raise ValueError(f"unknown benchmark: {benchmark!r}")
+
+
+def find_latest_router_recon_models_dir(
+    dataset_root: str | Path,
+    *,
+    machine: str,
+    benchmark: str,
+    pts_suite: str | None = None,
+) -> Path | None:
+    """
+    Locate the newest ``router_recon_grid_*/trained_models`` for ``machine`` + suite.
+
+    Returns ``None`` if no complete checkpoint set exists.
+    """
+    root = Path(dataset_root).resolve()
+    exp_root = root / "experiments"
+    if not exp_root.is_dir():
+        return None
+    prefix = router_recon_grid_prefix(benchmark=benchmark, machine=machine, pts_suite=pts_suite)
+    candidates: list[Path] = []
+    for p in exp_root.glob(f"{prefix}*/trained_models"):
+        if p.is_dir() and all((p / name).is_file() for name in ROUTER_RECON_CHECKPOINTS):
+            candidates.append(p)
+    if not candidates:
+        return None
+    return max(candidates, key=lambda p: p.stat().st_mtime)
+
