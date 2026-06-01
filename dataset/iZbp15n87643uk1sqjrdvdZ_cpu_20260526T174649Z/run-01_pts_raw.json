@@ -1,0 +1,604 @@
+{
+    "title": "moebenchptsizbp15n87643uk1sqjrdvdzcpu20260526t174649zr01174649660878",
+    "last_modified": "2026-05-27 01:14:32",
+    "description": "KVM testing on Ubuntu 26.04 via the Phoronix Test Suite.",
+    "systems": {
+        "moebenchptsizbp15n87643uk1sqjrdvdzcpu20260526t174649zr01174649660878": {
+            "identifier": "moebenchptsizbp15n87643uk1sqjrdvdzcpu20260526t174649zr01174649660878",
+            "hardware": {
+                "Processor": "Intel Xeon 6982P-C @ 3.90GHz (2 Cores \/ 4 Threads)",
+                "Motherboard": "Alibaba Cloud ECS (2.0.0 BIOS)",
+                "Chipset": "Intel 440FX 82441FX PMC",
+                "Memory": "1 x 8 GB RAM Alibaba Cloud",
+                "Disk": "43GB Alibaba Cloud Elastic Block Storage",
+                "Graphics": "Cirrus Logic GD 5446",
+                "Network": "Red Hat Virtio device"
+            },
+            "software": {
+                "OS": "Ubuntu 26.04",
+                "Kernel": "7.0.0-15-generic (x86_64)",
+                "Compiler": "GCC 15.2.0",
+                "File-System": "ext4",
+                "Screen Resolution": "800x600",
+                "System Layer": "KVM"
+            },
+            "user": "root",
+            "timestamp": "2026-05-26 17:47:14",
+            "client_version": "10.8.6",
+            "data": {
+                "compiler-configuration": "--build=x86_64-linux-gnu --disable-vtable-verify --disable-werror --enable-bootstrap --enable-cet --enable-checking=release --enable-clocale=gnu --enable-default-pie --enable-gnu-unique-object --enable-languages=c,ada,c++,go,d,fortran,objc,obj-c++,m2,rust,cobol,algol68 --enable-libphobos-checking=release --enable-libstdcxx-backtrace --enable-libstdcxx-debug --enable-libstdcxx-time=yes --enable-link-serialization=2 --enable-multiarch --enable-multilib --enable-nls --enable-objc-gc=auto --enable-offload-defaulted --enable-offload-targets=nvptx-none=\/build\/gcc-15-j35TAX\/gcc-15-15.2.0\/debian\/tmp-nvptx\/usr,amdgcn-amdhsa=\/build\/gcc-15-j35TAX\/gcc-15-15.2.0\/debian\/tmp-gcn\/usr --enable-plugin --enable-shared --enable-threads=posix --host=x86_64-linux-gnu --program-prefix=x86_64-linux-gnu- --target=x86_64-linux-gnu --with-abi=m64 --with-arch-32=i686 --with-build-config=bootstrap-lto-lean --with-default-libstdcxx-abi=new --with-gcc-major-version-only --with-multilib-list=m32,m64,mx32 --with-target-system-zlib=auto --with-tune=generic --without-cuda-driver -v",
+                "cpu-scaling-governor": "intel_cpufreq performance",
+                "cpu-microcode": "0x1",
+                "kernel-parameters": "nvme_core.io_timeout=4294967295 nvme_core.admin_timeout=4294967295",
+                "kernel-extra-details": "Transparent Huge Pages: madvise",
+                "security": "gather_data_sampling: Not affected + ghostwrite: Not affected + indirect_target_selection: Not affected + itlb_multihit: Not affected + l1tf: Not affected + mds: Not affected + meltdown: Not affected + mmio_stale_data: Not affected + old_microcode: Not affected + reg_file_data_sampling: Not affected + retbleed: Not affected + spec_rstack_overflow: Not affected + spec_store_bypass: Mitigation of SSB disabled via prctl + spectre_v1: Mitigation of usercopy\/swapgs barriers and __user pointer sanitization + spectre_v2: Mitigation of Enhanced \/ Automatic IBRS; IBPB: conditional; PBRSB-eIBRS: Not affected; BHI: BHI_DIS_S + srbds: Not affected + tsa: Not affected + tsx_async_abort: Not affected + vmscape: Not affected"
+            }
+        }
+    },
+    "results": {
+        "093545d5463f093c6c2d76293fbabd6cf2ebc503": {
+            "identifier": "pts\/rodinia-1.3.2",
+            "title": "Rodinia",
+            "app_version": "3.1",
+            "arguments": "OMP_LAVAMD",
+            "description": "Test: OpenMP LavaMD",
+            "scale": "Seconds",
+            "proportion": "LIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp15n87643uk1sqjrdvdzcpu20260526t174649zr01174649660878": {
+                    "test_run_times": [
+                        0.18,
+                        0,
+                        0
+                    ],
+                    "details": {
+                        "compiler-options": {
+                            "compiler-type": "CXX",
+                            "compiler": "g++",
+                            "compiler-options": "-O2 -lOpenCL"
+                        },
+                        "error": "The test quit with a non-zero exit status. E: .\/rodinia: 12: .\/lavaMD: not found"
+                    }
+                }
+            }
+        },
+        "851d8a0de9be8a446f2a451d458f0c56b311487c": {
+            "identifier": "pts\/rodinia-1.3.2",
+            "title": "Rodinia",
+            "app_version": "3.1",
+            "arguments": "OMP_CFD",
+            "description": "Test: OpenMP CFD Solver",
+            "scale": "Seconds",
+            "proportion": "LIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp15n87643uk1sqjrdvdzcpu20260526t174649zr01174649660878": {
+                    "value": 49.671,
+                    "raw_values": [
+                        49.794,
+                        49.732,
+                        49.486
+                    ],
+                    "test_run_times": [
+                        49.79,
+                        49.73,
+                        49.49
+                    ],
+                    "details": {
+                        "compiler-options": {
+                            "compiler-type": "CXX",
+                            "compiler": "g++",
+                            "compiler-options": "-O2 -lOpenCL"
+                        }
+                    }
+                }
+            }
+        },
+        "d03c92614e18f4e121d1fd9fd6893158013f0df5": {
+            "identifier": "pts\/namd-1.4.0",
+            "title": "NAMD",
+            "app_version": "3.0",
+            "arguments": "..\/f1atpase\/f1atpase.namd",
+            "description": "Input: ATPase with 327,506 Atoms",
+            "scale": "ns\/day",
+            "proportion": "HIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp15n87643uk1sqjrdvdzcpu20260526t174649zr01174649660878": {
+                    "value": 0.46919,
+                    "raw_values": [
+                        0.46888700292117,
+                        0.46946152762781,
+                        0.4692082111437
+                    ],
+                    "test_run_times": [
+                        134.57,
+                        96.03,
+                        96.22
+                    ]
+                }
+            }
+        },
+        "b840d6ec6a5d1df22eaef93336853bbe96238da2": {
+            "identifier": "pts\/namd-1.4.0",
+            "title": "NAMD",
+            "app_version": "3.0",
+            "arguments": "..\/stmv\/stmv.namd",
+            "description": "Input: STMV with 1,066,628 Atoms",
+            "scale": "ns\/day",
+            "proportion": "HIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp15n87643uk1sqjrdvdzcpu20260526t174649zr01174649660878": {
+                    "value": 0.13711,
+                    "raw_values": [
+                        0.13698386193123,
+                        0.13704769122607,
+                        0.13730285026987
+                    ],
+                    "test_run_times": [
+                        362.13,
+                        325.87,
+                        325.22
+                    ]
+                }
+            }
+        },
+        "05a5fd290b9902694beb7aecb2dda18ae3870ef3": {
+            "identifier": "pts\/x264-2.7.0",
+            "title": "x264",
+            "app_version": "2022-02-22",
+            "arguments": "Bosphorus_3840x2160.y4m",
+            "description": "Video Input: Bosphorus 4K",
+            "scale": "Frames Per Second",
+            "proportion": "HIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp15n87643uk1sqjrdvdzcpu20260526t174649zr01174649660878": {
+                    "value": 8.08,
+                    "raw_values": [
+                        8.16,
+                        8.06,
+                        8.02
+                    ],
+                    "test_run_times": [
+                        73.59,
+                        74.5,
+                        74.84
+                    ],
+                    "details": {
+                        "compiler-options": {
+                            "compiler-type": "CC",
+                            "compiler": "gcc",
+                            "compiler-options": "-ldl -m64 -lm -lpthread -O3 -flto"
+                        }
+                    }
+                }
+            }
+        },
+        "eb54c6df8f4d5cf1f110ac2c4fd373453a43e1d1": {
+            "identifier": "pts\/x264-2.7.0",
+            "title": "x264",
+            "app_version": "2022-02-22",
+            "arguments": "Bosphorus_1920x1080_120fps_420_8bit_YUV.y4m",
+            "description": "Video Input: Bosphorus 1080p",
+            "scale": "Frames Per Second",
+            "proportion": "HIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp15n87643uk1sqjrdvdzcpu20260526t174649zr01174649660878": {
+                    "value": 36.99,
+                    "raw_values": [
+                        36.69,
+                        37.06,
+                        37.23
+                    ],
+                    "test_run_times": [
+                        16.36,
+                        16.2,
+                        16.13
+                    ],
+                    "details": {
+                        "compiler-options": {
+                            "compiler-type": "CC",
+                            "compiler": "gcc",
+                            "compiler-options": "-ldl -m64 -lm -lpthread -O3 -flto"
+                        }
+                    }
+                }
+            }
+        },
+        "32cc22db72e4f0c9b9d9691279cba951d57b3d32": {
+            "identifier": "pts\/x265-1.5.0",
+            "title": "x265",
+            "app_version": "4.1",
+            "arguments": "Bosphorus_3840x2160.y4m",
+            "description": "Video Input: Bosphorus 4K",
+            "scale": "Frames Per Second",
+            "proportion": "HIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp15n87643uk1sqjrdvdzcpu20260526t174649zr01174649660878": {
+                    "value": 6.18,
+                    "raw_values": [
+                        6.14,
+                        6.19,
+                        6.21
+                    ],
+                    "test_run_times": [
+                        97.8,
+                        97.06,
+                        96.73
+                    ],
+                    "details": {
+                        "compiler-options": {
+                            "compiler-type": "CXX",
+                            "compiler": "g++",
+                            "compiler-options": "-O3 -lpthread -lrt -ldl -lnuma"
+                        }
+                    }
+                }
+            }
+        },
+        "7271dab077d02af53295faa3ee6acc9d78268a5f": {
+            "identifier": "pts\/x265-1.5.0",
+            "title": "x265",
+            "app_version": "4.1",
+            "arguments": "Bosphorus_1920x1080_120fps_420_8bit_YUV.y4m",
+            "description": "Video Input: Bosphorus 1080p",
+            "scale": "Frames Per Second",
+            "proportion": "HIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp15n87643uk1sqjrdvdzcpu20260526t174649zr01174649660878": {
+                    "value": 27.68,
+                    "raw_values": [
+                        27.54,
+                        27.74,
+                        27.75
+                    ],
+                    "test_run_times": [
+                        21.82,
+                        21.66,
+                        21.65
+                    ],
+                    "details": {
+                        "compiler-options": {
+                            "compiler-type": "CXX",
+                            "compiler": "g++",
+                            "compiler-options": "-O3 -lpthread -lrt -ldl -lnuma"
+                        }
+                    }
+                }
+            }
+        },
+        "056b87080920579f1e0b2f364cf8191f205d4f52": {
+            "identifier": "pts\/compress-7zip-1.13.0",
+            "title": "7-Zip Compression",
+            "app_version": "26.01",
+            "description": "Test: Compression Rating",
+            "scale": "MIPS",
+            "proportion": "HIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp15n87643uk1sqjrdvdzcpu20260526t174649zr01174649660878": {
+                    "value": 26308,
+                    "raw_values": [
+                        25786,
+                        26695,
+                        26442
+                    ],
+                    "test_run_times": [
+                        26.64,
+                        26.48,
+                        26.57
+                    ],
+                    "details": {
+                        "compiler-options": {
+                            "compiler-type": "CXX",
+                            "compiler": "g++",
+                            "compiler-options": "-lpthread -ldl -O2 -fPIC"
+                        }
+                    }
+                }
+            }
+        },
+        "c492dfa3fd4ab77f88e146cd61863fe368407a56": {
+            "identifier": "pts\/compress-7zip-1.13.0",
+            "title": "7-Zip Compression",
+            "app_version": "26.01",
+            "description": "Test: Decompression Rating",
+            "scale": "MIPS",
+            "proportion": "HIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp15n87643uk1sqjrdvdzcpu20260526t174649zr01174649660878": {
+                    "value": 14532,
+                    "raw_values": [
+                        14569,
+                        14507,
+                        14521
+                    ],
+                    "test_run_times": [
+                        26.64,
+                        26.48,
+                        26.57
+                    ],
+                    "details": {
+                        "compiler-options": {
+                            "compiler-type": "CXX",
+                            "compiler": "g++",
+                            "compiler-options": "-lpthread -ldl -O2 -fPIC"
+                        }
+                    }
+                }
+            }
+        },
+        "74dee63da9a8d7670c5b5a0630b3e29038978bad": {
+            "identifier": "pts\/stockfish-1.7.0",
+            "title": "Stockfish",
+            "app_version": "17.1",
+            "description": "Chess Benchmark",
+            "scale": "Nodes Per Second",
+            "proportion": "HIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp15n87643uk1sqjrdvdzcpu20260526t174649zr01174649660878": {
+                    "value": 3215023,
+                    "raw_values": [
+                        3190855,
+                        3221586,
+                        3232628
+                    ],
+                    "test_run_times": [
+                        154.34,
+                        154.3,
+                        154.26
+                    ],
+                    "details": {
+                        "compiler-options": {
+                            "compiler-type": "CXX",
+                            "compiler": "g++",
+                            "compiler-options": "-lgcov -m64 -lpthread -fno-exceptions -std=c++17 -fno-peel-loops -fno-tracer -pedantic -O3 -funroll-loops -msse -msse3 -mpopcnt -mavx2 -mbmi -mavx512f -mavx512bw -mavx512vnni -mavx512dq -mavx512vl -msse4.1 -mssse3 -msse2 -mbmi2 -flto -flto-partition=one -flto=jobserver"
+                        }
+                    }
+                }
+            }
+        },
+        "fc8b6de93b7723b344a80057c04367a883bac1ec": {
+            "identifier": "pts\/asmfish-1.1.2",
+            "title": "asmFish",
+            "app_version": "2018-07-23",
+            "description": "1024 Hash Memory, 26 Depth",
+            "scale": "Nodes\/second",
+            "proportion": "HIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp15n87643uk1sqjrdvdzcpu20260526t174649zr01174649660878": {
+                    "value": 7290492,
+                    "raw_values": [
+                        7241327,
+                        7277501,
+                        7352649
+                    ],
+                    "test_run_times": [
+                        222.12,
+                        214.97,
+                        264.9
+                    ]
+                }
+            }
+        },
+        "92436e477afc87403383088e25c2fd2b00803db9": {
+            "identifier": "pts\/build-gcc-1.5.0",
+            "title": "Timed GCC Compilation",
+            "app_version": "15.2",
+            "scale": "Seconds",
+            "proportion": "LIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp15n87643uk1sqjrdvdzcpu20260526t174649zr01174649660878": {
+                    "test_run_times": [
+                        389.01,
+                        369.88,
+                        369.3
+                    ],
+                    "details": {
+                        "error": "The test quit with a non-zero exit status. E: ..\/..\/.\/libgomp\/affinity-fmt.c:330:25: error: initialization discards \u2018const\u2019 qualifier from pointer target type [-Werror=discarded-qualifiers]"
+                    }
+                }
+            }
+        },
+        "4d7b365c6432dfbebc8c90edbf4cf6e787e51715": {
+            "identifier": "pts\/build-linux-kernel-1.18.0",
+            "title": "Timed Linux Kernel Compilation",
+            "app_version": "7.0",
+            "arguments": "defconfig",
+            "description": "Build: defconfig",
+            "scale": "Seconds",
+            "proportion": "LIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp15n87643uk1sqjrdvdzcpu20260526t174649zr01174649660878": {
+                    "value": 425.423,
+                    "raw_values": [
+                        427.267,
+                        424.568,
+                        424.435
+                    ],
+                    "test_run_times": [
+                        427.27,
+                        424.57,
+                        424.43
+                    ]
+                }
+            }
+        },
+        "66a86b17b58e6402353f79db103a04c05d0258f2": {
+            "identifier": "pts\/build-linux-kernel-1.18.0",
+            "title": "Timed Linux Kernel Compilation",
+            "app_version": "7.0",
+            "arguments": "allmodconfig",
+            "description": "Build: allmodconfig",
+            "scale": "Seconds",
+            "proportion": "LIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp15n87643uk1sqjrdvdzcpu20260526t174649zr01174649660878": {
+                    "value": 6549.493,
+                    "raw_values": [
+                        6551.921,
+                        6549.492,
+                        6547.066
+                    ],
+                    "test_run_times": [
+                        6551.92,
+                        6549.49,
+                        6547.07
+                    ]
+                }
+            }
+        },
+        "f7e0955c999643ce5c85940d6faefdb1264bd138": {
+            "identifier": "pts\/povray-1.2.1",
+            "title": "POV-Ray",
+            "app_version": "3.7.0.7",
+            "scale": "Seconds",
+            "proportion": "LIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp15n87643uk1sqjrdvdzcpu20260526t174649zr01174649660878": {
+                    "test_run_times": [
+                        0,
+                        0,
+                        0
+                    ],
+                    "details": {
+                        "error": "The test quit with a non-zero exit status. E: .\/povray: 3: .\/unix\/povray: not found"
+                    }
+                }
+            }
+        },
+        "5ad8dd2bdca5658500feb250585786e433b0dfcf": {
+            "identifier": "pts\/radiance-1.0.0",
+            "title": "Radiance Benchmark",
+            "app_version": "5.0",
+            "arguments": "make all",
+            "description": "Test: Serial",
+            "scale": "Seconds",
+            "proportion": "LIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp15n87643uk1sqjrdvdzcpu20260526t174649zr01174649660878": {
+                    "value": 492.641,
+                    "test_run_times": [
+                        492.64
+                    ]
+                }
+            }
+        },
+        "3ff26847c77648275146ed0b545a9997fd5bfdc6": {
+            "identifier": "pts\/radiance-1.0.0",
+            "title": "Radiance Benchmark",
+            "app_version": "5.0",
+            "arguments": "make smp",
+            "description": "Test: SMP Parallel",
+            "scale": "Seconds",
+            "proportion": "LIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp15n87643uk1sqjrdvdzcpu20260526t174649zr01174649660878": {
+                    "value": 225.615,
+                    "test_run_times": [
+                        225.62
+                    ]
+                }
+            }
+        },
+        "1d64e46e042afd3e1cf9130df8a4bc7e7fec7eb1": {
+            "identifier": "pts\/blender-5.1.0",
+            "title": "Blender",
+            "app_version": "5.1",
+            "arguments": "-b ..\/barbershop_interior_gpu.blend -o output.test -x 1 -F JPEG -f 1  NONE",
+            "description": "Blend File: Barbershop - Compute: CPU-Only",
+            "scale": "Seconds",
+            "proportion": "LIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp15n87643uk1sqjrdvdzcpu20260526t174649zr01174649660878": {
+                    "test_run_times": [
+                        0.11,
+                        0,
+                        0
+                    ],
+                    "details": {
+                        "error": "The test quit with a non-zero exit status."
+                    }
+                }
+            }
+        },
+        "d14fab923a8a05c721a245a14d1b704edb4f77f8": {
+            "identifier": "pts\/ctx-clock-1.0.0",
+            "title": "ctx_clock",
+            "description": "Context Switch Time",
+            "scale": "Clocks",
+            "proportion": "LIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp15n87643uk1sqjrdvdzcpu20260526t174649zr01174649660878": {
+                    "value": 250,
+                    "raw_values": [
+                        250,
+                        250,
+                        250
+                    ],
+                    "test_run_times": [
+                        1.12,
+                        1.18,
+                        1.12
+                    ],
+                    "details": {
+                        "compiler-options": {
+                            "compiler-type": "CC",
+                            "compiler": "gcc",
+                            "compiler-options": ""
+                        }
+                    }
+                }
+            }
+        },
+        "336fd32cb2c05fec4e5cd3e11c488269ccfa508f": {
+            "identifier": "pts\/sysbench-1.1.0",
+            "title": "Sysbench",
+            "app_version": "1.0.20",
+            "arguments": "cpu run",
+            "description": "Test: CPU",
+            "scale": "Events Per Second",
+            "proportion": "HIB",
+            "display_format": "BAR_GRAPH",
+            "results": {
+                "moebenchptsizbp15n87643uk1sqjrdvdzcpu20260526t174649zr01174649660878": {
+                    "value": 6402.51,
+                    "raw_values": [
+                        6406.79,
+                        6402.44,
+                        6398.31
+                    ],
+                    "test_run_times": [
+                        90.01,
+                        90,
+                        90
+                    ],
+                    "details": {
+                        "compiler-options": {
+                            "compiler-type": "CC",
+                            "compiler": "gcc",
+                            "compiler-options": "-O2 -funroll-loops -rdynamic -ldl -laio -lm"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

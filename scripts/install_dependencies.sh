@@ -187,5 +187,10 @@ if [[ "${BUILD_UNIXBENCH}" -eq 1 ]]; then
   fi
 fi
 
+if command -v phoronix-test-suite >/dev/null 2>&1; then
+  echo "Patching PTS x265 profile for CMake 4.x..."
+  MOEBENCH_ROOT="${ROOT_DIR}" bash "${ROOT_DIR}/scripts/patch_pts_x265_cmake.sh"
+fi
+
 echo "Dependency installation completed."
 echo "Tip: verify perf permission via /proc/sys/kernel/perf_event_paranoid"
