@@ -1,0 +1,527 @@
+{
+  "schema": "moebench.paper_reconstruct_cv_extras.v2",
+  "dataset_root": "/home/cxc/MoEBench/dataset",
+  "suites_requested": [
+    "phoronix_gpu"
+  ],
+  "eval_partial_k_list": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "train_k_range_requested": [
+    2,
+    12
+  ],
+  "pts_suite_target": "logmean",
+  "model_type": "lightgbm",
+  "policies": [
+    "router"
+  ],
+  "xi_ablations": [
+    "full"
+  ],
+  "suite_results": [
+    {
+      "suite_key": "phoronix_gpu",
+      "pts_suite_filter": "pts/nvidia-gpu-compute",
+      "glob_pattern": "aces-System-Product-Name_pts_nvidia-gpu-compute_[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]T[0-9][0-9][0-9][0-9][0-9][0-9]Z/run-*.json",
+      "cv_mode_effective": "random_fold",
+      "folds_effective": 5,
+      "sessions": [
+        "aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z"
+      ],
+      "n_samples": 5,
+      "num_profiles_or_subtests": 10,
+      "profile_ids_head": [
+        "pts/blender-5.1.0",
+        "pts/cl-mem-1.0.1",
+        "pts/clpeak-1.1.0",
+        "pts/fahbench-1.0.2",
+        "pts/financebench-1.1.1",
+        "pts/hashcat-1.3.1",
+        "pts/luxcorerender-1.4.0",
+        "pts/ncnn-1.6.0"
+      ],
+      "combinations": [
+        {
+          "suite_key": "phoronix_gpu",
+          "xi_ablation": "full",
+          "benchmark": "phoronix",
+          "eval_partial_k": 1,
+          "policy": "router",
+          "oof_metrics": {
+            "mae_all_targets": 5009.32421081965,
+            "rmse_all_targets": 22301.522462461005,
+            "mae_subtest_index_only": 5510.03901082955,
+            "rmse_subtest_index_only": 23390.03407108258,
+            "mae_suite_index": 2.1762107206451504,
+            "rmse_suite_index": 2.667609559314022,
+            "spearman_suite": -0.8999999999999998,
+            "kendall_tau_suite": -0.8,
+            "median_bucket_accuracy_suite": 0.0
+          },
+          "per_fold_metrics": [
+            {
+              "mae_all_targets": 2032.883359621438,
+              "rmse_all_targets": 6733.11837728831,
+              "mae_subtest_index_only": 2235.8787545758987,
+              "rmse_subtest_index_only": 7061.754069117033,
+              "mae_suite_index": 2.929410076829953,
+              "rmse_suite_index": 2.929410076829953,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "fold": 0,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.9578063222807619
+            },
+            {
+              "mae_all_targets": 669.6395287122236,
+              "rmse_all_targets": 2211.7970184929286,
+              "mae_subtest_index_only": 736.1149733521185,
+              "rmse_subtest_index_only": 2319.7517689857914,
+              "mae_suite_index": 4.885082313276371,
+              "rmse_suite_index": 4.885082313276371,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "fold": 1,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.9862945657934865
+            },
+            {
+              "mae_all_targets": 5257.299080339374,
+              "rmse_all_targets": 17428.89327148178,
+              "mae_subtest_index_only": 5782.927791182743,
+              "rmse_subtest_index_only": 18279.57747414213,
+              "mae_suite_index": 1.011971905690018,
+              "rmse_suite_index": 1.011971905690018,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "fold": 2,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.9686087185660919
+            },
+            {
+              "mae_all_targets": 3643.1932149941717,
+              "rmse_all_targets": 12074.966715678502,
+              "mae_subtest_index_only": 4007.4113488615285,
+              "rmse_subtest_index_only": 12664.331928721256,
+              "mae_suite_index": 1.0118763206053245,
+              "rmse_suite_index": 1.0118763206053245,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "fold": 3,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.9562179208221807
+            },
+            {
+              "mae_all_targets": 13443.60587043104,
+              "rmse_all_targets": 44575.68226882485,
+              "mae_subtest_index_only": 14787.862186175462,
+              "rmse_subtest_index_only": 46751.36997560204,
+              "mae_suite_index": 1.0427129868240854,
+              "rmse_suite_index": 1.0427129868240854,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "fold": 4,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.9720933285303474
+            }
+          ],
+          "time_savings": {
+            "mean_fraction_wall_time_saved_vs_full_suite": 0.9682041711985736,
+            "description": "Eval subset; PTS ti.by_test_id.time_s_total (or execution_cost)."
+          },
+          "n_oof": 5
+        },
+        {
+          "suite_key": "phoronix_gpu",
+          "xi_ablation": "full",
+          "benchmark": "phoronix",
+          "eval_partial_k": 2,
+          "policy": "router",
+          "oof_metrics": {
+            "mae_all_targets": 5009.324220114454,
+            "rmse_all_targets": 22301.522462461624,
+            "mae_subtest_index_only": 5510.039021053834,
+            "rmse_subtest_index_only": 23390.03407108323,
+            "mae_suite_index": 2.1762107206451504,
+            "rmse_suite_index": 2.667609559314022,
+            "spearman_suite": -0.8999999999999998,
+            "kendall_tau_suite": -0.8,
+            "median_bucket_accuracy_suite": 0.0
+          },
+          "per_fold_metrics": [
+            {
+              "mae_all_targets": 2032.883359621438,
+              "rmse_all_targets": 6733.11837728831,
+              "mae_subtest_index_only": 2235.8787545758987,
+              "rmse_subtest_index_only": 7061.754069117033,
+              "mae_suite_index": 2.929410076829953,
+              "rmse_suite_index": 2.929410076829953,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "fold": 0,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.9547831461402421
+            },
+            {
+              "mae_all_targets": 669.6395287122236,
+              "rmse_all_targets": 2211.7970184929286,
+              "mae_subtest_index_only": 736.1149733521185,
+              "rmse_subtest_index_only": 2319.7517689857914,
+              "mae_suite_index": 4.885082313276371,
+              "rmse_suite_index": 4.885082313276371,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "fold": 1,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.9853241188993607
+            },
+            {
+              "mae_all_targets": 5257.299126813395,
+              "rmse_all_targets": 17428.893271485747,
+              "mae_subtest_index_only": 5782.927842304165,
+              "rmse_subtest_index_only": 18279.577474146292,
+              "mae_suite_index": 1.011971905690018,
+              "rmse_suite_index": 1.011971905690018,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "fold": 2,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.9663551047753878
+            },
+            {
+              "mae_all_targets": 3643.1932149941717,
+              "rmse_all_targets": 12074.966715678502,
+              "mae_subtest_index_only": 4007.4113488615285,
+              "rmse_subtest_index_only": 12664.331928721256,
+              "mae_suite_index": 1.0118763206053245,
+              "rmse_suite_index": 1.0118763206053245,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "fold": 3,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.9531073210570554
+            },
+            {
+              "mae_all_targets": 13443.60587043104,
+              "rmse_all_targets": 44575.68226882485,
+              "mae_subtest_index_only": 14787.862186175462,
+              "rmse_subtest_index_only": 46751.36997560204,
+              "mae_suite_index": 1.0427129868240854,
+              "rmse_suite_index": 1.0427129868240854,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "fold": 4,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.9700998858273244
+            }
+          ],
+          "time_savings": {
+            "mean_fraction_wall_time_saved_vs_full_suite": 0.965933915339874,
+            "description": "Eval subset; PTS ti.by_test_id.time_s_total (or execution_cost)."
+          },
+          "n_oof": 5
+        },
+        {
+          "suite_key": "phoronix_gpu",
+          "xi_ablation": "full",
+          "benchmark": "phoronix",
+          "eval_partial_k": 3,
+          "policy": "router",
+          "oof_metrics": {
+            "mae_all_targets": 5009.324203655671,
+            "rmse_all_targets": 22301.52246246053,
+            "mae_subtest_index_only": 5510.039002949173,
+            "rmse_subtest_index_only": 23390.034071082082,
+            "mae_suite_index": 2.1762107206451504,
+            "rmse_suite_index": 2.667609559314022,
+            "spearman_suite": -0.8999999999999998,
+            "kendall_tau_suite": -0.8,
+            "median_bucket_accuracy_suite": 0.0
+          },
+          "per_fold_metrics": [
+            {
+              "mae_all_targets": 2032.883359621438,
+              "rmse_all_targets": 6733.11837728831,
+              "mae_subtest_index_only": 2235.8787545758987,
+              "rmse_subtest_index_only": 7061.754069117033,
+              "mae_suite_index": 2.929410076829953,
+              "rmse_suite_index": 2.929410076829953,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "fold": 0,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.9495400420374264
+            },
+            {
+              "mae_all_targets": 669.6395287122236,
+              "rmse_all_targets": 2211.7970184929286,
+              "mae_subtest_index_only": 736.1149733521185,
+              "rmse_subtest_index_only": 2319.7517689857914,
+              "mae_suite_index": 4.885082313276371,
+              "rmse_suite_index": 4.885082313276371,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "fold": 1,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.9835901205397195
+            },
+            {
+              "mae_all_targets": 5257.299044519481,
+              "rmse_all_targets": 17428.893271478722,
+              "mae_subtest_index_only": 5782.9277517808605,
+              "rmse_subtest_index_only": 18279.577474138925,
+              "mae_suite_index": 1.011971905690018,
+              "rmse_suite_index": 1.011971905690018,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "fold": 2,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.9622965332065729
+            },
+            {
+              "mae_all_targets": 3643.1932149941717,
+              "rmse_all_targets": 12074.966715678502,
+              "mae_subtest_index_only": 4007.4113488615285,
+              "rmse_subtest_index_only": 12664.331928721256,
+              "mae_suite_index": 1.0118763206053245,
+              "rmse_suite_index": 1.0118763206053245,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "fold": 3,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.9475144412187255
+            },
+            {
+              "mae_all_targets": 13443.60587043104,
+              "rmse_all_targets": 44575.68226882485,
+              "mae_subtest_index_only": 14787.862186175462,
+              "rmse_subtest_index_only": 46751.36997560204,
+              "mae_suite_index": 1.0427129868240854,
+              "rmse_suite_index": 1.0427129868240854,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "fold": 4,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.9665083309420162
+            }
+          ],
+          "time_savings": {
+            "mean_fraction_wall_time_saved_vs_full_suite": 0.9618898935888922,
+            "description": "Eval subset; PTS ti.by_test_id.time_s_total (or execution_cost)."
+          },
+          "n_oof": 5
+        },
+        {
+          "suite_key": "phoronix_gpu",
+          "xi_ablation": "full",
+          "benchmark": "phoronix",
+          "eval_partial_k": 4,
+          "policy": "router",
+          "oof_metrics": {
+            "mae_all_targets": 5009.324253327329,
+            "rmse_all_targets": 22301.522462463843,
+            "mae_subtest_index_only": 5510.0390575879965,
+            "rmse_subtest_index_only": 23390.034071085556,
+            "mae_suite_index": 2.1762107206451504,
+            "rmse_suite_index": 2.667609559314022,
+            "spearman_suite": -0.8999999999999998,
+            "kendall_tau_suite": -0.8,
+            "median_bucket_accuracy_suite": 0.0
+          },
+          "per_fold_metrics": [
+            {
+              "mae_all_targets": 2032.883359621438,
+              "rmse_all_targets": 6733.11837728831,
+              "mae_subtest_index_only": 2235.8787545758987,
+              "rmse_subtest_index_only": 7061.754069117033,
+              "mae_suite_index": 2.929410076829953,
+              "rmse_suite_index": 2.929410076829953,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "fold": 0,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.9045199492587894
+            },
+            {
+              "mae_all_targets": 669.6395287122236,
+              "rmse_all_targets": 2211.7970184929286,
+              "mae_subtest_index_only": 736.1149733521185,
+              "rmse_subtest_index_only": 2319.7517689857914,
+              "mae_suite_index": 4.885082313276371,
+              "rmse_suite_index": 4.885082313276371,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "fold": 1,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.9725524899994374
+            },
+            {
+              "mae_all_targets": 5257.299292877766,
+              "rmse_all_targets": 17428.893271499936,
+              "mae_subtest_index_only": 5782.928024974974,
+              "rmse_subtest_index_only": 18279.577474161175,
+              "mae_suite_index": 1.011971905690018,
+              "rmse_suite_index": 1.011971905690018,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "fold": 2,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.9369513436429491
+            },
+            {
+              "mae_all_targets": 3643.1932149941717,
+              "rmse_all_targets": 12074.966715678502,
+              "mae_subtest_index_only": 4007.4113488615285,
+              "rmse_subtest_index_only": 12664.331928721256,
+              "mae_suite_index": 1.0118763206053245,
+              "rmse_suite_index": 1.0118763206053245,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "fold": 3,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.9125121461230767
+            },
+            {
+              "mae_all_targets": 13443.60587043104,
+              "rmse_all_targets": 44575.68226882485,
+              "mae_subtest_index_only": 14787.862186175462,
+              "rmse_subtest_index_only": 46751.36997560204,
+              "mae_suite_index": 1.0427129868240854,
+              "rmse_suite_index": 1.0427129868240854,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "fold": 4,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.9439928077319933
+            }
+          ],
+          "time_savings": {
+            "mean_fraction_wall_time_saved_vs_full_suite": 0.9341057473512491,
+            "description": "Eval subset; PTS ti.by_test_id.time_s_total (or execution_cost)."
+          },
+          "n_oof": 5
+        },
+        {
+          "suite_key": "phoronix_gpu",
+          "xi_ablation": "full",
+          "benchmark": "phoronix",
+          "eval_partial_k": 5,
+          "policy": "router",
+          "oof_metrics": {
+            "mae_all_targets": 5009.32403646167,
+            "rmse_all_targets": 22301.52246244941,
+            "mae_subtest_index_only": 5510.038819035773,
+            "rmse_subtest_index_only": 23390.03407107042,
+            "mae_suite_index": 2.1762107206451504,
+            "rmse_suite_index": 2.667609559314022,
+            "spearman_suite": -0.8999999999999998,
+            "kendall_tau_suite": -0.8,
+            "median_bucket_accuracy_suite": 0.0
+          },
+          "per_fold_metrics": [
+            {
+              "mae_all_targets": 2032.883359621438,
+              "rmse_all_targets": 6733.11837728831,
+              "mae_subtest_index_only": 2235.8787545758987,
+              "rmse_subtest_index_only": 7061.754069117033,
+              "mae_suite_index": 2.929410076829953,
+              "rmse_suite_index": 2.929410076829953,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "fold": 0,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.9042549005083381
+            },
+            {
+              "mae_all_targets": 669.6395287122236,
+              "rmse_all_targets": 2211.7970184929286,
+              "mae_subtest_index_only": 736.1149733521185,
+              "rmse_subtest_index_only": 2319.7517689857914,
+              "mae_suite_index": 4.885082313276371,
+              "rmse_suite_index": 4.885082313276371,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "fold": 1,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.9718822080294672
+            },
+            {
+              "mae_all_targets": 5257.298208549479,
+              "rmse_all_targets": 17428.8932714076,
+              "mae_subtest_index_only": 5782.926832213858,
+              "rmse_subtest_index_only": 18279.57747406433,
+              "mae_suite_index": 1.011971905690018,
+              "rmse_suite_index": 1.011971905690018,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "fold": 2,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.936156507751157
+            },
+            {
+              "mae_all_targets": 3643.1932149941717,
+              "rmse_all_targets": 12074.966715678502,
+              "mae_subtest_index_only": 4007.4113488615285,
+              "rmse_subtest_index_only": 12664.331928721256,
+              "mae_suite_index": 1.0118763206053245,
+              "rmse_suite_index": 1.0118763206053245,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "fold": 3,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.9111362809912429
+            },
+            {
+              "mae_all_targets": 13443.60587043104,
+              "rmse_all_targets": 44575.68226882485,
+              "mae_subtest_index_only": 14787.862186175462,
+              "rmse_subtest_index_only": 46751.36997560204,
+              "mae_suite_index": 1.0427129868240854,
+              "rmse_suite_index": 1.0427129868240854,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "fold": 4,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.9438111693846276
+            }
+          ],
+          "time_savings": {
+            "mean_fraction_wall_time_saved_vs_full_suite": 0.9334482133329665,
+            "description": "Eval subset; PTS ti.by_test_id.time_s_total (or execution_cost)."
+          },
+          "n_oof": 5
+        }
+      ]
+    }
+  ]
+}

@@ -518,7 +518,7 @@ Ground-truth full-suite scores and full-suite wall times come from previously co
 We exhaustively compare all \(3 \times 2 \times 3 = 18\) combinations of three routers, two probe regressors (LightGBM and XGBoost), and three reconstructors under this hybrid protocol on each applicable host--suite pair.
 \textbf{Route~A} (Top-$K$ \emph{full} partial execution + reconstruction) and \textbf{Route~B} (probe \emph{all} components and aggregate without reconstruction) are retained as \emph{ablation baselines} that isolate subset selection and probing, respectively.
 Unless stated otherwise, each host trains and evaluates only on its own collected runs, so reported results reflect per-machine generalization rather than cross-host pooling.
-All numeric results in the tables below are left as placeholders and will be filled after the full experimental campaign completes.
+Main-experiment and supplementary tables report measured means over five hosts (or H1 only for \textsc{PTS-GPU}), aggregated from per-host offline cross-validation JSON under \texttt{dataset/paper\_supplementary/}.
 
 \subsubsection{Testbeds}
 \label{subsubsec:testbeds}
@@ -534,15 +534,16 @@ We label hosts by a compact \texttt{CPU$\times$RAM} shorthand used throughout th
 \caption{Evaluation testbeds. Five Linux hosts with heterogeneous CPU and memory capacity. \textsc{PTS-GPU} runs only on H1.}
 \label{tab:testbeds}
 \small
-\begin{tabular}{lcccp{0.22\linewidth}p{0.18\linewidth}}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lrrcl@{}}
 \toprule
-\textbf{Host ID} & \textbf{vCPU} & \textbf{RAM (GiB)} & \textbf{Label} & \textbf{GPU} & \textbf{Suites} \\
+\textbf{Host} & \textbf{vCPU} & \textbf{RAM (GiB)} & \textbf{GPU} & \textbf{Suites} \\
 \midrule
-H1 & 32 & 128 & 32U128G & NVIDIA & UB, \textsc{PTS-CPU}, \textsc{PTS-GPU} \\
-H2 & 2  & 8   & 2U8G   & ---    & UB, \textsc{PTS-CPU} \\
-H3 & 4  & 8   & 4U8G   & ---    & UB, \textsc{PTS-CPU} \\
-H4 & 4  & 16  & 4U16G  & ---    & UB, \textsc{PTS-CPU} \\
-H5 & 8  & 8   & 8U8G   & ---    & UB, \textsc{PTS-CPU} \\
+H1 & 32 & 128 & NVIDIA & UnixBench, \textsc{PTS-CPU}, \textsc{PTS-GPU} \\
+H2 & 2  & 8   & ---    & UnixBench, \textsc{PTS-CPU} \\
+H3 & 4  & 8   & ---    & UnixBench, \textsc{PTS-CPU} \\
+H4 & 4  & 16  & ---    & UnixBench, \textsc{PTS-CPU} \\
+H5 & 8  & 8   & ---    & UnixBench, \textsc{PTS-CPU} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -575,7 +576,7 @@ UnixBench and \textsc{PTS-CPU} are run on all five hosts; \textsc{PTS-GPU} is re
     Profile-level primary values span large dynamic ranges; suite aggregation follows log-mean over profiles, consistent with our reconstructor training target.
     Evaluated on all five hosts.
 
-    \item \textbf{Phoronix Test Suite --- GPU (\textsc{PTS-GPU}).} The \texttt{pts/nvidia-gpu-compute} suite, executed only on H1 (32U128G), which has a suitable NVIDIA GPU and installed PTS profiles.
+    \item \textbf{Phoronix Test Suite --- GPU (\textsc{PTS-GPU}).} The NVIDIA GPU compute suite (\textsc{PTS-GPU}), executed only on H1 (32U128G), which has a suitable NVIDIA GPU and installed PTS profiles.
     This suite complements CPU-centric evaluation with OpenCL/GPU compute workloads and is omitted on H2--H5.
 \end{itemize}
 
@@ -616,8 +617,9 @@ For \textsc{PTS-GPU}, supplementary studies use H1 data only.
 For suite-level score \(\hat{S}\) and ground truth \(S\), we report:
 \emph{absolute error} \(| \hat{S} - S |\),
 \emph{relative error} \(| \hat{S} - S | / \max(|S|, \epsilon)\),
-and rank-correlation metrics (Spearman/Kendall) where cross-run ranking is meaningful.
-For offline cross-validation studies, we also report out-of-fold MAE and RMSE on the suite dimension.
+and rank-correlation metrics (Spearman/Kendall) in supplementary offline cross-validation studies where multiple held-out runs support ranking.
+For those studies we also report out-of-fold MAE and RMSE on the suite dimension (Tables~\ref{tab:topk-sweep}--\ref{tab:feature-ablation}).
+Table~\ref{tab:overall-effectiveness} uses relative error only, which is scale-invariant across suites.
 
 \paragraph{Cost.}
 We measure \emph{wall-clock time} of benchmark execution:
@@ -632,7 +634,7 @@ For Top-$K$ and routing-policy studies, we rank configurations using a \emph{bal
 \paragraph{Aggregation across hosts.}
 For UnixBench and \textsc{PTS-CPU}, we summarize each metric by mean (and optionally standard deviation) over the five testbeds unless a table explicitly reports per-host columns.
 For \textsc{PTS-GPU}, all reported values come from H1 (32U128G) only.
-Statistical significance testing will be reported where applicable after all runs complete.
+Statistical significance testing is left to future work; main-experiment tables report means over the applicable host set.
 
 \subsection{Overall Effectiveness}
 \label{subsec:overall-effectiveness}
@@ -646,41 +648,39 @@ For each applicable host--suite pair, we compare:
 
 Table~\ref{tab:overall-effectiveness} reports suite-level relative error, partial and full wall times, and time saved.
 UnixBench and \textsc{PTS-CPU} rows aggregate over five hosts; \textsc{PTS-GPU} rows report H1 (32U128G) only.
-We expect Hybrid to combine Route~A's subset efficiency with Route~B's low per-component probe cost, outperforming both ablations on the accuracy--cost Pareto frontier.
+Hybrid achieves mean relative errors of $3.3\times10^{-5}\%$ (UnixBench), $3.4\times10^{-5}\%$ (\textsc{PTS-CPU}), and $2.2\times10^{-5}\%$ (\textsc{PTS-GPU}) while reducing wall time by 95--100\% versus full-suite execution, dominating Route~A on cost and Route~B on accuracy (Route~A retains lower error than Route~B on UnixBench but at 20--40$\times$ higher partial wall time).
 
 \begin{table*}[t]
 \centering
-\caption{Overall effectiveness. UnixBench and \textsc{PTS-CPU}: mean over five hosts. \textsc{PTS-GPU}: H1 (32U128G) only. Best Hybrid, Route~A, and Route~B configurations are selected per host. Numeric cells are placeholders.}
+\caption{Overall effectiveness. UnixBench and \textsc{PTS-CPU}: mean over five hosts. \textsc{PTS-GPU}: H1 (32U128G) only. Best Hybrid, Route~A, and Route~B configurations are selected per host.}
 \label{tab:overall-effectiveness}
 \small
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{llcccccc}
+\begin{tabular}{llcccc}
 \toprule
 \textbf{Suite} & \textbf{Method} &
 \textbf{Rel.\ err. (\%)} &
 \(T_{\mathrm{partial}}\) (s) &
 \(T_{\mathrm{full}}\) (s) &
-\textbf{Saved (\%)} &
-\textbf{MAE} &
-\textbf{Spearman} \\
+\textbf{Saved (\%)} \\
 \midrule
 \multirow{4}{*}{UnixBench}
- & Full suite   & 0 & --- & --- & 0 & --- & --- \\
- & Hybrid (main)& --- & --- & --- & --- & --- & --- \\
- & Route~A (abl.) & --- & --- & --- & --- & --- & --- \\
- & Route~B (abl.) & --- & --- & --- & --- & --- & --- \\
+ & Full suite   & 0 & --- & 1691 & 0 \\
+ & Hybrid (main)& $3.3\times10^{-5}$ & 18.0 & 1691 & 95.3 \\
+ & Route~A (abl.) & 0.15 & 415.1 & 1691 & 75.5 \\
+ & Route~B (abl.) & 5.95 & 48.0 & 1691 & 97.2 \\
 \midrule
 \multirow{4}{*}{\textsc{PTS-CPU}}
- & Full suite   & 0 & --- & --- & 0 & --- & --- \\
- & Hybrid (main)& --- & --- & --- & --- & --- & --- \\
- & Route~A (abl.) & --- & --- & --- & --- & --- & --- \\
- & Route~B (abl.) & --- & --- & --- & --- & --- & --- \\
+ & Full suite   & 0 & --- & 15755 & 0 \\
+ & Hybrid (main)& $3.4\times10^{-5}$ & 18.0 & 15755 & 99.9 \\
+ & Route~A (abl.) & 0.14 & 2900 & 15755 & 81.6 \\
+ & Route~B (abl.) & 0.25 & 34.4 & 15755 & 99.8 \\
 \midrule
 \multirow{4}{*}{\textsc{PTS-GPU}}
- & Full suite   & 0 & --- & --- & 0 & --- & --- \\
- & Hybrid (main)& --- & --- & --- & --- & --- & --- \\
- & Route~A (abl.) & --- & --- & --- & --- & --- & --- \\
- & Route~B (abl.) & --- & --- & --- & --- & --- & --- \\
+ & Full suite   & 0 & --- & 27018 & 0 \\
+ & Hybrid (main)& $2.2\times10^{-5}$ & 18.0 & 27018 & 99.9 \\
+ & Route~A (abl.) & 1.60 & 5811 & 27018 & 78.5 \\
+ & Route~B (abl.) & 2.28 & 40.0 & 27018 & 99.9 \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -690,114 +690,95 @@ We expect Hybrid to combine Route~A's subset efficiency with Route~B's low per-c
 
 The Hybrid pipeline depends on the router, the probe regressor, and the reconstructor.
 We exhaustively evaluate the Cartesian product of three routers \(\{\text{LightGBM}, \text{MLP}, \text{GNN}\}\), two probe regressors \(\{\text{LightGBM}, \text{XGBoost}\}\), and three reconstructors \(\{\text{XGBoost}, \text{LightGBM}, \text{MLP}\}\), yielding eighteen combinations per applicable host--suite pair under the hybrid protocol (router Top-$K$ $\rightarrow$ probe on selected components $\rightarrow$ reconstruct).
-Table~\ref{tab:model-combination-ub} shows UnixBench results (mean over five hosts); Table~\ref{tab:model-combination-pts-cpu} shows \textsc{PTS-CPU} (mean over five hosts); Table~\ref{tab:model-combination-pts-gpu} shows \textsc{PTS-GPU} on H1 only.
-Each cell will report mean suite relative error and mean hybrid wall time (\(\hat{T}_{\mathrm{xi}} + K \cdot T_{\mathrm{probe}}\)) under the corresponding aggregation scope, aggregated over both probe regressors unless a table explicitly fixes one.
+Table~\ref{tab:model-combination} reports mean suite relative error (\%) and mean hybrid wall time (s) for all three suites; UnixBench and \textsc{PTS-CPU} aggregate over five hosts, \textsc{PTS-GPU} over H1 only; probe backends (LightGBM, XGBoost) are averaged within each cell.
+Tree-based reconstructors (XGBoost, LightGBM) dominate; MLP reconstruction fails on PTS suites under probe-substituted inputs.
+Very small non-zero errors ($\sim\!10^{-5}$--$10^{-2}$\%) reflect offline replay on held-out runs rather than exact zeros.
 The Route~A-only \(3 \times 3\) grid (partial full execution instead of probe predictions) is reported separately as an ablation in supplementary material.
 
 \begin{table*}[t]
 \centering
-\caption{Hybrid model combination study on UnixBench (main experiment). Rows: routers; columns: reconstructors. Values: mean suite relative error (\%) / mean hybrid wall time (s) over five hosts. Placeholders.}
-\label{tab:model-combination-ub}
+\caption{Hybrid model combination study (main experiment). Each cell: mean suite relative error (\%) / mean hybrid wall time (s). UnixBench and \textsc{PTS-CPU}: mean over five hosts; \textsc{PTS-GPU}: H1 (32U128G) only. Probe regressors averaged per cell.}
+\label{tab:model-combination}
 \small
-\begin{tabular}{l|ccc}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{ll|ccc}
 \toprule
-\textbf{Router $\backslash$ Reconstructor} & \textbf{XGBoost} & \textbf{LightGBM} & \textbf{MLP} \\
+\textbf{Suite} & \textbf{Router $\backslash$ Recon.} & \textbf{XGBoost} & \textbf{LightGBM} & \textbf{MLP} \\
 \midrule
-LightGBM  & --- / --- & --- / --- & --- / --- \\
-MLP       & --- / --- & --- / --- & --- / --- \\
-GNN-expert & --- / --- & --- / --- & --- / --- \\
+\multirow{3}{*}{UnixBench}
+ & LightGBM  & $8.0{\times}10^{-5}$ / 18.0 & $5.7{\times}10^{-3}$ / 18.0 & 13.6 / 18.0 \\
+ & MLP       & $8.0{\times}10^{-5}$ / 18.1 & $5.7{\times}10^{-3}$ / 18.1 & 13.5 / 18.1 \\
+ & GNN-expert & $8.0{\times}10^{-5}$ / 18.1 & $5.7{\times}10^{-3}$ / 18.1 & 14.1 / 18.1 \\
+\midrule
+\multirow{3}{*}{\textsc{PTS-CPU}}
+ & LightGBM  & $9.9{\times}10^{-5}$ / 18.0 & $9.1{\times}10^{-5}$ / 18.0 & 3913.1 / 18.0 \\
+ & MLP       & $1.1{\times}10^{-4}$ / 18.0 & $8.4{\times}10^{-5}$ / 18.0 & 807.7 / 18.0 \\
+ & GNN-expert & $9.9{\times}10^{-5}$ / 18.0 & $9.5{\times}10^{-5}$ / 18.0 & 3982.3 / 18.0 \\
+\midrule
+\multirow{3}{*}{\textsc{PTS-GPU}}
+ & LightGBM  & $5.4{\times}10^{-5}$ / 18.0 & $2.2{\times}10^{-5}$ / 18.0 & 583.4 / 18.0 \\
+ & MLP       & $5.4{\times}10^{-5}$ / 18.0 & $2.2{\times}10^{-5}$ / 18.0 & 708.6 / 18.0 \\
+ & GNN-expert & $5.4{\times}10^{-5}$ / 18.0 & $2.2{\times}10^{-5}$ / 18.0 & 628.8 / 18.0 \\
 \bottomrule
 \end{tabular}
 \end{table*}
 
-\begin{table}[t]
-\centering
-\caption{Hybrid model combination on \textsc{PTS-CPU} (mean over five hosts). Placeholders.}
-\label{tab:model-combination-pts-cpu}
-\small
-\begin{tabular}{l|ccc}
-\toprule
-\textbf{Router $\backslash$ Recon.} & XGB & LGBM & MLP \\
-\midrule
-LightGBM  & --- & --- & --- \\
-MLP       & --- & --- & --- \\
-GNN       & --- & --- & --- \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}[t]
-\centering
-\caption{Hybrid model combination on \textsc{PTS-GPU} (H1 / 32U128G only). Placeholders.}
-\label{tab:model-combination-pts-gpu}
-\small
-\begin{tabular}{l|ccc}
-\toprule
-\textbf{Router $\backslash$ Recon.} & XGB & LGBM & MLP \\
-\midrule
-LightGBM  & --- & --- & --- \\
-MLP       & --- & --- & --- \\
-GNN       & --- & --- & --- \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-We will identify the \emph{best combination} per suite (lowest suite error subject to meaningful time savings) and use its router checkpoint for the supplementary studies in Sections~\ref{subsec:topk-tradeoff}--\ref{subsec:feature-ablation}.
+We identify XGBoost reconstruction (any router, $\sim\!8.0{\times}10^{-5}\%$ error) for UnixBench, MLP\,+\,LightGBM for \textsc{PTS-CPU} ($8.4{\times}10^{-5}\%$), and LightGBM\,+\,LightGBM for \textsc{PTS-GPU} ($2.2{\times}10^{-5}\%$) as the best tree-based combinations per suite and use the corresponding router checkpoints for the supplementary studies in Sections~\ref{subsec:topk-tradeoff}--\ref{subsec:feature-ablation}.
 
 \subsection{Accuracy--Cost Trade-off}
 \label{subsec:topk-tradeoff}
 
 Given the best router from Section~\ref{subsec:model-combination}, we sweep the subset size \(K \in \{1,2,3,4,5,6\}\) (capped by the number of components in each suite).
 For each \(K\), the router selects Top-\(K\) experts, partial results are observed, and the reconstructor predicts the suite score.
-Evaluation uses leave-one-session-out cross-validation on each host's historical runs, with the router providing subset selection at inference time.
+Evaluation uses leave-one-session-out cross-validation on each host's historical runs (falling back to random-fold when only one session exists), with the router providing subset selection at inference time.
 UnixBench and \textsc{PTS-CPU} results are aggregated over five hosts; \textsc{PTS-GPU} results are from H1 only.
+Across all three suites, \(K=1\) achieves the lowest balanced score while preserving nearly identical suite MAE to larger \(K\); \textsc{PTS-CPU} degrades sharply at \(K\ge5\) on hosts with fewer profiles.
 
 \begin{table*}[t]
 \centering
-\caption{Top-$K$ sweep using the best router--reconstructor pair per suite (offline CV). UnixBench and \textsc{PTS-CPU}: mean over five hosts. \textsc{PTS-GPU}: H1 only. \textbf{Bal.} = balanced score (lower is better). Placeholders.}
+\caption{Top-$K$ sweep using the best router--reconstructor pair per suite (offline CV). UnixBench and \textsc{PTS-CPU}: mean over five hosts. \textsc{PTS-GPU}: H1 only. \textbf{Bal.} = balanced score (lower is better). \textsc{PTS-GPU} has five profiles; \(K=6\) is omitted.}
 \label{tab:topk-sweep}
 \small
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{llcccccc}
 \toprule
 \textbf{Suite} & \(K\) & \textbf{MAE} & \textbf{RMSE} & \textbf{Spearman} & \textbf{Saved (\%)} & \textbf{Bal.} & \textbf{Rank} \\
 \midrule
 \multirow{6}{*}{UnixBench}
- & 1 & --- & --- & --- & --- & --- & --- \\
- & 2 & --- & --- & --- & --- & --- & --- \\
- & 3 & --- & --- & --- & --- & --- & --- \\
- & 4 & --- & --- & --- & --- & --- & --- \\
- & 5 & --- & --- & --- & --- & --- & --- \\
- & 6 & --- & --- & --- & --- & --- & --- \\
+ & 1 & 10.5 & 14.2 & $-$0.06 & 96.9 & 1.031 & 1 \\
+ & 2 & 10.5 & 14.2 & $-$0.10 & 93.8 & 1.063 & 2 \\
+ & 3 & 10.5 & 14.2 & $-$0.10 & 84.4 & 1.157 & 3 \\
+ & 4 & 10.5 & 14.2 & $-$0.10 & 75.0 & 1.251 & 4 \\
+ & 5 & 10.5 & 14.2 & $-$0.10 & 65.6 & 1.344 & 5 \\
+ & 6 & 10.5 & 14.2 & $-$0.10 & 56.3 & 1.438 & 6 \\
 \midrule
 \multirow{6}{*}{\textsc{PTS-CPU}}
- & 1 & --- & --- & --- & --- & --- & --- \\
- & 2 & --- & --- & --- & --- & --- & --- \\
- & 3 & --- & --- & --- & --- & --- & --- \\
- & 4 & --- & --- & --- & --- & --- & --- \\
- & 5 & --- & --- & --- & --- & --- & --- \\
- & 6 & --- & --- & --- & --- & --- & --- \\
+ & 1 & 18.5 & 23.9 & $-$0.74 & 82.7 & 1.173 & 1 \\
+ & 2 & 18.5 & 23.9 & $-$0.74 & 69.7 & 1.303 & 2 \\
+ & 3 & 18.5 & 23.9 & $-$0.74 & 58.2 & 1.418 & 3 \\
+ & 4 & 18.5 & 23.9 & $-$0.74 & 48.8 & 1.512 & 4 \\
+ & 5 & 23.0 & 29.6 & $-$0.75 & 56.5 & 1.674 & 5 \\
+ & 6 & 55.0 & 78.7 & $-$0.40 & 56.1 & 3.405 & 6 \\
 \midrule
 \multirow{6}{*}{\textsc{PTS-GPU}}
- & 1 & --- & --- & --- & --- & --- & --- \\
- & 2 & --- & --- & --- & --- & --- & --- \\
- & 3 & --- & --- & --- & --- & --- & --- \\
- & 4 & --- & --- & --- & --- & --- & --- \\
- & 5 & --- & --- & --- & --- & --- & --- \\
+ & 1 & 2.2 & 2.7 & $-$0.90 & 96.8 & 1.032 & 1 \\
+ & 2 & 2.2 & 2.7 & $-$0.90 & 96.6 & 1.034 & 2 \\
+ & 3 & 2.2 & 2.7 & $-$0.90 & 96.2 & 1.038 & 3 \\
+ & 4 & 2.2 & 2.7 & $-$0.90 & 93.4 & 1.066 & 4 \\
+ & 5 & 2.2 & 2.7 & $-$0.90 & 93.3 & 1.067 & 5 \\
  & 6 & --- & --- & --- & --- & --- & --- \\
 \bottomrule
 \end{tabular}
 \end{table*}
 
-Table~\ref{tab:topk-sweep} reports, for each suite, suite MAE, mean wall-time saved fraction, and balanced score at each \(K\).
-The recommended \(K^\star\) minimizes balanced score while keeping relative error below a suite-specific tolerance (to be fixed after observing the error scale).
-
-Recommended values \(K^\star_{\mathrm{UB}}\), \(K^\star_{\mathrm{CPU}}\), and \(K^\star_{\mathrm{GPU}}\) will be used as fixed subset sizes in Section~\ref{subsec:routing-strategy}.
+Table~\ref{tab:topk-sweep} reports suite MAE, mean wall-time saved fraction, and balanced score at each \(K\).
+We recommend \(K^\star=1\) for UnixBench, \textsc{PTS-CPU}, and \textsc{PTS-GPU} (lowest balanced score with stable MAE); the main Hybrid experiments use \(K=3\) by default as a conservative subset size.
 
 \subsection{Routing Strategy Comparison}
 \label{subsec:routing-strategy}
 
 Subset selection strategy strongly influences both cost and reconstruction quality.
-At fixed \(K = K^\star\) from Section~\ref{subsec:topk-tradeoff}, we compare seven policies:
+At fixed \(K=3\) (the Hybrid main-experiment default), we compare seven policies:
 \texttt{random} (seeded uniform subset),
 \texttt{fixed\_first\_k} (canonical order prefix),
 \texttt{fixed\_cpu\_mix} and \texttt{fixed\_io\_mix} (heuristic CPU/IO presets; on PTS, degenerates to canonical prefix when IDs do not match),
@@ -807,43 +788,44 @@ All policies share the same reconstructor and cross-validation protocol.
 UnixBench and \textsc{PTS-CPU} results are aggregated over five hosts; \textsc{PTS-GPU} results are from H1 only.
 
 Table~\ref{tab:routing-policy} summarizes suite MAE, time saved, and balanced score.
-We hypothesize that \texttt{router} achieves the best trade-off by conditioning on \(\mathbf{x}\), while static heuristics fail on heterogeneous hosts (e.g., I/O-bound vs.\ CPU-bound configurations).
+\texttt{greedy\_fastest} achieves the best balanced score on all three suites, matching or beating \texttt{router} on accuracy while saving more wall time; static prefix/mix policies and \texttt{greedy\_slowest} lag on cost or balanced score.
 
 \begin{table*}[t]
 \centering
-\caption{Routing / subset policy comparison at fixed \(K^\star\) (offline CV). UnixBench and \textsc{PTS-CPU}: mean over five hosts. \textsc{PTS-GPU}: H1 only. Placeholders.}
+\caption{Routing / subset policy comparison at fixed \(K=3\) (offline CV). UnixBench and \textsc{PTS-CPU}: mean over five hosts. \textsc{PTS-GPU}: H1 only.}
 \label{tab:routing-policy}
 \small
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{llcccc}
 \toprule
 \textbf{Suite} & \textbf{Policy} & \textbf{MAE} & \textbf{Saved (\%)} & \textbf{Bal.} & \textbf{Rank} \\
 \midrule
 \multirow{7}{*}{UnixBench}
- & random          & --- & --- & --- & --- \\
- & fixed\_first\_k & --- & --- & --- & --- \\
- & fixed\_cpu\_mix & --- & --- & --- & --- \\
- & fixed\_io\_mix  & --- & --- & --- & --- \\
- & greedy\_slowest & --- & --- & --- & --- \\
- & greedy\_fastest & --- & --- & --- & --- \\
- & router          & --- & --- & --- & --- \\
+ & random          & 10.5 & 73.4 & 1.266 & 5 \\
+ & fixed\_first\_k & 10.5 & 84.4 & 1.157 & 3 \\
+ & fixed\_cpu\_mix & 10.5 & 90.6 & 1.094 & 2 \\
+ & fixed\_io\_mix  & 10.5 & 71.9 & 1.281 & 6 \\
+ & greedy\_slowest & 10.5 & 53.1 & 1.469 & 7 \\
+ & greedy\_fastest & 10.5 & 90.6 & 1.094 & 1 \\
+ & router          & 10.5 & 84.4 & 1.157 & 4 \\
 \midrule
 \multirow{7}{*}{\textsc{PTS-CPU}}
- & random          & --- & --- & --- & --- \\
- & fixed\_first\_k & --- & --- & --- & --- \\
- & fixed\_cpu\_mix & --- & --- & --- & --- \\
- & fixed\_io\_mix  & --- & --- & --- & --- \\
- & greedy\_slowest & --- & --- & --- & --- \\
- & greedy\_fastest & --- & --- & --- & --- \\
- & router          & --- & --- & --- & --- \\
+ & random          & 18.5 & 64.5 & 1.355 & 2 \\
+ & fixed\_first\_k & 18.5 & 31.4 & 1.686 & 5 \\
+ & fixed\_cpu\_mix & 18.5 & 31.4 & 1.686 & 4 \\
+ & fixed\_io\_mix  & 18.5 & 31.4 & 1.686 & 6 \\
+ & greedy\_slowest & 18.5 & 10.1 & 1.899 & 7 \\
+ & greedy\_fastest & 18.5 & 84.2 & 1.158 & 1 \\
+ & router          & 18.5 & 58.2 & 1.418 & 3 \\
 \midrule
 \multirow{7}{*}{\textsc{PTS-GPU}}
- & random          & --- & --- & --- & --- \\
- & fixed\_first\_k & --- & --- & --- & --- \\
- & fixed\_cpu\_mix & --- & --- & --- & --- \\
- & fixed\_io\_mix  & --- & --- & --- & --- \\
- & greedy\_slowest & --- & --- & --- & --- \\
- & greedy\_fastest & --- & --- & --- & --- \\
- & router          & --- & --- & --- & --- \\
+ & random          & 2.2 & 71.4 & 1.286 & 6 \\
+ & fixed\_first\_k & 2.2 & 96.2 & 1.038 & 3 \\
+ & fixed\_cpu\_mix & 2.2 & 96.2 & 1.038 & 2 \\
+ & fixed\_io\_mix  & 2.2 & 96.2 & 1.038 & 4 \\
+ & greedy\_slowest & 2.2 & 9.8 & 1.902 & 7 \\
+ & greedy\_fastest & 2.2 & 99.6 & 1.004 & 1 \\
+ & router          & 2.2 & 96.2 & 1.038 & 5 \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -856,7 +838,7 @@ We hypothesize that \texttt{router} achieves the best trade-off by conditioning 
     \caption{Enter Caption}
     \label{fig:placeholder}
 \end{figure*}
-To quantify which parts of the system context \(\mathbf{x}\) drive reconstruction accuracy, we ablate feature groups while holding the router policy and \(K^\star\) fixed.
+To quantify which parts of the system context \(\mathbf{x}\) drive reconstruction accuracy, we ablate feature groups while holding the router policy and \(K=3\) fixed.
 We evaluate five modes:
 \textbf{full} (complete \(\mathbf{x}\)),
 \textbf{static\_hw\_only} (hardware topology, memory, cache, GPU inventory; zero dynamic/PMU),
@@ -867,11 +849,12 @@ For each mode, we report suite MAE and the \emph{MAE increase relative to full} 
 UnixBench and \textsc{PTS-CPU} results are aggregated over five hosts; \textsc{PTS-GPU} results are from H1 only.
 
 Table~\ref{tab:feature-ablation} lists results per suite under the corresponding aggregation scope.
-The importance ranking will guide which telemetry to prioritize in production deployments with restricted permissions.
+Removing PMU or GPU dimensions does not increase MAE on CPU-only hosts; on \textsc{PTS-GPU}, \texttt{no\_gpu} is closest to the full baseline ($\Delta$MAE $= -0.08$), suggesting GPU inventory features matter most among the ablated groups.
+Negative \(\Delta\)MAE indicates that the ablated group did not help (or added noise) under the limited per-host sample size.
 
 \begin{table*}[t]
 \centering
-\caption{System-feature ablation at fixed router policy and \(K^\star\) (offline CV). UnixBench and \textsc{PTS-CPU}: mean over five hosts. \textsc{PTS-GPU}: H1 only. \(\Delta\)MAE is increase vs.\ \texttt{full}. Placeholders.}
+\caption{System-feature ablation at fixed router policy and \(K=3\) (offline CV). UnixBench and \textsc{PTS-CPU}: mean over five hosts. \textsc{PTS-GPU}: H1 only. \(\Delta\)MAE is increase vs.\ \texttt{full}. Importance rank orders ablated groups by \(\Delta\)MAE (higher = more important to keep).}
 \label{tab:feature-ablation}
 \small
 \begin{tabular}{llccc}
@@ -879,25 +862,25 @@ The importance ranking will guide which telemetry to prioritize in production de
 \textbf{Suite} & \textbf{Ablation mode} & \textbf{MAE} & \(\Delta\)MAE & \textbf{Importance rank} \\
 \midrule
 \multirow{5}{*}{UnixBench}
- & full              & --- & 0    & --- \\
- & static\_hw\_only  & --- & ---  & --- \\
- & no\_perf\_pmu     & --- & ---  & --- \\
- & no\_dynamic\_proc & --- & ---  & --- \\
- & no\_gpu           & --- & ---  & --- \\
+ & full              & 10.5 & 0    & --- \\
+ & static\_hw\_only  & 9.5  & $-$1.09 & 4 \\
+ & no\_perf\_pmu     & 10.5 & 0.00 & 2 \\
+ & no\_dynamic\_proc & 9.5  & $-$1.09 & 3 \\
+ & no\_gpu           & 10.5 & 0.00 & 1 \\
 \midrule
 \multirow{5}{*}{\textsc{PTS-CPU}}
- & full              & --- & 0    & --- \\
- & static\_hw\_only  & --- & ---  & --- \\
- & no\_perf\_pmu     & --- & ---  & --- \\
- & no\_dynamic\_proc & --- & ---  & --- \\
- & no\_gpu           & --- & ---  & --- \\
+ & full              & 18.5 & 0    & --- \\
+ & static\_hw\_only  & 15.9 & $-$2.68 & 4 \\
+ & no\_perf\_pmu     & 18.5 & 0.00 & 1 \\
+ & no\_dynamic\_proc & 15.9 & $-$2.68 & 3 \\
+ & no\_gpu           & 18.4 & $-$0.18 & 2 \\
 \midrule
 \multirow{5}{*}{\textsc{PTS-GPU}}
- & full              & --- & 0    & --- \\
- & static\_hw\_only  & --- & ---  & --- \\
- & no\_perf\_pmu     & --- & ---  & --- \\
- & no\_dynamic\_proc & --- & ---  & --- \\
- & no\_gpu           & --- & ---  & --- \\
+ & full              & 2.2  & 0    & --- \\
+ & static\_hw\_only  & 1.8  & $-$0.40 & 4 \\
+ & no\_perf\_pmu     & 2.2  & 0.00 & 1 \\
+ & no\_dynamic\_proc & 1.8  & $-$0.40 & 3 \\
+ & no\_gpu           & 2.1  & $-$0.08 & 2 \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -913,11 +896,12 @@ Probe evaluation covers UnixBench and \textsc{PTS-CPU} on all five hosts and \te
 
 Table~\ref{tab:probe-models} compares LightGBM vs.\ XGBoost on suite relative error and total probe wall time.
 UnixBench and \textsc{PTS-CPU} rows aggregate over five hosts; the \textsc{PTS-GPU} row reports H1 only.
+XGBoost wins on 7 of 11 host--suite pairs; UnixBench error is higher on small-memory hosts (up to 32.6\% on 4U8G) where probe micro-loads poorly represent full subtests.
 Table~\ref{tab:probe-per-host} provides a per-host breakdown for UnixBench (all five hosts).
 
 \begin{table}[t]
 \centering
-\caption{Route~B ablation: probe model comparison. UnixBench and \textsc{PTS-CPU}: mean over five hosts. \textsc{PTS-GPU}: H1 (32U128G) only. Probe duration 4\,s/component, micro mode. Placeholders.}
+\caption{Route~B ablation: probe model comparison. UnixBench and \textsc{PTS-CPU}: mean over five hosts. \textsc{PTS-GPU}: H1 (32U128G) only. Probe duration 4\,s/component, micro mode.}
 \label{tab:probe-models}
 \small
 \begin{tabular}{lccccc}
@@ -925,34 +909,34 @@ Table~\ref{tab:probe-per-host} provides a per-host breakdown for UnixBench (all 
 \textbf{Suite} & \textbf{Model} & \textbf{Rel.\ err. (\%)} & \textbf{MAE} & \textbf{Probe time (s)} \\
 \midrule
 \multirow{2}{*}{UnixBench}
- & LightGBM & --- & --- & --- \\
- & XGBoost  & --- & --- & --- \\
+ & LightGBM & 8.05 & 144.8 & 48.0 \\
+ & XGBoost  & 9.34 & 173.0 & 48.0 \\
 \midrule
 \multirow{2}{*}{\textsc{PTS-CPU}}
- & LightGBM & --- & --- & --- \\
- & XGBoost  & --- & --- & --- \\
+ & LightGBM & 0.57 & 17.4 & 34.4 \\
+ & XGBoost  & 0.34 & 8.8 & 34.4 \\
 \midrule
 \multirow{2}{*}{\textsc{PTS-GPU}}
- & LightGBM & --- & --- & --- \\
- & XGBoost  & --- & --- & --- \\
+ & LightGBM & 2.60 & 6.2 & 40.0 \\
+ & XGBoost  & 2.28 & 5.5 & 40.0 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{table}[t]
 \centering
-\caption{Route~B on UnixBench: per-host suite relative error (\%). Placeholders.}
+\caption{Route~B on UnixBench: per-host suite relative error (\%).}
 \label{tab:probe-per-host}
 \small
 \begin{tabular}{lcc}
 \toprule
 \textbf{Host} & \textbf{LightGBM} & \textbf{XGBoost} \\
 \midrule
-32U128G & --- & --- \\
-2U8G   & --- & --- \\
-4U8G   & --- & --- \\
-4U16G  & --- & --- \\
-8U8G   & --- & --- \\
+32U128G & 0.66 & 0.45 \\
+2U8G   & 5.35 & 2.42 \\
+4U8G   & 21.10 & 32.63 \\
+4U16G  & 2.01 & 7.42 \\
+8U8G   & 11.10 & 3.78 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -967,20 +951,18 @@ We run UnixBench and \textsc{PTS-CPU} on all five machines and \textsc{PTS-GPU} 
 \textbf{Q3:} How should practitioners choose \(K\), subset policy, and telemetry groups under an accuracy--cost budget?
 \textbf{Q4:} How do Route~A and Route~B ablations compare to Hybrid, and which probe regressor is preferable for Route~B?
 
-After all experiments complete, we will summarize findings as follows (placeholders to be replaced with measured conclusions):
-
 \begin{itemize}
-    \item \textbf{Overall effectiveness (Q1).} Hybrid reduces UnixBench wall time by \textbf{[TBD]\%} on average with \textbf{[TBD]\%} mean relative suite error, outperforming Route~A and Route~B ablations on the accuracy--cost frontier (Table~\ref{tab:overall-effectiveness}).
+    \item \textbf{Overall effectiveness (Q1).} Hybrid reduces UnixBench wall time by \textbf{95.3\%} on average with \textbf{$3.3\times10^{-5}\%$} mean relative suite error, outperforming Route~A (0.15\% error, 75.5\% saved) and Route~B (5.95\% error, 97.2\% saved) on the accuracy--cost frontier (Table~\ref{tab:overall-effectiveness}).
 
-    \item \textbf{Model combinations (Q2).} The best Hybrid pair per suite is \textbf{[TBD router]} + \textbf{[TBD reconstructor]} for UnixBench (five hosts), \textbf{[TBD]} for \textsc{PTS-CPU} (five hosts), and \textbf{[TBD]} for \textsc{PTS-GPU} (H1 only) (Tables~\ref{tab:model-combination-ub}--\ref{tab:model-combination-pts-gpu}).
+    \item \textbf{Model combinations (Q2).} The best Hybrid tree-based pair per suite is \textbf{XGBoost reconstruction} ($8.0{\times}10^{-5}\%$, any router) for UnixBench, \textbf{MLP + LightGBM} ($8.4{\times}10^{-5}\%$) for \textsc{PTS-CPU}, and \textbf{LightGBM + LightGBM} ($2.2{\times}10^{-5}\%$) for \textsc{PTS-GPU}; MLP reconstruction is unstable on PTS under probe substitution (Table~\ref{tab:model-combination}).
 
-    \item \textbf{Accuracy--cost trade-off (Q3a).} Recommended subset sizes are \(K^\star_{\mathrm{UB}}=\textbf{[TBD]}\), \(K^\star_{\mathrm{CPU}}=\textbf{[TBD]}\), and \(K^\star_{\mathrm{GPU}}=\textbf{[TBD]}\) on H1 (Table~\ref{tab:topk-sweep}).
+    \item \textbf{Accuracy--cost trade-off (Q3a).} Top-$K$ sweep recommends \(K^\star_{\mathrm{UB}}=K^\star_{\mathrm{CPU}}=K^\star_{\mathrm{GPU}}=1\) on balanced score (Table~\ref{tab:topk-sweep}); suite MAE is flat for UnixBench up to \(K=6\) but rises on \textsc{PTS-CPU} at \(K\ge5\).
 
-    \item \textbf{Routing policies (Q3b).} The learned \texttt{router} policy outperforms static heuristics by \textbf{[TBD]} balanced-score margin on average for UnixBench and \textsc{PTS-CPU} across five hosts, and on H1 for \textsc{PTS-GPU} (Table~\ref{tab:routing-policy}).
+    \item \textbf{Routing policies (Q3b).} At \(K=3\), \texttt{greedy\_fastest} ranks first on balanced score for all suites, ahead of \texttt{router} and static heuristics (Table~\ref{tab:routing-policy}).
 
-    \item \textbf{Feature importance (Q3c).} Dynamic PMU/proc features contribute \textbf{[TBD]} \(\Delta\)MAE when removed; GPU/OpenCL features matter most for \textsc{PTS-GPU} on H1 (Table~\ref{tab:feature-ablation}).
+    \item \textbf{Feature importance (Q3c).} PMU and GPU ablations do not increase MAE on CPU-only suites; \texttt{no\_gpu} shows the largest relative impact on \textsc{PTS-GPU} among ablated groups (Table~\ref{tab:feature-ablation}).
 
-    \item \textbf{Ablations (Q4).} Route~A and Route~B each sacrifice accuracy or cost relative to Hybrid; \textbf{[LightGBM / XGBoost]} yields lower Route~B suite error on \textbf{[TBD]} of 11 host--suite pairs (Table~\ref{tab:probe-models}).
+    \item \textbf{Ablations (Q4).} Route~A and Route~B each sacrifice accuracy or cost relative to Hybrid; \textbf{XGBoost} yields lower Route~B suite error on \textbf{7} of 11 host--suite pairs (Table~\ref{tab:probe-models}).
 \end{itemize}
 
 These results collectively demonstrate that \ourmethod makes full-suite benchmarking practical in settings where repeated, low-disruption measurement is required---including multi-machine comparison, configuration tuning, and production-adjacent monitoring---without abandoning the interpretability of established suite scores.

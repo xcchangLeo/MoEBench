@@ -175,7 +175,7 @@ def evaluate_single_run_offline(
     if benchmark == "phoronix":
         from moebench.phoronix.training_data import full_suite_wall_seconds_pts
 
-        full_t = full_suite_wall_seconds_pts(ds, recon_test_ids)
+        full_t = full_suite_wall_seconds_pts(ds, test_ids=tuple(recon_test_ids))
     partial_t = sum(probe_walls.get(tid, probe_duration_s) for tid in selected_ids)
     hybrid_t = float(xi_overhead_s) + partial_t
 
@@ -341,7 +341,7 @@ def evaluate_hybrid_online(
     if benchmark == "phoronix":
         from moebench.phoronix.training_data import full_suite_wall_seconds_pts
 
-        full_t = full_suite_wall_seconds_pts(ground_truth_ds, recon_test_ids)
+        full_t = full_suite_wall_seconds_pts(ground_truth_ds, test_ids=tuple(recon_test_ids))
     else:
         full_t = full_suite_wall_seconds(ground_truth_ds, test_ids=tuple(recon_test_ids))
 

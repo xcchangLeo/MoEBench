@@ -119,6 +119,16 @@ def _ensure_ml_python(auto_install: bool) -> str:
     return py
 
 
+def _pts_probe_token(pts_suite: str | None) -> str:
+    """Canonical probe artifact basename token (matches run_probe_three_suites.sh)."""
+    s = (pts_suite or "cpu").strip().lower()
+    if s in ("cpu", "pts/cpu"):
+        return "pts_cpu"
+    if "gpu" in s or "nvidia" in s:
+        return "pts_gpu"
+    return safe_session_tag(s.replace("/", "_"))
+
+
 def _probe_paths(
     *,
     models_dir: Path,
@@ -131,7 +141,7 @@ def _probe_paths(
         ds_name = "probe_dataset_unixbench.json"
         model_name = f"probe_unixbench_{suffix}.pkl"
     else:
-        tok = safe_session_tag(str(pts_suite or "cpu").replace("/", "_"))
+        tok = _pts_probe_token(pts_suite)
         ds_name = f"probe_dataset_{tok}.json"
         model_name = f"probe_{tok}_{suffix}.pkl"
     return models_dir / ds_name, models_dir / model_name
