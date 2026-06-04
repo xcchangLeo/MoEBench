@@ -1,0 +1,332 @@
+{
+  "experiment": "xi_ablation",
+  "suites": [
+    {
+      "suite_key": "unixbench",
+      "baseline_mean_suite_relative_error_full_xi": 0.0016662257193741411,
+      "baseline_mae_suite_full_xi": 5.314501953125,
+      "eval_partial_k": 3,
+      "by_mode": [
+        {
+          "xi_ablation": "full",
+          "label_zh": "完整 xi（基线）",
+          "mean_suite_relative_error": 0.0016662257193741411,
+          "relative_error_increase_vs_full": 0.0,
+          "relative_error_increase_vs_full_pp": 0.0,
+          "mae_suite_index": 5.314501953125,
+          "mae_increase_vs_full": 0.0,
+          "mean_wall_time_saved_fraction": 0.843908252578931
+        },
+        {
+          "xi_ablation": "no_dynamic_proc",
+          "label_zh": "去掉 /proc 动态与负载代理",
+          "mean_suite_relative_error": 0.0018640273092153212,
+          "relative_error_increase_vs_full": 0.00019780158984118008,
+          "relative_error_increase_vs_full_pp": 0.01978015898411801,
+          "mae_suite_index": 5.947509765625,
+          "mae_increase_vs_full": 0.6330078124999998,
+          "mean_wall_time_saved_fraction": 0.843908252578931,
+          "importance_rank": 2
+        },
+        {
+          "xi_ablation": "no_gpu",
+          "label_zh": "去掉 GPU/OpenCL 维度",
+          "mean_suite_relative_error": 0.0016662257193741411,
+          "relative_error_increase_vs_full": 0.0,
+          "relative_error_increase_vs_full_pp": 0.0,
+          "mae_suite_index": 5.314501953125,
+          "mae_increase_vs_full": 0.0,
+          "mean_wall_time_saved_fraction": 0.843908252578931,
+          "importance_rank": 4
+        },
+        {
+          "xi_ablation": "no_perf_pmu",
+          "label_zh": "去掉 PMU/perf 动态计数",
+          "mean_suite_relative_error": 0.0016662257193741411,
+          "relative_error_increase_vs_full": 0.0,
+          "relative_error_increase_vs_full_pp": 0.0,
+          "mae_suite_index": 5.314501953125,
+          "mae_increase_vs_full": 0.0,
+          "mean_wall_time_saved_fraction": 0.843908252578931,
+          "importance_rank": 3
+        },
+        {
+          "xi_ablation": "static_hw_only",
+          "label_zh": "仅静态硬件相关维度",
+          "mean_suite_relative_error": 0.0018640273092153212,
+          "relative_error_increase_vs_full": 0.00019780158984118008,
+          "relative_error_increase_vs_full_pp": 0.01978015898411801,
+          "mae_suite_index": 5.947509765625,
+          "mae_increase_vs_full": 0.6330078124999998,
+          "mean_wall_time_saved_fraction": 0.843908252578931,
+          "importance_rank": 1
+        }
+      ],
+      "importance_ranking": [
+        {
+          "xi_ablation": "static_hw_only",
+          "label_zh": "仅静态硬件相关维度",
+          "mean_suite_relative_error": 0.0018640273092153212,
+          "relative_error_increase_vs_full": 0.00019780158984118008,
+          "relative_error_increase_vs_full_pp": 0.01978015898411801,
+          "mae_suite_index": 5.947509765625,
+          "mae_increase_vs_full": 0.6330078124999998,
+          "mean_wall_time_saved_fraction": 0.843908252578931,
+          "importance_rank": 1
+        },
+        {
+          "xi_ablation": "no_dynamic_proc",
+          "label_zh": "去掉 /proc 动态与负载代理",
+          "mean_suite_relative_error": 0.0018640273092153212,
+          "relative_error_increase_vs_full": 0.00019780158984118008,
+          "relative_error_increase_vs_full_pp": 0.01978015898411801,
+          "mae_suite_index": 5.947509765625,
+          "mae_increase_vs_full": 0.6330078124999998,
+          "mean_wall_time_saved_fraction": 0.843908252578931,
+          "importance_rank": 2
+        },
+        {
+          "xi_ablation": "no_perf_pmu",
+          "label_zh": "去掉 PMU/perf 动态计数",
+          "mean_suite_relative_error": 0.0016662257193741411,
+          "relative_error_increase_vs_full": 0.0,
+          "relative_error_increase_vs_full_pp": 0.0,
+          "mae_suite_index": 5.314501953125,
+          "mae_increase_vs_full": 0.0,
+          "mean_wall_time_saved_fraction": 0.843908252578931,
+          "importance_rank": 3
+        },
+        {
+          "xi_ablation": "no_gpu",
+          "label_zh": "去掉 GPU/OpenCL 维度",
+          "mean_suite_relative_error": 0.0016662257193741411,
+          "relative_error_increase_vs_full": 0.0,
+          "relative_error_increase_vs_full_pp": 0.0,
+          "mae_suite_index": 5.314501953125,
+          "mae_increase_vs_full": 0.0,
+          "mean_wall_time_saved_fraction": 0.843908252578931,
+          "importance_rank": 4
+        }
+      ],
+      "interpretation": "importance_ranking 按「去掉该组特征后 suite 相对误差上升幅度」排序；上升越大（ΔRel. err. 越大），说明该特征组越重要。"
+    },
+    {
+      "suite_key": "phoronix_cpu",
+      "baseline_mean_suite_relative_error_full_xi": 0.01804323050581057,
+      "baseline_mae_suite_full_xi": 54.99101417896909,
+      "eval_partial_k": 3,
+      "by_mode": [
+        {
+          "xi_ablation": "full",
+          "label_zh": "完整 xi（基线）",
+          "mean_suite_relative_error": 0.01804323050581057,
+          "relative_error_increase_vs_full": 0.0,
+          "relative_error_increase_vs_full_pp": 0.0,
+          "mae_suite_index": 54.99101417896909,
+          "mae_increase_vs_full": 0.0,
+          "mean_wall_time_saved_fraction": 0.8912231691799987
+        },
+        {
+          "xi_ablation": "no_dynamic_proc",
+          "label_zh": "去掉 /proc 动态与负载代理",
+          "mean_suite_relative_error": 0.019389625098291854,
+          "relative_error_increase_vs_full": 0.0013463945924812835,
+          "relative_error_increase_vs_full_pp": 0.13463945924812837,
+          "mae_suite_index": 59.76658411290555,
+          "mae_increase_vs_full": 4.77556993393646,
+          "mean_wall_time_saved_fraction": 0.8912231691799987,
+          "importance_rank": 2
+        },
+        {
+          "xi_ablation": "no_gpu",
+          "label_zh": "去掉 GPU/OpenCL 维度",
+          "mean_suite_relative_error": 0.017775741814681854,
+          "relative_error_increase_vs_full": -0.0002674886911287165,
+          "relative_error_increase_vs_full_pp": -0.02674886911287165,
+          "mae_suite_index": 54.102780541604076,
+          "mae_increase_vs_full": -0.8882336373650119,
+          "mean_wall_time_saved_fraction": 0.8912231691799987,
+          "importance_rank": 4
+        },
+        {
+          "xi_ablation": "no_perf_pmu",
+          "label_zh": "去掉 PMU/perf 动态计数",
+          "mean_suite_relative_error": 0.01804323050581057,
+          "relative_error_increase_vs_full": 0.0,
+          "relative_error_increase_vs_full_pp": 0.0,
+          "mae_suite_index": 54.99101417896909,
+          "mae_increase_vs_full": 0.0,
+          "mean_wall_time_saved_fraction": 0.8912231691799987,
+          "importance_rank": 3
+        },
+        {
+          "xi_ablation": "static_hw_only",
+          "label_zh": "仅静态硬件相关维度",
+          "mean_suite_relative_error": 0.019389625098291854,
+          "relative_error_increase_vs_full": 0.0013463945924812835,
+          "relative_error_increase_vs_full_pp": 0.13463945924812837,
+          "mae_suite_index": 59.76658411290555,
+          "mae_increase_vs_full": 4.77556993393646,
+          "mean_wall_time_saved_fraction": 0.8912231691799987,
+          "importance_rank": 1
+        }
+      ],
+      "importance_ranking": [
+        {
+          "xi_ablation": "static_hw_only",
+          "label_zh": "仅静态硬件相关维度",
+          "mean_suite_relative_error": 0.019389625098291854,
+          "relative_error_increase_vs_full": 0.0013463945924812835,
+          "relative_error_increase_vs_full_pp": 0.13463945924812837,
+          "mae_suite_index": 59.76658411290555,
+          "mae_increase_vs_full": 4.77556993393646,
+          "mean_wall_time_saved_fraction": 0.8912231691799987,
+          "importance_rank": 1
+        },
+        {
+          "xi_ablation": "no_dynamic_proc",
+          "label_zh": "去掉 /proc 动态与负载代理",
+          "mean_suite_relative_error": 0.019389625098291854,
+          "relative_error_increase_vs_full": 0.0013463945924812835,
+          "relative_error_increase_vs_full_pp": 0.13463945924812837,
+          "mae_suite_index": 59.76658411290555,
+          "mae_increase_vs_full": 4.77556993393646,
+          "mean_wall_time_saved_fraction": 0.8912231691799987,
+          "importance_rank": 2
+        },
+        {
+          "xi_ablation": "no_perf_pmu",
+          "label_zh": "去掉 PMU/perf 动态计数",
+          "mean_suite_relative_error": 0.01804323050581057,
+          "relative_error_increase_vs_full": 0.0,
+          "relative_error_increase_vs_full_pp": 0.0,
+          "mae_suite_index": 54.99101417896909,
+          "mae_increase_vs_full": 0.0,
+          "mean_wall_time_saved_fraction": 0.8912231691799987,
+          "importance_rank": 3
+        },
+        {
+          "xi_ablation": "no_gpu",
+          "label_zh": "去掉 GPU/OpenCL 维度",
+          "mean_suite_relative_error": 0.017775741814681854,
+          "relative_error_increase_vs_full": -0.0002674886911287165,
+          "relative_error_increase_vs_full_pp": -0.02674886911287165,
+          "mae_suite_index": 54.102780541604076,
+          "mae_increase_vs_full": -0.8882336373650119,
+          "mean_wall_time_saved_fraction": 0.8912231691799987,
+          "importance_rank": 4
+        }
+      ],
+      "interpretation": "importance_ranking 按「去掉该组特征后 suite 相对误差上升幅度」排序；上升越大（ΔRel. err. 越大），说明该特征组越重要。"
+    },
+    {
+      "suite_key": "phoronix_gpu",
+      "baseline_mean_suite_relative_error_full_xi": 0.009161963650140242,
+      "baseline_mae_suite_full_xi": 2.1762107206451504,
+      "eval_partial_k": 3,
+      "by_mode": [
+        {
+          "xi_ablation": "full",
+          "label_zh": "完整 xi（基线）",
+          "mean_suite_relative_error": 0.009161963650140242,
+          "relative_error_increase_vs_full": 0.0,
+          "relative_error_increase_vs_full_pp": 0.0,
+          "mae_suite_index": 2.1762107206451504,
+          "mae_increase_vs_full": 0.0,
+          "mean_wall_time_saved_fraction": 0.9618898935888922
+        },
+        {
+          "xi_ablation": "no_dynamic_proc",
+          "label_zh": "去掉 /proc 动态与负载代理",
+          "mean_suite_relative_error": 0.007460077446572795,
+          "relative_error_increase_vs_full": -0.0017018862035674473,
+          "relative_error_increase_vs_full_pp": -0.17018862035674473,
+          "mae_suite_index": 1.7728331735797043,
+          "mae_increase_vs_full": -0.40337754706544615,
+          "mean_wall_time_saved_fraction": 0.9618898935888922,
+          "importance_rank": 4
+        },
+        {
+          "xi_ablation": "no_gpu",
+          "label_zh": "去掉 GPU/OpenCL 维度",
+          "mean_suite_relative_error": 0.008815701866825518,
+          "relative_error_increase_vs_full": -0.00034626178331472433,
+          "relative_error_increase_vs_full_pp": -0.03462617833147243,
+          "mae_suite_index": 2.0937577770856195,
+          "mae_increase_vs_full": -0.08245294355953092,
+          "mean_wall_time_saved_fraction": 0.9618898935888922,
+          "importance_rank": 2
+        },
+        {
+          "xi_ablation": "no_perf_pmu",
+          "label_zh": "去掉 PMU/perf 动态计数",
+          "mean_suite_relative_error": 0.009161963650140242,
+          "relative_error_increase_vs_full": 0.0,
+          "relative_error_increase_vs_full_pp": 0.0,
+          "mae_suite_index": 2.1762107206451504,
+          "mae_increase_vs_full": 0.0,
+          "mean_wall_time_saved_fraction": 0.9618898935888922,
+          "importance_rank": 1
+        },
+        {
+          "xi_ablation": "static_hw_only",
+          "label_zh": "仅静态硬件相关维度",
+          "mean_suite_relative_error": 0.007460077446572795,
+          "relative_error_increase_vs_full": -0.0017018862035674473,
+          "relative_error_increase_vs_full_pp": -0.17018862035674473,
+          "mae_suite_index": 1.7728331735797043,
+          "mae_increase_vs_full": -0.40337754706544615,
+          "mean_wall_time_saved_fraction": 0.9618898935888922,
+          "importance_rank": 3
+        }
+      ],
+      "importance_ranking": [
+        {
+          "xi_ablation": "no_perf_pmu",
+          "label_zh": "去掉 PMU/perf 动态计数",
+          "mean_suite_relative_error": 0.009161963650140242,
+          "relative_error_increase_vs_full": 0.0,
+          "relative_error_increase_vs_full_pp": 0.0,
+          "mae_suite_index": 2.1762107206451504,
+          "mae_increase_vs_full": 0.0,
+          "mean_wall_time_saved_fraction": 0.9618898935888922,
+          "importance_rank": 1
+        },
+        {
+          "xi_ablation": "no_gpu",
+          "label_zh": "去掉 GPU/OpenCL 维度",
+          "mean_suite_relative_error": 0.008815701866825518,
+          "relative_error_increase_vs_full": -0.00034626178331472433,
+          "relative_error_increase_vs_full_pp": -0.03462617833147243,
+          "mae_suite_index": 2.0937577770856195,
+          "mae_increase_vs_full": -0.08245294355953092,
+          "mean_wall_time_saved_fraction": 0.9618898935888922,
+          "importance_rank": 2
+        },
+        {
+          "xi_ablation": "static_hw_only",
+          "label_zh": "仅静态硬件相关维度",
+          "mean_suite_relative_error": 0.007460077446572795,
+          "relative_error_increase_vs_full": -0.0017018862035674473,
+          "relative_error_increase_vs_full_pp": -0.17018862035674473,
+          "mae_suite_index": 1.7728331735797043,
+          "mae_increase_vs_full": -0.40337754706544615,
+          "mean_wall_time_saved_fraction": 0.9618898935888922,
+          "importance_rank": 3
+        },
+        {
+          "xi_ablation": "no_dynamic_proc",
+          "label_zh": "去掉 /proc 动态与负载代理",
+          "mean_suite_relative_error": 0.007460077446572795,
+          "relative_error_increase_vs_full": -0.0017018862035674473,
+          "relative_error_increase_vs_full_pp": -0.17018862035674473,
+          "mae_suite_index": 1.7728331735797043,
+          "mae_increase_vs_full": -0.40337754706544615,
+          "mean_wall_time_saved_fraction": 0.9618898935888922,
+          "importance_rank": 4
+        }
+      ],
+      "interpretation": "importance_ranking 按「去掉该组特征后 suite 相对误差上升幅度」排序；上升越大（ΔRel. err. 越大），说明该特征组越重要。"
+    }
+  ]
+}

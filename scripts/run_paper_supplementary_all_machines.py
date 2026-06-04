@@ -38,14 +38,21 @@ MACHINES_UB_CPU = [
     "iZbp1acaw5wdllhz47922rZ",
 ]
 
+# Canonical H1 session dirs (one per suite) used for supplementary offline CV.
+H1_SESSION_BY_SUITE: dict[str, str] = {
+    "unixbench": "aces-System-Product-Name_20260524T102558Z",
+    "phoronix_cpu": "aces-System-Product-Name_cpu_20260520T033403Z",
+    "phoronix_gpu": "aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z",
+}
+
 SUITE_CFG = {
     "unixbench": {
         "suite_key": "unixbench",
         "benchmark": "unixbench",
         "pts_suite": None,
         "grid_prefix": "router_recon_grid_unixbench_",
-        "router_file": "router_lgbm.pkl",
-        "model_type": "xgboost",
+        "router_file": "router_mlp.pt",
+        "model_type": "lightgbm",
         "log_flag": "--log1p-partial-index",
         "train_k_max": 6,
         "k_sweep": "1,2,3,4,5,6",
@@ -60,7 +67,7 @@ SUITE_CFG = {
         "model_type": "lightgbm",
         "log_flag": "--log1p-partial-value",
         "train_k_max": 12,
-        "k_sweep": "1,2,3,4,5",
+        "k_sweep": "1,2,3,4,5,6",
         "hosts": MACHINES_UB_CPU,
     },
     "phoronix_gpu": {
@@ -80,11 +87,7 @@ SUITE_CFG = {
 
 def _num_components(machine: str, cfg: dict[str, Any]) -> int:
     ds_root = REPO / "dataset"
-    glob_pat = glob_for_machine(
-        benchmark=cfg["benchmark"],
-        machine=machine,
-        pts_suite=cfg["pts_suite"],
-    )
+    glob_pat = _glob_for_machine(machine, cfg)
     if cfg["suite_key"] == "unixbench":
         paths = collect_unixbench_run_paths(ds_root, glob_pattern=glob_pat)
         if not paths:
@@ -122,7 +125,31 @@ def _latest_grid(prefix: str, machine: str) -> Path | None:
     return best[1] if best else None
 
 
+def _glob_for_machine(machine: str, cfg: dict[str, Any]) -> str:
+    sk = cfg["suite_key"]
+    if machine == "aces-System-Product-Name" and sk in H1_SESSION_BY_SUITE:
+        return f"{H1_SESSION_BY_SUITE[sk]}/run-*.json"
+    return glob_for_machine(
+        benchmark=cfg["benchmark"],
+        machine=machine,
+        pts_suite=cfg["pts_suite"],
+    )
+
+
+def _session_models_dir(machine: str, cfg: dict[str, Any]) -> Path | None:
+    sk = cfg["suite_key"]
+    if machine != "aces-System-Product-Name" or sk not in H1_SESSION_BY_SUITE:
+        return None
+    d = REPO / "dataset" / H1_SESSION_BY_SUITE[sk] / "trained_models"
+    return d if d.is_dir() else None
+
+
 def _router_path(machine: str, cfg: dict[str, Any]) -> Path:
+    session_dir = _session_models_dir(machine, cfg)
+    if session_dir is not None:
+        p = session_dir / cfg["router_file"]
+        if p.is_file():
+            return p
     d = _latest_grid(cfg["grid_prefix"], machine)
     if d is None:
         raise FileNotFoundError(f"No grid for {machine} prefix={cfg['grid_prefix']}")
@@ -148,11 +175,7 @@ def _run_cv(
     if skip_existing and out_json.is_file():
         print(f"skip existing {out_json}", flush=True)
         return
-    glob_pat = glob_for_machine(
-        benchmark=cfg["benchmark"],
-        machine=machine,
-        pts_suite=cfg["pts_suite"],
-    )
+    glob_pat = _glob_for_machine(machine, cfg)
     max_k = _num_components(machine, cfg)
     k_sweep_eff = _cap_k_sweep(k_sweep, max_k) if k_sweep else k_sweep
     eval_k_eff = _cap_eval_k(eval_k, max_k)
@@ -191,11 +214,29 @@ def _run_cv(
         cmd.extend(["--glob-pts-gpu", glob_pat, "--router-model-pts-gpu", str(router)])
 
     if mode == "topk":
-        cmd.extend(["--k-sweep", k_sweep_eff, "--policies", "router"])
+        cmd.extend(["--k-sweep", k_sweep_eff, "--policies", "router", "--match-train-k-to-eval"])
     elif mode == "policy":
-        cmd.extend(["--eval-partial-k", str(eval_k_eff), "--policies", policies])
+        cmd.extend(
+            [
+                "--eval-partial-k",
+                str(eval_k_eff),
+                "--policies",
+                policies,
+                "--match-train-k-to-eval",
+                "--train-with-eval-policy",
+            ]
+        )
     else:
-        cmd.extend(["--eval-partial-k", str(eval_k_eff), "--policies", "router"])
+        cmd.extend(
+            [
+                "--eval-partial-k",
+                str(eval_k_eff),
+                "--policies",
+                "router",
+                "--match-train-k-to-eval",
+                "--train-with-eval-policy",
+            ]
+        )
 
     print("+", " ".join(cmd), flush=True)
     subprocess.check_call(cmd)

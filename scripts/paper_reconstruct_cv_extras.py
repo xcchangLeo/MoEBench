@@ -125,6 +125,94 @@ def _build_folds(
     raise ValueError("cv_mode must be random_fold or leave_one_session_out")
 
 
+def _build_augmented_train_matrix_policy_unixbench(
+    rows_meta: list[dict[str, Any]],
+    xi_vec: Any,
+    test_ids: list[str],
+    rng: np.random.RandomState,
+    train_aug: int,
+    train_k: int,
+    policy: str,
+    router_meta: dict[str, Any] | None,
+    log1p_partial_index: bool,
+    seed: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    x_rows: list[list[float]] = []
+    y_rows: list[list[float]] = []
+    for meta in rows_meta:
+        ds = meta["ds"]
+        for aug_i in range(train_aug):
+            seed_parts = (meta["path"], "train", aug_i, seed, policy, train_k)
+            ex = select_eval_subset(
+                policy,
+                test_ids=test_ids,
+                k=train_k,
+                ds=ds,
+                rng=rng,
+                seed_parts=seed_parts,
+                router_meta=router_meta,
+            )
+            row = build_partial_feature_row(
+                ds,
+                ex,
+                xi_vectorizer=xi_vec,
+                log1p_index=log1p_partial_index,
+            )
+            if row is None:
+                continue
+            x_rows.append(row)
+            y_rows.append(meta["y"].tolist())
+    if not x_rows:
+        raise RuntimeError("No training rows for reconstruction model")
+    return np.asarray(x_rows, dtype=np.float64), np.asarray(y_rows, dtype=np.float64)
+
+
+def _build_augmented_train_matrix_policy_phoronix(
+    rows_meta: list[dict[str, Any]],
+    xi_vec: Any,
+    test_ids: list[str],
+    rng: np.random.RandomState,
+    train_aug: int,
+    train_k: int,
+    policy: str,
+    router_meta: dict[str, Any] | None,
+    log1p_partial_value: bool,
+    seed: int,
+    pts_wall_fn: Callable[[dict[str, Any], str], float | None],
+) -> tuple[np.ndarray, np.ndarray]:
+    tid_tup = tuple(test_ids)
+    x_rows: list[list[float]] = []
+    y_rows: list[list[float]] = []
+    for meta in rows_meta:
+        ds = meta["ds"]
+        for aug_i in range(train_aug):
+            seed_parts = (meta["path"], "train", aug_i, seed, policy, train_k)
+            ex = select_eval_subset(
+                policy,
+                test_ids=test_ids,
+                k=train_k,
+                ds=ds,
+                rng=rng,
+                seed_parts=seed_parts,
+                router_meta=router_meta,
+                profile_wall_seconds=pts_wall_fn,
+            )
+            row = build_partial_feature_row_pts(
+                ds,
+                ex,
+                test_ids=tid_tup,
+                xi_vectorizer=xi_vec,
+                log1p_value=log1p_partial_value,
+            )
+            if row is None:
+                continue
+            x_rows.append(row)
+            y_rows.append(meta["y"].tolist())
+    if not x_rows:
+        raise RuntimeError("No training rows for PTS reconstruction model")
+    return np.asarray(x_rows, dtype=np.float64), np.asarray(y_rows, dtype=np.float64)
+
+
 def run_one_combo_unixbench(
     *,
     rows_meta: list[dict[str, Any]],
@@ -147,6 +235,7 @@ def run_one_combo_unixbench(
     cv_mode: str,
     folds: int,
     seed: int,
+    train_with_eval_policy: bool = False,
 ) -> dict[str, Any]:
     fold_indices = _build_folds(rows_meta, cv_mode=cv_mode, folds=folds, seed=seed)
 
@@ -161,16 +250,30 @@ def run_one_combo_unixbench(
         train_idx = [i for i in range(len(rows_meta)) if i not in set(val_idx)]
 
         rng = np.random.RandomState(seed + fi * 997)
-        x_train, y_train = rte.build_augmented_train_matrix(
-            [rows_meta[i] for i in train_idx],
-            xi_vec,
-            test_ids,
-            rng,
-            train_aug,
-            train_k_min,
-            train_k_max,
-            log1p_partial_index,
-        )
+        if train_with_eval_policy:
+            x_train, y_train = _build_augmented_train_matrix_policy_unixbench(
+                [rows_meta[i] for i in train_idx],
+                xi_vec,
+                test_ids,
+                rng,
+                train_aug,
+                train_k_min,
+                policy,
+                router_meta,
+                log1p_partial_index,
+                seed,
+            )
+        else:
+            x_train, y_train = rte.build_augmented_train_matrix(
+                [rows_meta[i] for i in train_idx],
+                xi_vec,
+                test_ids,
+                rng,
+                train_aug,
+                train_k_min,
+                train_k_max,
+                log1p_partial_index,
+            )
 
         val_blocks: list[tuple[int, list[float], set[str]]] = []
         for t_i in val_idx:
@@ -291,6 +394,7 @@ def run_one_combo_phoronix(
     folds: int,
     seed: int,
     pts_wall_fn: Callable[[dict[str, Any], str], float | None],
+    train_with_eval_policy: bool = False,
 ) -> dict[str, Any]:
     fold_indices = _build_folds(rows_meta, cv_mode=cv_mode, folds=folds, seed=seed)
     n_out = len(test_ids) + 1
@@ -306,16 +410,31 @@ def run_one_combo_phoronix(
         train_idx = [i for i in range(len(rows_meta)) if i not in set(val_idx)]
 
         rng = np.random.RandomState(seed + fi * 997)
-        x_train, y_train = build_augmented_train_matrix_pts(
-            [rows_meta[i] for i in train_idx],
-            xi_vec,
-            test_ids,
-            rng,
-            train_aug,
-            train_k_min,
-            train_k_max,
-            log1p_partial_value,
-        )
+        if train_with_eval_policy:
+            x_train, y_train = _build_augmented_train_matrix_policy_phoronix(
+                [rows_meta[i] for i in train_idx],
+                xi_vec,
+                test_ids,
+                rng,
+                train_aug,
+                train_k_min,
+                policy,
+                router_meta,
+                log1p_partial_value,
+                seed,
+                pts_wall_fn,
+            )
+        else:
+            x_train, y_train = build_augmented_train_matrix_pts(
+                [rows_meta[i] for i in train_idx],
+                xi_vec,
+                test_ids,
+                rng,
+                train_aug,
+                train_k_min,
+                train_k_max,
+                log1p_partial_value,
+            )
 
         val_blocks: list[tuple[int, list[float], set[str]]] = []
         for t_i in val_idx:
@@ -530,9 +649,18 @@ def run_suite_block(
     combinations: list[dict[str, Any]] = []
     pts_wall_fn = time_seconds_for_profile
 
+    match_train_k = bool(getattr(args, "match_train_k_to_eval", False)) or len(k_list) > 1
+
     for eval_k in k_list:
         if eval_k > len(test_ids) or eval_k < 1:
             raise ValueError(f"K={eval_k} invalid for {suite_key} (num_profiles={len(test_ids)})")
+
+        if match_train_k:
+            combo_train_k_min = max(1, min(int(eval_k), len(test_ids)))
+            combo_train_k_max = combo_train_k_min
+        else:
+            combo_train_k_min = eff_train_k_min
+            combo_train_k_max = eff_train_k_max
 
         for xi_mode in xi_modes:
             xi_vec: Any = XiVectorizer() if xi_mode == "full" else AblatedXiVectorizer(xi_mode)
@@ -551,8 +679,8 @@ def run_suite_block(
                         eval_partial_k=eval_k,
                         model_type=args.model_type,
                         train_aug=args.train_aug,
-                        train_k_min=eff_train_k_min,
-                        train_k_max=eff_train_k_max,
+                        train_k_min=combo_train_k_min,
+                        train_k_max=combo_train_k_max,
                         log1p_partial_index=args.log1p_partial_index,
                         mlp_hidden=args.mlp_hidden,
                         mlp_epochs=args.mlp_epochs,
@@ -563,6 +691,7 @@ def run_suite_block(
                         cv_mode=eff_cv,
                         folds=eff_folds,
                         seed=int(args.seed),
+                        train_with_eval_policy=bool(args.train_with_eval_policy),
                     )
                 else:
                     block = run_one_combo_phoronix(
@@ -574,8 +703,8 @@ def run_suite_block(
                         eval_partial_k=eval_k,
                         model_type=args.model_type,
                         train_aug=args.train_aug,
-                        train_k_min=eff_train_k_min,
-                        train_k_max=eff_train_k_max,
+                        train_k_min=combo_train_k_min,
+                        train_k_max=combo_train_k_max,
                         log1p_partial_value=args.log1p_partial_value,
                         mlp_hidden=args.mlp_hidden,
                         mlp_epochs=args.mlp_epochs,
@@ -587,6 +716,7 @@ def run_suite_block(
                         folds=eff_folds,
                         seed=int(args.seed),
                         pts_wall_fn=pts_wall_fn,
+                        train_with_eval_policy=bool(args.train_with_eval_policy),
                     )
                 combinations.append({"suite_key": suite_key, "xi_ablation": xi_mode, **block})
 
@@ -665,6 +795,16 @@ def main() -> int:
     ap.add_argument("--train-aug", type=int, default=10)
     ap.add_argument("--train-k-min", type=int, default=2)
     ap.add_argument("--train-k-max", type=int, default=6)
+    ap.add_argument(
+        "--match-train-k-to-eval",
+        action="store_true",
+        help="When sweeping K, train the reconstructor with the same partial subset size as eval K.",
+    )
+    ap.add_argument(
+        "--train-with-eval-policy",
+        action="store_true",
+        help="Train reconstruction augmentations with the same subset policy as evaluation.",
+    )
     ap.add_argument("--log1p-partial-index", action="store_true", help="UnixBench only: log1p partial index")
     ap.add_argument("--log1p-partial-value", action="store_true", help="PTS only: log1p primary value")
     ap.add_argument("--mlp-hidden", type=int, default=128)

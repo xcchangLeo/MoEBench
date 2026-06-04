@@ -515,6 +515,9 @@ def aggregate_err(y_true: np.ndarray, y_pred: np.ndarray) -> dict[str, Any]:
     suite_p = y_pred[:, -1]
     mae_s = float(np.mean(np.abs(suite_t - suite_p)))
     rmse_s = float(np.sqrt(np.mean((suite_t - suite_p) ** 2)))
+    rel_s = float(
+        np.mean(np.abs(suite_t - suite_p) / np.maximum(np.abs(suite_t), 1e-9))
+    )
     return {
         "mae_all_targets": mae,
         "rmse_all_targets": rmse,
@@ -522,6 +525,7 @@ def aggregate_err(y_true: np.ndarray, y_pred: np.ndarray) -> dict[str, Any]:
         "rmse_subtest_index_only": rmse_tests,
         "mae_suite_index": mae_s,
         "rmse_suite_index": rmse_s,
+        "mean_suite_relative_error": rel_s,
         "spearman_suite": spearman_rho(suite_t, suite_p),
         "kendall_tau_suite": kendall_tau_simple(suite_t, suite_p),
     }
