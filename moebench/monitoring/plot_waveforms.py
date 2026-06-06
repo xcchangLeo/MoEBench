@@ -30,17 +30,9 @@ def sort_traces_for_plot(traces: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def _ensure_matplotlib(auto_install: bool):
-    try:
-        import matplotlib.pyplot as plt  # noqa: F401
-    except ImportError:
-        if auto_install:
-            import subprocess
-            import sys
+    from moebench.pip_install import ensure_importable
 
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "matplotlib"])
-            import matplotlib.pyplot as plt  # noqa: F401
-        else:
-            raise
+    ensure_importable("matplotlib", auto_install=auto_install)
     import matplotlib.pyplot as plt
 
     return plt

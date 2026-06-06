@@ -62,7 +62,7 @@ if [[ "${USE_VENV}" -eq 0 && -n "${CONDA_PREFIX:-}" ]]; then
   if [[ "${WITH_TORCH}" -eq 1 ]]; then
     pkgs+=(torch)
   fi
-  pkgs+=(scikit-learn)
+  pkgs+=(scikit-learn matplotlib)
   python3 -m pip install --upgrade "${pkgs[@]}"
   echo "Done."
   echo "Next, run with: $(command -v python3)"
@@ -94,7 +94,7 @@ fi
 if [[ "${WITH_TORCH}" -eq 1 ]]; then
   pkgs+=(torch)
 fi
-pkgs+=(scikit-learn)
+pkgs+=(scikit-learn matplotlib)
 
 echo "Installing into venv: ${pkgs[*]}"
 "${VENV_PIP}" install --upgrade "${pkgs[@]}"

@@ -245,6 +245,89 @@ def router_recon_grid_prefix(*, benchmark: str, machine: str, pts_suite: str | N
     raise ValueError(f"unknown benchmark: {benchmark!r}")
 
 
+def remap_stale_repo_path(path: str | Path, repo_root: Path | None = None) -> Path:
+    """Rewrite absolute paths recorded on another MoEBench checkout to this repo."""
+    root = (repo_root or Path(__file__).resolve().parents[1]).resolve()
+    raw = Path(path).expanduser()
+    if raw.is_file():
+        return raw.resolve()
+    parts = raw.parts
+    if "MoEBench" in parts:
+        remapped = (root / Path(*parts[parts.index("MoEBench") + 1 :])).resolve()
+        if remapped.is_file():
+            return remapped
+        return remapped
+    if not raw.is_absolute():
+        for base in (Path.cwd(), root):
+            candidate = (base / raw).resolve()
+            if candidate.is_file():
+                return candidate
+        return (root / raw).resolve()
+    return raw.resolve()
+
+
+def resolve_checkpoint_file(
+    user_path: str,
+    repo_root: Path,
+    *,
+    kind: str,
+    fallback: Path | None = None,
+) -> Path:
+    """Resolve a model checkpoint path under this repo, with optional fallback."""
+    tried: list[str] = []
+    candidates: list[Path] = []
+    raw = user_path.strip()
+    if raw:
+        candidates.append(remap_stale_repo_path(raw, repo_root))
+    if fallback is not None:
+        candidates.append(fallback.resolve())
+    seen: set[str] = set()
+    for candidate in candidates:
+        key = str(candidate)
+        if key in seen:
+            continue
+        seen.add(key)
+        tried.append(key)
+        if candidate.is_file():
+            return candidate
+    hint = f"\nExpected an existing {kind} checkpoint."
+    if fallback is not None:
+        hint += f"\nAuto-discovery also checked: {fallback}"
+    raise FileNotFoundError(f"{kind} not found: {user_path!r}\nTried:\n  " + "\n  ".join(tried) + hint)
+
+
+def find_router_recon_checkpoint(
+    dataset_root: str | Path,
+    *,
+    machine: str,
+    benchmark: str,
+    filename: str,
+    pts_suite: str | None = None,
+) -> Path | None:
+    """Newest ``router_recon_grid_*/trained_models/<filename>`` for ``machine``."""
+    root = Path(dataset_root).resolve()
+    prefix = router_recon_grid_prefix(benchmark=benchmark, machine=machine, pts_suite=pts_suite)
+    matches = [
+        p
+        for p in root.glob(f"experiments/{prefix}*/trained_models/{filename}")
+        if p.is_file()
+    ]
+    if not matches:
+        return None
+    return max(matches, key=lambda p: p.stat().st_mtime)
+
+
+def find_probe_checkpoint(
+    dataset_root: str | Path,
+    *,
+    machine: str,
+    filename: str = "probe_unixbench_lgbm.pkl",
+) -> Path | None:
+    """Default probe bundle under ``models/<machine>/``."""
+    candidate = machine_models_dir(dataset_root, machine) / filename
+    return candidate if candidate.is_file() else None
+
+
 def find_latest_router_recon_models_dir(
     dataset_root: str | Path,
     *,
