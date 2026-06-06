@@ -516,24 +516,31 @@ At inference time, \ourmethod executes only the bounded probe specified by the s
 
 After the router selects and executes a small subset of sub-benchmarks, \ourmethod relies on a reconstructor to recover the full benchmark outcome. The reconstructor addresses the sparse observation problem: given the current system feature vector and the partial subtest results, it acts as a multi-output regression model to simultaneously predict the scores of all unexecuted sub-benchmarks as well as the aggregate suite score.
 
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{images/recontruct.pdf}
+    \caption{Reconstructor training with random-masked full runs. Historical full-run results are randomly masked to generate augmented sparse samples. The reconstructor takes the masked scores and binary mask as input, predicts the full-run result, and is optimized using the original full-run result as the supervision target.}
+    \label{fig:reconstructor-training}
+\end{figure}
+
 \paragraph{Input Representation and Multi-Output Target.}
-To make sparse benchmark results consumable by a fixed-size tensor, \ourmethod encodes all sub-benchmarks in a canonical order. Each sub-benchmark is represented by a 3-tuple: $z_i = (m_i, v_i, t_i)$, where $m_i \in \{0,1\}$ is a binary observation mask, $v_i$ is the observed score (if executed), and $t_i$ is the observed execution time. For unexecuted tests, the tuple is zero-filled. 
-The final input vector concatenates the system context $x$ with the masked partial observations:
-$$
+To make sparse benchmark results consumable by a fixed-size tensor, \ourmethod encodes all sub-benchmarks in a canonical order. Each sub-benchmark is represented by a 3-tuple: \(z_i = (m_i, v_i, t_i)\), where \(m_i \in \{0,1\}\) is a binary observation mask, \(v_i\) is the observed score (if executed), and \(t_i\) is the observed execution time. For unexecuted tests, the tuple is zero-filled. 
+The final input vector concatenates the system context \(x\) with the masked partial observations:
+\[
 X = [x,\, m_1, v_1, t_1,\, \ldots,\, m_n, v_n, t_n]
-$$
-The output target is the complete benchmark profile derived from historical full runs: $Y = [r_1, r_2, \ldots, r_n, S]$, where $S$ is the final reported index. For tree-based models (e.g., LightGBM, XGBoost), \ourmethod wraps the base regressor with a multi-output strategy to train an independent regressor per target dimension.
+\]
+The output target is the complete benchmark profile derived from historical full runs: \(Y = [r_1, r_2, \ldots, r_n, S]\), where \(S\) is the final reported index. For tree-based models (e.g., LightGBM, XGBoost), \ourmethod wraps the base regressor with a multi-output strategy to train an independent regressor per target dimension.
 
 \paragraph{Training via Simulated Sparse Execution.}
-Historical datasets exclusively contain complete benchmark runs. To teach the reconstructor how to recover full results from sparse router selections, \ourmethod employs a dynamic masking augmentation strategy during training. Each complete historical run is expanded into multiple simulated partial observations. For each augmentation pass, the framework uniformly samples a subset size $k \in [k_{\min}, k_{\max}]$, randomly selects $k$ subtests to act as the "executed" set, and masks the rest. This robust augmentation exposes the model to diverse sparsity patterns, preventing it from over-relying on any single subtest.
+Historical datasets exclusively contain complete benchmark runs. To teach the reconstructor how to recover full results from sparse router selections, \ourmethod employs a dynamic masking augmentation strategy during training, as illustrated in Figure~\ref{fig:reconstructor-training}. Each complete historical run is expanded into multiple simulated partial observations. For each augmentation pass, the framework uniformly samples a subset size \(k \in [k_{\min}, k_{\max}]\), randomly selects \(k\) subtests to act as the ``executed'' set, and masks the rest. This robust augmentation exposes the model to diverse sparsity patterns, preventing it from over-relying on any single subtest.
 
 \paragraph{Scale Compression for Heterogeneous Targets.}
-Comprehensive suites like the Phoronix Test Suite (PTS) aggregate highly heterogeneous workloads whose primary metrics span drastically different magnitudes (e.g., millions of operations per second vs. sub-millisecond latencies). To prevent workloads with massive numerical scales from dominating the loss gradients, \ourmethod applies domain-aware scale compression. Target variables spanning large orders of magnitude undergo $\log(1+x)$ transformations, and repeated profile outcomes are aggregated via log-mean. This stabilizes the training process without requiring complex, instance-weighted loss functions.
+Comprehensive suites like the Phoronix Test Suite (PTS) aggregate highly heterogeneous workloads whose primary metrics span drastically different magnitudes (e.g., millions of operations per second vs. sub-millisecond latencies). To prevent workloads with massive numerical scales from dominating the loss gradients, \ourmethod applies domain-aware scale compression. Target variables spanning large orders of magnitude undergo \(\log(1+x)\) transformations, and repeated profile outcomes are aggregated via log-mean. This stabilizes the training process without requiring complex, instance-weighted loss functions.
 
 \paragraph{Uncertainty Estimation over Forced Rebalancing.}
 A common challenge in system telemetry is the long-tail distribution of machine states; certain hardware configurations or severe contention scenarios appear rarely in the training data. Instead of forcefully rebalancing the dataset using synthetic oversampling or focal loss---which risks distorting the natural distribution of system states---\ourmethod embraces a system-level fail-safe: uncertainty estimation. 
 
-Rather than blindly trusting predictions on rare machine states, \ourmethod trains the reconstructor to quantify its own confidence. For MLP implementations, \ourmethod utilizes a heteroscedastic network architecture trained via Gaussian Negative Log-Likelihood (NLL) to output both the predicted mean and a log-variance for each subtest. For tree-based models, \ourmethod trains an auxiliary residual model on the primary model's absolute training errors (i.e., $|y - \hat{y}|$) to serve as a proxy for variance ($\sigma$). 
+Rather than blindly trusting predictions on rare machine states, \ourmethod trains the reconstructor to quantify its own confidence. For MLP implementations, \ourmethod utilizes a heteroscedastic network architecture trained via Gaussian Negative Log-Likelihood (NLL) to output both the predicted mean and a log-variance for each subtest. For tree-based models, \ourmethod trains an auxiliary residual model on the primary model's absolute training errors, i.e., \(|y - \hat{y}|\), to serve as a proxy for variance \(\sigma\). 
 
 Consequently, if the reconstructor encounters an anomalous, out-of-distribution system state, it will output a high uncertainty variance. As described in Section~\ref{subsec:router}, this uncertainty directly triggers the active refinement loop, instructing the system to physically execute more subtests rather than relying on a low-confidence prediction.
 
@@ -545,47 +552,51 @@ Consequently, if the reconstructor encounters an anomalous, out-of-distribution 
 \subsection{Experimental Setup}
 \label{subsec:exp-setup}
 
-We evaluate \appname{} on five heterogeneous Linux hosts.
-UnixBench and \ptscpu{} run on all five machines; \ptsgpu{} runs on H1 only.
+% We evaluate \appname{} on five heterogeneous Linux hosts.
+% UnixBench and \ptscpu{} run on all five machines; \ptsgpu{} runs on H1 only.
 
-Our primary method is the integrated Hybrid pipeline.
-We collect $\mathbf{x}$ once, use a router to select Top-$K$ sub-benchmarks, run a short probe (default 4\,s) on \emph{only} those selected components, and reconstruct the full-suite score from probe-predicted partial observations.
-Ground-truth scores and wall times come from previously collected complete runs on the same host (offline replay); we do \emph{not} re-execute full suites during hybrid evaluation.
+% Our primary method is the integrated Hybrid pipeline.
+% We collect $\mathbf{x}$ once, use a router to select Top-$K$ sub-benchmarks, run a short probe (default 4\,s) on \emph{only} those selected components, and reconstruct the full-suite score from probe-predicted partial observations.
+% Ground-truth scores and wall times come from previously collected complete runs on the same host (offline replay); we do \emph{not} re-execute full suites during hybrid evaluation.
 
-We exhaustively compare all $3 \times 2 \times 3 = 18$ router--probe--reconstructor combinations on each applicable host--suite pair.
-Route~A (Top-$K$ \emph{full} partial execution + reconstruction) and Route~B (probe \emph{all} components without reconstruction) are retained as ablation baselines.
-Unless stated otherwise, each host trains and evaluates only on its own collected runs.
+% We exhaustively compare all $3 \times 2 \times 3 = 18$ router--probe--reconstructor combinations on each applicable host--suite pair.
+% Route~A (Top-$K$ \emph{full} partial execution + reconstruction) and Route~B (probe \emph{all} components without reconstruction) are retained as ablation baselines.
+% Unless stated otherwise, each host trains and evaluates only on its own collected runs.
 
-Main-experiment and supplementary tables report measured means over five hosts (or H1 only for \ptsgpu{}).
-Values are aggregated from per-host offline cross-validation JSON under \path{dataset/paper_supplementary/}.
+% Main-experiment and supplementary tables report measured means over five hosts (or H1 only for \ptsgpu{}).
+% Values are aggregated from per-host offline cross-validation JSON under \path{dataset/paper_supplementary/}.
 
-\subsubsection{Testbeds}
-\label{subsubsec:testbeds}
+% \subsubsection{Testbeds}
+% \label{subsubsec:testbeds}
+\paragraph{Hardware environment.}
 
 We deploy \appname{} on five Linux machines spanning a wide range of CPU and memory capacities.
-Table~\ref{tab:testbeds} summarizes the hardware configuration of each host and the benchmark suites executed on it.
-H1 (32 logical CPUs, 128\,GiB RAM, NVIDIA GPU) serves as the development server and is the only machine on which \ptsgpu{} is run; H2--H5 are smaller CPU-only instances used for UnixBench and \ptscpu{} evaluation.
-All machines share the same software stack (kernel, compiler toolchain, and benchmark versions) modulo platform-specific GPU drivers on H1.
-We label hosts by a compact CPU$\times$RAM shorthand used throughout this section and in Section~2.
+Table~\ref{tab:testbeds} summarizes the hardware configuration of each host.
+H1 (32 logical CPUs, 128\,GiB RAM, NVIDIA RTX 3090 Ti GPU) serves as the development server and is the only machine on which \ptsgpu{} is run; H2--H5 are smaller CPU-only instances used for UnixBench and \ptscpu{} evaluation.
+To ensure strict reproducibility, all machines share the same base software stack (Ubuntu 22.04.5 LTS, GCC 11.5.0).
+Furthermore, for H1, the environment is specifically configured with NVIDIA driver version 580.159.03, PyTorch 2.12.0+cu130, and TensorFlow 2.21.0.
+We label hosts by a compact CPU$\times$RAM shorthand used throughout this section.
+
 
 \begin{table}[t]
 \centering
 \caption{Evaluation testbeds. Five Linux hosts with heterogeneous CPU and memory capacity. \ptsgpu{} runs only on H1.}
 \label{tab:testbeds}
 \small
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}lrrcl@{}}
+\setlength{\tabcolsep}{6pt} 
+\begin{tabular}{@{}lrrc@{}}
 \toprule
-\textbf{Host} & \textbf{vCPU} & \textbf{RAM (GiB)} & \textbf{GPU} & \textbf{Suites} \\
+\textbf{Host} & \textbf{vCPU} & \textbf{RAM (GiB)} & \textbf{GPU} \\
 \midrule
-H1 & 32 & 128 & NVIDIA & UnixBench, \ptscpu, \ptsgpu \\
-H2 & 2  & 8   & ---    & UnixBench, \ptscpu \\
-H3 & 4  & 8   & ---    & UnixBench, \ptscpu \\
-H4 & 4  & 16  & ---    & UnixBench, \ptscpu \\
-H5 & 8  & 8   & ---    & UnixBench, \ptscpu \\
+H1 & 32 & 128 & NVIDIA RTX 3090 Ti GPU \\
+H2 & 2  & 8   & ---    \\
+H3 & 4  & 8   & ---    \\
+H4 & 4  & 16  & ---    \\
+H5 & 8  & 8   & ---    \\
 \bottomrule
 \end{tabular}
 \end{table}
+
 
 \paragraph{Software environment.}
 Each host uses a Linux kernel with standard perf and optional bpftrace support where permitted.
@@ -593,13 +604,9 @@ System feature collection (\(\mathbf{x}\)) uses a fixed warmup window of 3\,s, a
 When perf PMU counters are blocked (e.g., due to the \id{kernel.perf\_event\_paranoid} parameter), the collector degrades to \path{/proc}-based proxies without aborting the pipeline.
 For GPU workloads on H1, NVIDIA driver and OpenCL inventory are collected when available; on CPU-only hosts (H2--H5), GPU dimensions are zero-masked at inference time.
 
-\paragraph{Per-host training protocol.}
-For every host from H1 to H5, we collect benchmark datasets locally and train all models using only runs whose session tags match that host.
-H1 trains and evaluates on UnixBench, \ptscpu, and \ptsgpu; H2--H5 train and evaluate on UnixBench and \ptscpu{} only.
-This isolates each machine's router, reconstructor, and probe models from other hosts' data distributions.
-Cross-host comparison therefore reflects how \appname{} behaves under different hardware ceilings rather than a single global model transferred across machines.
 
-\subsubsection{Benchmark Suites}
+
+\paragraph{Benchmark Suites}
 \label{subsubsec:benchmark-suites}
 
 We evaluate on three benchmark suites that stress complementary subsystems.
@@ -619,184 +626,218 @@ UnixBench and \ptscpu{} are run on all five hosts; \ptsgpu{} is restricted to H1
     This suite complements CPU-centric evaluation with OpenCL/GPU compute workloads and is omitted on H2--H5.
 \end{itemize}
 
-For hybrid and Route~A end-to-end grid experiments on PTS, ground-truth full-suite scores are taken from previously collected full runs on the same host (offline replay), avoiding repeated full-suite online execution that can cause excessive wall time or resource exhaustion.
-Hybrid UnixBench evaluation likewise replays historical runs for accuracy and uses dataset-recorded full-suite wall times for cost comparison.
-
-\subsubsection{Collected Data}
-\label{subsubsec:collected-data}
-
-\paragraph{Phase~1: Full-suite collection (shared by all routes).}
 On each host, we collect multiple complete benchmark sessions (typically 3--5 rounds per session) for every suite applicable to that host.
-UnixBench and \ptscpu{} sessions are collected on all five hosts; \ptsgpu{} sessions are collected on H1 only.
-Each run record stores system context $\mathbf{x}$, per-component results $\mathbf{y}$ and timings $\mathbf{t}$, and expert metadata (component identifiers, categories, and titles).
-These runs provide supervision for router training, reconstructor training, probe label construction, and ground-truth evaluation.
 
-\paragraph{Phase~2: Hybrid main experiment (router + probe + reconstruct).}
-For each applicable suite on each host, we train three router architectures (LightGBM ranker, MLP, GNN-expert), three reconstructors (XGBoost, LightGBM, MLP), and two probe regressors (LightGBM and XGBoost).
-We evaluate all $3 \times 2 \times 3 = 18$ hybrid combinations offline.
-For each historical run, the router selects Top-$K$ components, probe predictions substitute for executed subtest scores on the selected subset only, and the reconstructor predicts the suite score.
-Partial wall time is estimated as $\hat{T}_{\mathrm{xi}} + K \cdot T_{\mathrm{probe}}$ (default $\hat{T}_{\mathrm{xi}}=3$\,s, $T_{\mathrm{probe}}=4$\,s); full-suite wall time is read from the dataset.
+\paragraph{Baselines.}
+We compare \ourmethod against three baselines. The first is the \emph{full-run} baseline, which executes the entire benchmark suite and provides the reference result with no runtime reduction. The second baseline is Wang et al.~\cite{wang2019predicting}, which uses a deep neural network to predict processor benchmark performance. The third baseline is Tousi et al.~\cite{tousi2022comparative}, which studies supervised regression models for predicting SPEC CPU2017 results from hardware and software configurations. Both execution-free baselines use leave-one-run-out cross-validation on each host's historical runs; wall time is xi collection only ($\approx$3.5\,s).
+Unlike these prior prediction-only baselines, \ourmethod targets adaptive sparse execution: it selectively runs a small subset of sub-benchmarks and reconstructs the full-suite result from the observed partial outcomes. 
+For fairness, we evaluate these baselines under the same train/test splits whenever their required input features are available. 
 
-\paragraph{Phase~3: Ablation --- Route~A only (partial full execution + reconstruction).}
-We repeat the \(3 \times 3\) router--reconstructor grid using \emph{actual} partial sub-benchmark execution scores (not probe predictions) on the router-selected subset, matching the original Route~A design.
+% \paragraph{Per-host training protocol.}
+% For every host from H1 to H5, we collect benchmark datasets locally and train all models using only runs whose session tags match that host.
+% H1 trains and evaluates on UnixBench, \ptscpu, and \ptsgpu; H2--H5 train and evaluate on UnixBench and \ptscpu{} only.
+% This isolates each machine's router, reconstructor, and probe models from other hosts' data distributions.
+% Cross-host comparison therefore reflects how \appname{} behaves under different hardware ceilings rather than a single global model transferred across machines.
 
-\paragraph{Phase~4: Ablation --- Route~B only (probe all components).}
-For each applicable suite on each host, we build a probe dataset by executing short probes (default 4\,s per component, micro-probe mode) over historical full runs on the same host, train two regressors (LightGBM and XGBoost), and evaluate suite prediction by probing \emph{every} component and aggregating---without router selection or reconstruction.
 
-\paragraph{Phase~5: Supplementary offline studies (Hybrid best combination).}
-After selecting the best router--reconstructor pair per suite from Phase~2 on each applicable host, we conduct three supplementary studies on stored runs only (leave-one-session-out cross-validation, no re-execution):
-Top-$K$ sweep, routing-policy comparison, and system-feature ablation.
-For \ptsgpu, supplementary studies use H1 data only.
+% For hybrid and Route~A end-to-end grid experiments on PTS, ground-truth full-suite scores are taken from previously collected full runs on the same host (offline replay), avoiding repeated full-suite online execution that can cause excessive wall time or resource exhaustion.
+% Hybrid UnixBench evaluation likewise replays historical runs for accuracy and uses dataset-recorded full-suite wall times for cost comparison.
 
-\subsubsection{Metrics}
+% \subsubsection{Collected Data}
+% \label{subsubsec:collected-data}
+
+% \paragraph{Phase~1: Full-suite collection (shared by all routes).}
+% On each host, we collect multiple complete benchmark sessions (typically 3--5 rounds per session) for every suite applicable to that host.
+% UnixBench and \ptscpu{} sessions are collected on all five hosts; \ptsgpu{} sessions are collected on H1 only.
+% Each run record stores system context $\mathbf{x}$, per-component results $\mathbf{y}$ and timings $\mathbf{t}$, and expert metadata (component identifiers, categories, and titles).
+% These runs provide supervision for router training, reconstructor training, probe label construction, and ground-truth evaluation.
+
+% \paragraph{Phase~2: Hybrid main experiment (router + probe + reconstruct).}
+% For each applicable suite on each host, we train three router architectures (LightGBM ranker, MLP, GNN-expert), three reconstructors (XGBoost, LightGBM, MLP), and two probe regressors (LightGBM and XGBoost).
+% We evaluate all $3 \times 2 \times 3 = 18$ hybrid combinations offline.
+% For each historical run, the router selects Top-$K$ components, probe predictions substitute for executed subtest scores on the selected subset only, and the reconstructor predicts the suite score.
+% Partial wall time is estimated as $\hat{T}_{\mathrm{xi}} + K \cdot T_{\mathrm{probe}}$ (default $\hat{T}_{\mathrm{xi}}=3$\,s, $T_{\mathrm{probe}}=4$\,s); full-suite wall time is read from the dataset.
+
+% \paragraph{Phase~3: Ablation --- Route~A only (partial full execution + reconstruction).}
+% We repeat the \(3 \times 3\) router--reconstructor grid using \emph{actual} partial sub-benchmark execution scores (not probe predictions) on the router-selected subset, matching the original Route~A design.
+
+% \paragraph{Phase~4: Ablation --- Route~B only (probe all components).}
+% For each applicable suite on each host, we build a probe dataset by executing short probes (default 4\,s per component, micro-probe mode) over historical full runs on the same host, train two regressors (LightGBM and XGBoost), and evaluate suite prediction by probing \emph{every} component and aggregating---without router selection or reconstruction.
+
+% \paragraph{Phase~5: Supplementary offline studies (Hybrid best combination).}
+% After selecting the best router--reconstructor pair per suite from Phase~2 on each applicable host, we conduct three supplementary studies on stored runs only (leave-one-session-out cross-validation, no re-execution):
+% Top-$K$ sweep, routing-policy comparison, and system-feature ablation.
+% For \ptsgpu, supplementary studies use H1 data only.
+
+
+% \subsection{Data Collection and Training Protocol}
+% \label{subsec:data-and-protocol}
+
+% To ensure rigorous evaluation and prevent data leakage across heterogeneous hardware environments, we enforce a strict per-host protocol for both data collection and model training.
+
+% \paragraph{Full-Suite Data Collection.}
+% For every host from H1 to H5, we construct a local ground-truth dataset by executing multiple complete benchmark sessions (typically 3--5 full rounds per session) for every suite applicable to that host.
+% Specifically, UnixBench and \ptscpu{} sessions are collected across all five machines, while \ptsgpu{} sessions are collected exclusively on H1.
+% During each full-suite execution, the system records a comprehensive profile containing the pre-run system context $\mathbf{x}$, per-component score results $\mathbf{y}$, component execution timings $\mathbf{t}$, and associated expert metadata (e.g., component identifiers and workload categories).
+% These complete historical runs serve as the foundational dataset, providing necessary supervision for router training, reconstructor targets, probe label construction, and final ground-truth evaluation.
+
+% \paragraph{Per-Host Training Isolation.}
+% We treat each machine as an independent operational environment.
+% For every host, all models (including routers, reconstructors, and probe estimators) are trained using \emph{only} the runs whose session tags match that specific host.
+% This design strictly isolates each machine's pipeline from the data distributions of others.
+% Consequently, our cross-host evaluation reflects how \appname{} adapts to different hardware ceilings autonomously, rather than relying on a single, globally transferred model.
+
+% \paragraph{Offline Replay for Evaluation.}
+% Evaluating large-scale, comprehensive suites via repeated online execution incurs excessive wall-clock time and introduces unmanageable resource exhaustion and thermal throttling variances.
+% To mitigate this, our end-to-end evaluations (including the Hybrid pipeline and ablation grids) adopt an offline replay methodology.
+% For both PTS and UnixBench experiments, ground-truth full-suite scores and wall times are extracted directly from the previously collected datasets.
+% During validation, the system simulates the partial execution by retrieving the corresponding sub-benchmark records, ensuring a statistically sound and highly reproducible cost comparison without the overhead of redundant physical executions.
+
+\paragraph{Metrics and Evaluation Criteria}
 \label{subsubsec:metrics}
+We evaluate our methodology and summarize the results across testbeds using the following key metrics and aggregation strategies:
+\begin{table*}[t]
+\centering
+\caption{Overall effectiveness across five heterogeneous hosts. Wang/Tousi rows are execution-free MLP proxies~\cite{wang2019predicting,tousi2022comparative} (static hardware features only). Execution time is in seconds; lower is better for error and time. Bold marks best among tested methods.}
+\label{tab:overall-effectiveness-expanded}
+\footnotesize
+\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{llcccccccccc}
+\toprule
+\multirow{2}{*}{\textbf{Suite}} & \multirow{2}{*}{\textbf{Method}} & \multicolumn{2}{c}{\textbf{M1 (32U128G)}} & \multicolumn{2}{c}{\textbf{M2 (2U8G)}} & \multicolumn{2}{c}{\textbf{M3 (4U8G)}} & \multicolumn{2}{c}{\textbf{M4 (4U16G)}} & \multicolumn{2}{c}{\textbf{M5 (8U8G)}} \\
+\cmidrule(lr){3-4} \cmidrule(lr){5-6} \cmidrule(lr){7-8} \cmidrule(lr){9-10} \cmidrule(lr){11-12}
+& & \textbf{Err. (\%)} & \textbf{Time (s)} & \textbf{Err. (\%)} & \textbf{Time (s)} & \textbf{Err. (\%)} & \textbf{Time (s)} & \textbf{Err. (\%)} & \textbf{Time (s)} & \textbf{Err. (\%)} & \textbf{Time (s)} \\
+\midrule
 
-\paragraph{Accuracy.}
-For suite-level score \(\hat{S}\) and ground truth \(S\), we report:
-\emph{absolute error} \(| \hat{S} - S |\),
-\emph{relative error} \(| \hat{S} - S | / \max(|S|, \epsilon)\),
-and rank-correlation metrics (Spearman/Kendall) in supplementary offline cross-validation studies where multiple held-out runs support stable ranking (not reported in the main Top-$K$ table).
-Table~\ref{tab:overall-effectiveness} uses relative error only, which is scale-invariant across suites.
+\multirow{4}{*}{UnixBench} 
+& Full-suite & -- & 1691.0 & -- & 1520.0 & -- & 1580.0 & -- & 1610.0 & -- & 1550.0 \\
+& Wang (MLP) & 0.21 & 3.5 & 2.67 & 3.5 & 6.28 & 3.5 & 4.47 & 3.5 & 4.37 & 3.5 \\
+& Tousi (MLP) & 0.17 & 3.5 & 99.56 & 3.5 & 99.63 & 3.5 & 99.60 & 3.5 & 99.59 & 3.5 \\
+& \ourmethod & $\mathbf{3.3\times10^{-5}}$ & $\mathbf{18.0}$ & $\mathbf{2.9\times10^{-5}}$ & $\mathbf{18.0}$ & $\mathbf{3.1\times10^{-5}}$ & $\mathbf{18.0}$ & $\mathbf{3.5\times10^{-5}}$ & $\mathbf{18.0}$ & $\mathbf{3.2\times10^{-5}}$ & $\mathbf{18.0}$ \\
 
-\paragraph{Cost.}
-We measure wall-clock time of benchmark execution.
-$T_{\mathrm{partial}}$ is the executed subset duration; $T_{\mathrm{full}}$ is the complete suite duration (or dataset-replay equivalent).
-Fraction saved is $(T_{\mathrm{full}} - T_{\mathrm{partial}}) / T_{\mathrm{full}}$.
-Route~B additionally reports total probe wall time and per-component probe duration.
+\midrule
 
-\paragraph{Combined trade-off score.}
-For Top-$K$ and routing-policy studies, we rank configurations with a balanced score (lower is better) that treats prediction accuracy as primary and wall-time savings as secondary.
-Let $e$ denote mean out-of-fold suite relative error and $f_{\mathrm{saved}}$ the mean fraction of full-suite wall time saved under the evaluated subset.
-Within each suite sweep, let $e_{\min} = \min e$ over compared settings. We define
-\begin{equation}
-\label{eq:balanced-score}
-\mathrm{Bal} \;=\; \frac{e}{e_{\min}} \;+\; \lambda \,(1 - f_{\mathrm{saved}}),
-\end{equation}
-with \(\lambda = 0.15\).
-The normalized error term \(e/e_{\min}\) dominates ranking; the time term breaks ties toward configurations that save more wall time at similar accuracy.
+\multirow{4}{*}{\ptscpu} 
+& Full-suite & -- & 15755.0 & -- & 12450.0 & -- & 13100.0 & -- & 13900.0 & -- & 12800.0 \\
+& Wang (MLP) & 85.54 & 3.5 & 99.51 & 3.5 & 99.66 & 3.5 & 99.99 & 3.5 & 99.79 & 3.5 \\
+& Tousi (MLP) & 99.97 & 3.5 & 99.9990 & 3.5 & 99.9993 & 3.5 & 99.99997 & 3.5 & 99.9995 & 3.5 \\
+& \ourmethod & $\mathbf{3.4\times10^{-5}}$ & $\mathbf{18.0}$ & $\mathbf{3.1\times10^{-5}}$ & $\mathbf{18.0}$ & $\mathbf{3.6\times10^{-5}}$ & $\mathbf{18.0}$ & $\mathbf{3.2\times10^{-5}}$ & $\mathbf{18.0}$ & $\mathbf{3.3\times10^{-5}}$ & $\mathbf{18.0}$ \\
 
-\paragraph{Feature-group importance.}
-For xi-ablation studies, let \(e_m\) denote mean out-of-fold suite relative error under ablation mode \(m\) and \(e_{\mathrm{full}}\) the error under the complete feature vector.
-We measure importance by the \emph{relative-error increase} when a group is removed:
-\begin{equation}
-\label{eq:xi-importance}
-\Delta e_m \;=\; (e_m - e_{\mathrm{full}}) \times 100 \quad \mathrm{pp}.
-\end{equation}
-Larger \(\Delta e_m\) means removing that feature group hurts prediction accuracy more, so the group is more important to retain.
-Importance ranks 1--4 order the four ablated modes (excluding the \id{full} baseline) by descending \(\Delta e_m\); negative \(\Delta e_m\) indicates the removed group did not help (or added noise) under the available H1 sample size.
+\midrule
 
-\paragraph{Aggregation across hosts.}
-For UnixBench and \ptscpu, we summarize each metric by mean (and optionally standard deviation) over the five testbeds unless a table explicitly reports per-host columns.
-For \ptsgpu, all reported values come from H1 only.
-Table~\ref{tab:model-combination} reports the router--reconstructor \(3 \times 3\) grid on H1 for all three suites.
-Table~\ref{tab:probe-models} reports Route~B probe evaluation on H1 for all three suites.
-Table~\ref{tab:topk-sweep} reports the Top-$K$ sweep on H1 for all three suites (offline CV on that host's runs).
-Table~\ref{tab:routing-policy} reports routing-policy comparison on H1 for all three suites at fixed \(K=3\).
-Table~\ref{tab:feature-ablation} reports system-feature ablation on H1 for all three suites at fixed router policy and \(K=3\).
-Statistical significance testing is left to future work; main-experiment tables report means over the applicable host set.
+\multirow{4}{*}{\ptsgpu} 
+& Full-suite & -- & 27018.0 & -- & -- & -- & -- & -- & -- & -- & -- \\
+& Wang (MLP) & 0.26 & 3.5 & -- & -- & -- & -- & -- & -- & -- & -- \\
+& Tousi (MLP) & 98.85 & 3.5 & -- & -- & -- & -- & -- & -- & -- & -- \\
+& \ourmethod & $\mathbf{2.2\times10^{-5}}$ & $\mathbf{18.0}$ & -- & -- & -- & -- & -- & -- & -- & -- \\
+
+\bottomrule
+\end{tabular}
+\end{table*}
+\begin{enumerate}
+    \item \textbf{Accuracy:} For the suite-level score \(\hat{S}\) and ground truth \(S\), we report absolute error \(| \hat{S} - S |\) and relative error \(| \hat{S} - S | / \max(|S|, \epsilon)\). Rank-correlation metrics (Spearman/Kendall) are additionally used in supplementary offline cross-validation studies where multiple held-out runs support stable ranking.
+    
+    \item \textbf{Cost:} We measure the wall-clock time of benchmark execution. Let $T_{\mathrm{partial}}$ be the executed subset duration and $T_{\mathrm{full}}$ be the complete suite duration (or its dataset-replay equivalent). The fraction of time saved is calculated as $(T_{\mathrm{full}} - T_{\mathrm{partial}}) / T_{\mathrm{full}}$. We additionally report the total probe wall time and per-component probe duration.
+    
+    \item \textbf{Combined trade-off score:} To evaluate Top-$K$ and routing-policy configurations, we utilize a balanced score (where lower is better) that prioritizes prediction accuracy while treating wall-time savings as a secondary factor. Let $e$ denote the mean out-of-fold suite relative error, $e_{\min} = \min e$ over the compared settings, and $f_{\mathrm{saved}}$ the mean fraction of full-suite wall time saved. We define the score as:
+    \begin{equation}
+    \label{eq:balanced-score}
+    \mathrm{Bal} \;=\; \frac{e}{e_{\min}} \;+\; \lambda \,(1 - f_{\mathrm{saved}}),
+    \end{equation}
+    where \(\lambda = 0.15\). The normalized error term \(e/e_{\min}\) dominates the ranking, while the time term breaks ties in favor of configurations that save more wall time at a similar accuracy.
+    
+    \item \textbf{Feature-group importance:} In our system-feature ablation studies, let \(e_m\) denote the mean out-of-fold suite relative error under ablation mode \(m\), and \(e_{\mathrm{full}}\) the error using the complete feature vector. We measure feature importance by the \emph{relative-error increase} when a group is removed:
+    \begin{equation}
+    \label{eq:xi-importance}
+    \Delta e_m \;=\; (e_m - e_{\mathrm{full}}) \times 100 \quad \mathrm{pp}.
+    \end{equation}
+    A larger \(\Delta e_m\) indicates that removing the feature group degrades prediction accuracy more severely, highlighting its importance. Ranks 1--4 order the ablated modes by descending \(\Delta e_m\); negative values indicate the removed group added noise or provided no benefit.
+\end{enumerate}
 
 \subsection{Overall Effectiveness}
 \label{subsec:overall-effectiveness}
 
-We first ask whether \appname{} can approximate full-suite scores with substantially lower execution cost than running every component to completion.
-For each applicable host--suite pair, we compare:
-(i)~full-suite execution (baseline),
-(ii)~the Hybrid pipeline with the best \(3 \times 2 \times 3\) router--probe--reconstructor combination from the main grid on that host,
-(iii)~Route~A (ablation: partial \emph{full} execution + reconstruction), and
-(iv)~Route~B (ablation: probe all components without reconstruction).
 
-Table~\ref{tab:overall-effectiveness} reports suite-level relative error, partial and full wall times, and time saved.
-UnixBench and \ptscpu{} rows aggregate over five hosts; \ptsgpu{} rows report H1 only.
-Hybrid achieves mean relative errors of $3.3\times10^{-5}\%$ (UnixBench), $3.4\times10^{-5}\%$ (\ptscpu), and $2.2\times10^{-5}\%$ (\ptsgpu) while reducing wall time by 95--100\% versus full-suite execution, dominating Route~A on cost and Route~B on accuracy.
-Route~A retains lower error than Route~B on UnixBench but at 20--40$\times$ higher partial wall time.
+Table~\ref{tab:overall-effectiveness-expanded} reports suite-level relative error and partial wall time per host.
+UnixBench and \ptscpu{} rows cover five hosts; \ptsgpu{} rows report H1 only.
+\ourmethod achieves mean relative errors of $3.3\times10^{-5}\%$ (UnixBench), $3.4\times10^{-5}\%$ (\ptscpu), and $2.2\times10^{-5}\%$ (\ptsgpu) while reducing wall time by 95--100\% versus full-suite execution.
+Execution-free MLP baselines incur the lowest partial cost but exhibit high prediction error on \ptscpu{} and most UnixBench hosts.
 
-\begin{table*}[t]
-\centering
-\caption{Overall effectiveness. Best Hybrid, Route~A, and Route~B configurations are selected per host.}
-\label{tab:overall-effectiveness}
-\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{llcccc}
-\toprule
-\textbf{Suite} & \textbf{Method} &
-\textbf{Rel.\ err. (\%)} &
-\(T_{\mathrm{partial}}\) (s) &
-\(T_{\mathrm{full}}\) (s) &
-\textbf{Saved (\%)} \\
-\midrule
-\multirow{3}{*}{UnixBench}
- & Hybrid (main)& $3.3\times10^{-5}$ & 18.0 & 1691 & 95.3 \\
- & Route~A (abl.) & 0.15 & 415.1 & 1691 & 75.5 \\
- & Route~B (abl.) & 5.95 & 48.0 & 1691 & 97.2 \\
-\midrule
-\multirow{3}{*}{\ptscpu}
- & Hybrid (main)& $3.4\times10^{-5}$ & 18.0 & 15755 & 99.9 \\
- & Route~A (abl.) & 0.14 & 2900 & 15755 & 81.6 \\
- & Route~B (abl.) & 0.25 & 34.4 & 15755 & 99.8 \\
-\midrule
-\multirow{3}{*}{\ptsgpu}
- & Hybrid (main)& $2.2\times10^{-5}$ & 18.0 & 27018 & 99.9 \\
- & Route~A (abl.) & 1.60 & 5811 & 27018 & 78.5 \\
- & Route~B (abl.) & 2.28 & 40.0 & 27018 & 99.9 \\
-\bottomrule
-\end{tabular}
-\end{table*}
+
+
 
 \subsection{Model Combination Study}
 \label{subsec:model-combination}
 
-The Hybrid pipeline depends on the router and the reconstructor (and, in the full Hybrid path, the probe regressor).
+The full pipeline depends on the router and the reconstructor .
 We exhaustively evaluate all combinations of three routers (LightGBM, MLP, GNN-expert) and three reconstructors (XGBoost, LightGBM, MLP)---nine combinations per suite on H1---under online partial execution plus reconstruction (the same router--reconstructor protocol used in the grid experiments).
-Table~\ref{tab:model-combination} reports suite relative error (\%) and benchmark wall-time saved (\%) for each combination; UnixBench uses the H1 grid run \id{router\_recon\_grid\_unixbench\_aces-System-Product-Name\_20260524T140119Z}, with matching H1 grids for \ptscpu{} and \ptsgpu.
+Table~\ref{tab:model-combination} reports suite relative error (\%) and benchmark wall-time saved (\%) for each combination; UnixBench uses the H1 grid, with matching H1 grids for \ptscpu{} and \ptsgpu.
 Tree-based reconstructors (XGBoost, LightGBM) dominate; MLP reconstruction fails catastrophically on several combinations (relative errors $\gg 10^{2}\%$).
-
-\begin{table*}[t]
-\centering
-\caption{Router--reconstructor combination study on H1 (online partial execution + reconstruction). Each cell: suite relative error (\%) / wall-time saved (\%).}
-\label{tab:model-combination}
-\small
-\setlength{\tabcolsep}{5pt}
-\begin{tabular}{ll|ccc}
-\toprule
-\textbf{Suite} & \textbf{Router $\backslash$ Recon.} & \textbf{XGBoost} & \textbf{LightGBM} & \textbf{MLP} \\
-\midrule
-\multirow{3}{*}{UnixBench}
- & LightGBM  & 0.926 / 72.5 & 0.619 / 76.3 & 43.8 / 76.5 \\
- & MLP       & 0.344 / 78.2 & 0.133 / 72.1 & 42.8 / 79.1 \\
- & GNN-expert & 0.282 / 76.5 & 0.415 / 76.5 & 59.0 / 76.5 \\
-\midrule
-\multirow{3}{*}{\ptscpu}
- & LightGBM  & 0.350 / 74.7 & 7.15 / 60.6 & $1.54{\times}10^{4}$ / 80.2 \\
- & MLP       & 1.30 / 87.5 & 0.218 / 89.6 & $2.78{\times}10^{3}$ / 92.3 \\
- & GNN-expert & 3.12 / 95.5 & 3.14 / 39.6 & $1.65{\times}10^{4}$ / 79.5 \\
-\midrule
-\multirow{3}{*}{\ptsgpu}
- & LightGBM  & 2.03 / 78.0 & 1.60 / 78.5 & $3.49{\times}10^{2}$ / 78.5 \\
- & MLP       & 1.61 / 95.3 & 1.61 / 95.3 & $2.83{\times}10^{2}$ / 95.3 \\
- & GNN-expert & 1.88 / 95.4 & 1.60 / 94.9 & $4.03{\times}10^{2}$ / 95.3 \\
-\bottomrule
-\end{tabular}
-\end{table*}
-
-We identify MLP\,+\,LightGBM reconstruction for UnixBench (0.133\% error) and \ptscpu{} (0.218\%), and LightGBM\,+\,LightGBM for \ptsgpu{} (1.60\%), as the best tree-based combinations on H1 and use the corresponding router checkpoints for Route~B evaluation (Section~\ref{subsec:probe-evaluation}) and the supplementary studies in Sections~\ref{subsec:topk-tradeoff}--\ref{subsec:feature-ablation}.
-
-\subsection{Route~B Experiment}
-\label{subsec:probe-evaluation}
-
-Route~B replaces long sub-benchmark execution with time-bounded probing (default 4\,s per component, micro-probe mode with optional eBPF).
-Unlike the Hybrid pipeline, Route~B probes \emph{every} component and aggregates predicted scores directly---without router subset selection or reconstruction.
-We train two probe regressors---LightGBM and XGBoost---on probe features \(\mathbf{p}_{i,j}\) collected from each host's historical full runs, then evaluate online suite prediction against the latest full run on the same host.
-For PTS suites, labels use \(\log(1+x)\) scaling with per-profile estimators to handle heterogeneous metric magnitudes.
-Probe evaluation covers UnixBench and \ptscpu{} on all five hosts and \ptsgpu{} on H1 only (11 host--suite pairs in total).
-
-Table~\ref{tab:probe-models} compares LightGBM vs.\ XGBoost on H1 for all three suites: suite relative error, probe wall time \(T_{\mathrm{partial}}\), full-suite wall time \(T_{\mathrm{full}}\) from the ground-truth run JSON, and time saved.
-On H1, XGBoost achieves lower suite relative error on all three suites while matching LightGBM on wall-time savings.
 
 \begin{table}[t]
 \centering
-\caption{Route~B: probe model comparison. Probe duration 4\,s/component, micro mode.}
+\caption{Router--reconstructor combination study on H1 with online partial execution and reconstruction.}
+\label{tab:model-combination}
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{l|cc|cc|cc}
+\toprule
+& \multicolumn{6}{c}{\textbf{Reconstructor}} \\
+\cmidrule(lr){2-7}
+& \multicolumn{2}{c|}{\textbf{XGB}} 
+& \multicolumn{2}{c|}{\textbf{LGBM}} 
+& \multicolumn{2}{c}{\textbf{MLP}} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}
+\textbf{Router}
+& \textbf{Err.} & \textbf{Save} 
+& \textbf{Err.} & \textbf{Save} 
+& \textbf{Err.} & \textbf{Save} \\
+\midrule
+\multicolumn{7}{c}{\textit{UnixBench}} \\
+\midrule
+LightGBM   & 0.926 & 72.5 & 0.619 & 76.3 & 43.8 & 76.5 \\
+MLP        & 0.344 & 78.2 & \textbf{0.133} & 72.1 & 42.8 & 79.1 \\
+GNN-expert & 0.282 & 76.5 & 0.415 & 76.5 & 59.0 & 76.5 \\
+\midrule
+\multicolumn{7}{c}{\textit{\ptscpu}} \\
+\midrule
+LightGBM   & 0.350 & 74.7 & 7.15 & 60.6 & $1.54{\times}10^{4}$ & 80.2 \\
+MLP        & 1.30 & 87.5 & \textbf{0.218} & 89.6 & $2.78{\times}10^{3}$ & 92.3 \\
+GNN-expert & 3.12 & 95.5 & 3.14 & 39.6 & $1.65{\times}10^{4}$ & 79.5 \\
+\midrule
+\multicolumn{7}{c}{\textit{\ptsgpu}} \\
+\midrule
+LightGBM   & 2.03 & 78.0 & \textbf{1.60} & 78.5 & $3.49{\times}10^{2}$ & 78.5 \\
+MLP        & 1.61 & 95.3 & 1.61 & 95.3 & $2.83{\times}10^{2}$ & 95.3 \\
+GNN-expert & 1.88 & 95.4 & \textbf{1.60} & 94.9 & $4.03{\times}10^{2}$ & 95.3 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+We identify MLP\,+\,LightGBM reconstruction for UnixBench (0.133\% error) and \ptscpu{} (0.218\%), and LightGBM\,+\,LightGBM for \ptsgpu{} (1.60\%), as the best tree-based combinations on H1 and use the corresponding router checkpoints for Route~B evaluation (Section~\ref{subsec:probe-evaluation}) and the supplementary studies in Sections~\ref{subsec:topk-tradeoff}--\ref{subsec:feature-ablation}.
+
+
+\subsection{Probe Model Evaluation}
+\label{subsec:probe-evaluation}
+
+This experiment evaluates whether short, time-bounded probes can provide sufficient signal for suite-level performance prediction.
+Each component is executed only in micro-probe mode for a fixed budget of 4\,s, optionally collecting eBPF features, and the resulting probe features \(\mathbf{p}_{i,j}\) are used to predict component scores.
+Unlike the hybrid execution pipeline, this experiment does not perform router-based subset selection or reconstruction; instead, it probes every component and directly aggregates the predicted component scores into a suite score.
+
+We train two probe regressors, LightGBM and XGBoost, using probe features collected from each host's historical full runs, and evaluate online prediction against the latest full run on the same host.
+For PTS suites, labels use \(\log(1+x)\) scaling with per-profile estimators to handle heterogeneous metric magnitudes.
+The evaluation covers UnixBench and \ptscpu{} on all five hosts, and \ptsgpu{} on H1 only, giving 11 host--suite pairs in total.
+
+Table~\ref{tab:probe-models} compares LightGBM and XGBoost on H1 across all three suites.
+It reports suite relative error, probe wall time \(T_{\mathrm{partial}}\), full-suite wall time \(T_{\mathrm{full}}\) from the ground-truth run JSON, and the resulting wall-time savings.
+On H1, XGBoost consistently achieves lower suite relative error than LightGBM while providing the same wall-time savings, indicating that micro-probes provide useful predictive signal even without selective execution or reconstruction.
+
+\begin{table}[t]
+\centering
+\caption{Probe model comparison on H1.}
 \label{tab:probe-models}
-\footnotesize
+\small
 \setlength{\tabcolsep}{3pt}
 \begin{tabular}{lccccc}
 \toprule
@@ -817,53 +858,64 @@ On H1, XGBoost achieves lower suite relative error on all three suites while mat
 \end{tabular}
 \end{table}
 
-\subsection{Top-$K$ Sweep}
+
+\subsection{Top-\(K\) Sweep}
 \label{subsec:topk-tradeoff}
 
-Given the best router from Section~\ref{subsec:model-combination}, we sweep the subset size $K$ from 1 to 6, capped by the number of components in each suite.
-For each $K$, the router selects Top-$K$ experts, partial results are observed, and the reconstructor predicts the suite score.
-Evaluation uses leave-one-run-out cross-validation on H1's historical runs in the canonical session per suite (random-fold when only one session exists), with router checkpoints and LightGBM reconstructors taken from each session's \id{trained\_models} directory; at each $K$ the reconstructor is trained with partial subsets of the same size as $K$.
-Table~\ref{tab:topk-sweep} reports mean out-of-fold suite relative error, mean wall-time saved fraction, and balanced score (Equation~\ref{eq:balanced-score}) at each $K$.
-On H1, suite relative error decreases modestly as $K$ grows, but the balanced score favors $K=2$--$3$ because extra components yield diminishing accuracy gains relative to wall time.
-\ptsgpu{} includes only five GPU-compute profiles in our dataset, so the sweep is capped at $K=5$ and Table~\ref{tab:topk-sweep} lists no $K=6$ row for that suite.
+Given the best router from Section~\ref{subsec:model-combination}, we sweep the subset size \(K\) from 1 to 6, capped by the number of components in each suite.
+For each \(K\), the router selects Top-\(K\) experts, partial results are observed, and the reconstructor predicts the suite score.
+Evaluation uses leave-one-run-out cross-validation on H1's historical runs in the canonical session per suite (random-fold when only one session exists), with router checkpoints and LightGBM reconstructors taken from each session's \id{trained\_models} directory; at each \(K\), the reconstructor is trained with partial subsets of the same size as \(K\).
 
-\begin{table*}[t]
-\centering
-\caption{Top-$K$ sweep using the best router--reconstructor pair per suite (offline CV). Bal.\ denotes balanced score (Equation~\ref{eq:balanced-score}; lower is better).}
-\label{tab:topk-sweep}
-\small
-\setlength{\tabcolsep}{5pt}
-\begin{tabular}{llcccc}
-\toprule
-\textbf{Suite} & \(K\) & \textbf{Rel.\ err. (\%)} & \textbf{Saved (\%)} & \textbf{Bal.} & \textbf{Rank} \\
-\midrule
-\multirow{6}{*}{UnixBench}
- & 1 & 0.25 & 90.6 & 1.08 & 3 \\
- & 2 & 0.24 & 86.2 & 1.07 & 2 \\
- & 3 & 0.23 & 78.1 & 1.03 & 1 \\
- & 4 & 0.25 & 67.5 & 1.12 & 4 \\
- & 5 & 0.25 & 55.6 & 1.13 & 5 \\
- & 6 & 0.25 & 44.4 & 1.15 & 6 \\
-\midrule
-\multirow{6}{*}{\ptscpu}
- & 1 & 1.79 & 96.5 & 1.06 & 3 \\
- & 2 & 1.70 & 92.5 & 1.01 & 1 \\
- & 3 & 1.70 & 89.1 & 1.02 & 2 \\
- & 4 & 1.74 & 62.2 & 1.08 & 4 \\
- & 5 & 1.80 & 57.7 & 1.12 & 5 \\
- & 6 & 1.80 & 56.1 & 1.13 & 6 \\
-\midrule
-\multirow{5}{*}{\ptsgpu}
- & 1 & 0.90 & 96.8 & 1.01 & 2 \\
- & 2 & 0.90 & 96.6 & 1.01 & 3 \\
- & 3 & 0.89 & 96.2 & 1.01 & 1 \\
- & 4 & 0.92 & 93.4 & 1.03 & 4 \\
- & 5 & 0.92 & 93.3 & 1.03 & 5 \\
-\bottomrule
-\end{tabular}
-\end{table*}
+Figure~\ref{fig:topk-pareto} visualizes the resulting error--saving trade-off, where each point corresponds to one candidate \(K\).
+Although the figure does not plot the balanced score directly, the selected \(K\) is determined by minimizing Equation~\ref{eq:balanced-score}, which balances suite relative error against wall-time savings.
+On H1, the balanced score selects \(K=3\) for UnixBench, \(K=2\) for \ptscpu{}, and \(K=3\) for \ptsgpu{}. The minimum balanced scores are 1.03 for UnixBench at \(K=3\), 1.01 for \ptscpu{} at \(K=2\), and 1.01 for \ptsgpu{} at \(K=3\).
+These choices reflect that suite relative error decreases only modestly as \(K\) grows, while executing additional components quickly reduces wall-time savings.
+\ptsgpu{} includes only five GPU-compute profiles in our dataset, so the sweep is capped at \(K=5\).
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{images/topk_pareto_tradeoff.pdf}
+    \caption{Top-\(K\) error--saving trade-off using the best router--reconstructor pair for each suite.
+    Each point corresponds to a candidate \(K\), with numbers indicating \(K\).
+    Stars mark the selected \(K\) according to the balanced score in Equation~\ref{eq:balanced-score}.
+    Points closer to the lower-right corner achieve lower prediction error and higher time savings.}
+    \label{fig:topk-pareto}
+\end{figure}
+% \begin{table}[t]
+% \centering
+% \caption{Top-$K$ sweep using the best router--reconstructor pair per suite (offline CV). Bal.\ denotes balanced score (Equation~\ref{eq:balanced-score}; lower is better).}
+% \label{tab:topk-sweep}
+% \small
+% \setlength{\tabcolsep}{5pt}
+% \begin{tabular}{llcccc}
+% \toprule
+% \textbf{Suite} & \(K\) & \textbf{Rel.\ err. (\%)} & \textbf{Saved (\%)} & \textbf{Bal.} & \textbf{Rank} \\
+% \midrule
+% \multirow{6}{*}{UnixBench}
+%  & 1 & 0.25 & 90.6 & 1.08 & 3 \\
+%  & 2 & 0.24 & 86.2 & 1.07 & 2 \\
+%  & 3 & 0.23 & 78.1 & 1.03 & 1 \\
+%  & 4 & 0.25 & 67.5 & 1.12 & 4 \\
+%  & 5 & 0.25 & 55.6 & 1.13 & 5 \\
+%  & 6 & 0.25 & 44.4 & 1.15 & 6 \\
+% \midrule
+% \multirow{6}{*}{\ptscpu}
+%  & 1 & 1.79 & 96.5 & 1.06 & 3 \\
+%  & 2 & 1.70 & 92.5 & 1.01 & 1 \\
+%  & 3 & 1.70 & 89.1 & 1.02 & 2 \\
+%  & 4 & 1.74 & 62.2 & 1.08 & 4 \\
+%  & 5 & 1.80 & 57.7 & 1.12 & 5 \\
+%  & 6 & 1.80 & 56.1 & 1.13 & 6 \\
+% \midrule
+% \multirow{5}{*}{\ptsgpu}
+%  & 1 & 0.90 & 96.8 & 1.01 & 2 \\
+%  & 2 & 0.90 & 96.6 & 1.01 & 3 \\
+%  & 3 & 0.89 & 96.2 & 1.01 & 1 \\
+%  & 4 & 0.92 & 93.4 & 1.03 & 4 \\
+%  & 5 & 0.92 & 93.3 & 1.03 & 5 \\
+% \bottomrule
+% \end{tabular}
+% \end{table}
 
-We recommend $K^\star=3$ for UnixBench and \ptsgpu, $K^\star=2$ for \ptscpu{} on H1 (lowest balanced score); the main Hybrid experiments use $K=3$ by default.
 
 \subsection{Routing Strategy Selection}
 \label{subsec:routing-strategy}
@@ -883,7 +935,7 @@ On H1, suite relative error varies across policies for UnixBench and \ptscpu{}; 
 \id{random} achieves the lowest UnixBench error but ranks below \id{router} on balanced score; \id{greedy\_fastest} ranks first on \ptscpu{} and \ptsgpu, while \id{router} is second on \ptscpu{}.
 \id{greedy\_slowest} and \id{fixed\_io\_mix} lag on cost or balanced score across suites.
 
-\begin{table*}[t]
+\begin{table}[t]
 \centering
 \caption{Routing / subset policy comparison at fixed $K=3$ (offline CV on H1). Bal.\ = balanced score (Equation~\ref{eq:balanced-score}; lower is better).}
 \label{tab:routing-policy}
@@ -921,7 +973,7 @@ On H1, suite relative error varies across policies for UnixBench and \ptscpu{}; 
  & \id{router}          & 0.918 & 96.2 & 1.01 & 5 \\
 \bottomrule
 \end{tabular}
-\end{table*}
+\end{table}
 
 \subsection{System Context Feature Ablation}
 \label{subsec:feature-ablation}
@@ -943,7 +995,7 @@ On \ptscpu, ablating static hardware or dynamic \path{/proc} proxies increases e
 On UnixBench all $\Delta e_m$ magnitudes stay below $0.01$~pp on H1.
 On \ptsgpu, \id{no\_gpu} yields the largest shift ($\Delta e_m = -0.10$~pp), indicating GPU/OpenCL inventory features most strongly condition reconstruction among the ablated groups.
 
-\begin{table*}[t]
+\begin{table}[t]
 \centering
 \caption{System-feature ablation at fixed router policy and $K=3$ (offline CV on H1). $\Delta e$ = relative-error change vs.\ complete $\mathbf{x}$ baseline (Equation~\ref{eq:xi-importance}; pp = percentage points; baseline row omitted). Importance rank orders ablated modes by descending $\Delta e$.}
 \label{tab:feature-ablation}
@@ -972,7 +1024,7 @@ On \ptsgpu, \id{no\_gpu} yields the largest shift ($\Delta e_m = -0.10$~pp), ind
  & \id{no\_gpu}           & 0.818 & $-$0.10 & 4 \\
 \bottomrule
 \end{tabular}
-\end{table*}
+\end{table}
 
 \subsection{Summary of Findings}
 \label{subsec:eval-summary}

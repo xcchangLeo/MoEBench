@@ -1,0 +1,190 @@
+{
+  "schema": "moebench.experiment.exec_free_baselines.v2",
+  "created_at_utc": "2026-06-05T06:07:20.016111+00:00",
+  "suite": "pts_cpu",
+  "suite_label": "PTS-CPU",
+  "machine": "aces-System-Product-Name",
+  "xi_mode": "static_hw_only",
+  "cv_mode": "leave_one_run_out",
+  "n_runs": 5,
+  "n_sessions": 1,
+  "test_ids": [
+    "pts/asmfish-1.1.2",
+    "pts/build-gcc-1.5.0",
+    "pts/ctx-clock-1.0.0",
+    "pts/kvazaar-1.2.0",
+    "pts/namd-1.4.0",
+    "pts/openssl-4.0.0",
+    "pts/povray-1.2.1",
+    "pts/radiance-1.0.0",
+    "pts/rodinia-1.3.2",
+    "pts/stockfish-1.7.0",
+    "pts/sysbench-1.1.0",
+    "pts/x264-2.7.0",
+    "pts/x265-1.5.0"
+  ],
+  "methods_run": [
+    "wang_dnn",
+    "tousi_mlp"
+  ],
+  "methods": [
+    {
+      "method": "wang_dnn",
+      "model_family": "mlp",
+      "paper": "wang2019",
+      "paper_label": "Wang et al. (2019)",
+      "table_label": "Wang-style (DNN)",
+      "train_config": {
+        "hidden": 128,
+        "hidden_layers": 2,
+        "epochs": 300,
+        "lr": 0.001
+      },
+      "mean_suite_rel_err": 0.8553509957851958,
+      "mean_suite_rel_err_pct": 85.53509957851958,
+      "median_xi_wall_s": 3.5,
+      "n_runs": 5,
+      "n_folds": 5,
+      "cv_mode": "leave_one_run_out",
+      "per_run": [
+        {
+          "path": "/home/cxc/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-01.json",
+          "session": "aces-System-Product-Name_cpu_20260520T033403Z",
+          "y_true": 113340391.92229833,
+          "y_pred": 20502126.0,
+          "suite_rel_err": 0.8191101543564854,
+          "xi_wall_s": 3.5,
+          "fold": 0
+        },
+        {
+          "path": "/home/cxc/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-02.json",
+          "session": "aces-System-Product-Name_cpu_20260520T033403Z",
+          "y_true": 123103918.81857,
+          "y_pred": 20040584.0,
+          "suite_rel_err": 0.8372059623094881,
+          "xi_wall_s": 3.5,
+          "fold": 1
+        },
+        {
+          "path": "/home/cxc/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-03.json",
+          "session": "aces-System-Product-Name_cpu_20260520T033403Z",
+          "y_true": 127470171.17721207,
+          "y_pred": 18231424.0,
+          "suite_rel_err": 0.8569749782899857,
+          "xi_wall_s": 3.5,
+          "fold": 2
+        },
+        {
+          "path": "/home/cxc/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-04.json",
+          "session": "aces-System-Product-Name_cpu_20260520T033403Z",
+          "y_true": 127597425.75089918,
+          "y_pred": 14464789.0,
+          "suite_rel_err": 0.8866372976188506,
+          "xi_wall_s": 3.5,
+          "fold": 3
+        },
+        {
+          "path": "/home/cxc/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-05.json",
+          "session": "aces-System-Product-Name_cpu_20260520T033403Z",
+          "y_true": 124121793.38950291,
+          "y_pred": 15288505.0,
+          "suite_rel_err": 0.8768265863511688,
+          "xi_wall_s": 3.5,
+          "fold": 4
+        }
+      ]
+    },
+    {
+      "method": "tousi_mlp",
+      "model_family": "mlp",
+      "paper": "tousi2022",
+      "paper_label": "Tousi et al. (2022)",
+      "table_label": "Tousi-style (MLP)",
+      "train_config": {
+        "hidden": 64,
+        "hidden_layers": 1,
+        "epochs": 150,
+        "lr": 0.001
+      },
+      "mean_suite_rel_err": 0.999674466558344,
+      "mean_suite_rel_err_pct": 99.96744665583441,
+      "median_xi_wall_s": 3.5,
+      "n_runs": 5,
+      "n_folds": 5,
+      "cv_mode": "leave_one_run_out",
+      "per_run": [
+        {
+          "path": "/home/cxc/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-01.json",
+          "session": "aces-System-Product-Name_cpu_20260520T033403Z",
+          "y_true": 113340391.92229833,
+          "y_pred": 37987.29296875,
+          "suite_rel_err": 0.9996648388776105,
+          "xi_wall_s": 3.5,
+          "fold": 0
+        },
+        {
+          "path": "/home/cxc/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-02.json",
+          "session": "aces-System-Product-Name_cpu_20260520T033403Z",
+          "y_true": 123103918.81857,
+          "y_pred": 41338.69921875,
+          "suite_rel_err": 0.9996641967240728,
+          "xi_wall_s": 3.5,
+          "fold": 1
+        },
+        {
+          "path": "/home/cxc/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-03.json",
+          "session": "aces-System-Product-Name_cpu_20260520T033403Z",
+          "y_true": 127470171.17721207,
+          "y_pred": 31947.5859375,
+          "suite_rel_err": 0.9997493720637349,
+          "xi_wall_s": 3.5,
+          "fold": 2
+        },
+        {
+          "path": "/home/cxc/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-04.json",
+          "session": "aces-System-Product-Name_cpu_20260520T033403Z",
+          "y_true": 127597425.75089918,
+          "y_pred": 50762.72265625,
+          "suite_rel_err": 0.9996021649938663,
+          "xi_wall_s": 3.5,
+          "fold": 3
+        },
+        {
+          "path": "/home/cxc/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-05.json",
+          "session": "aces-System-Product-Name_cpu_20260520T033403Z",
+          "y_true": 124121793.38950291,
+          "y_pred": 38259.28515625,
+          "suite_rel_err": 0.9996917601324354,
+          "xi_wall_s": 3.5,
+          "fold": 4
+        }
+      ]
+    }
+  ],
+  "ranked_by_err_pct_desc": [
+    {
+      "method": "tousi_mlp",
+      "table_label": "Tousi-style (MLP)",
+      "paper": "tousi2022",
+      "err_pct": 99.96744665583441,
+      "time_s": 3.5
+    },
+    {
+      "method": "wang_dnn",
+      "table_label": "Wang-style (DNN)",
+      "paper": "wang2019",
+      "err_pct": 85.53509957851958,
+      "time_s": 3.5
+    }
+  ],
+  "table3_cells": {
+    "wang_dnn": {
+      "err_pct": 85.53509957851958,
+      "time_s": 3.5
+    },
+    "tousi_mlp": {
+      "err_pct": 99.96744665583441,
+      "time_s": 3.5
+    }
+  }
+}

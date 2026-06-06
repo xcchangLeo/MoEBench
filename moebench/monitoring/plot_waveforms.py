@@ -3,7 +3,30 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
+
+MODE_ORDER = ("full", "route_a", "route_b", "benchscout")
+
+MODE_DISPLAY_LABELS: dict[str, str] = {
+    "full": "Full run",
+    "route_a": "router only",
+    "route_b": "probe only",
+    "benchscout": "BenchScout",
+}
+
+PALETTE_FOUR = ["#2563eb", "#16a34a", "#ea580c", "#9333ea"]
+
+
+def trace_display_label(tr: dict[str, Any]) -> str:
+    mode = str(tr.get("mode") or "")
+    if mode in MODE_DISPLAY_LABELS:
+        return MODE_DISPLAY_LABELS[mode]
+    return str(tr.get("label") or mode or "trace")
+
+
+def sort_traces_for_plot(traces: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    order = {m: i for i, m in enumerate(MODE_ORDER)}
+    return sorted(traces, key=lambda t: order.get(str(t.get("mode", "")), 99))
 
 
 def _ensure_matplotlib(auto_install: bool):
@@ -39,7 +62,7 @@ def plot_waveform_grid(
     colors_mem = "#dc2626"
 
     for col, tr in enumerate(traces):
-        label = str(tr.get("label") or f"mode_{col}")
+        label = trace_display_label(tr)
         samples = tr.get("samples") or []
         if not samples:
             continue
@@ -97,11 +120,11 @@ def plot_waveform_overlay(
     """Overlay traces on shared axes (each starts at t=0)."""
     plt = _ensure_matplotlib(auto_install)
     fig, (ax_cpu, ax_mem) = plt.subplots(2, 1, figsize=(10, 6), sharex=True)
-    palette = ["#2563eb", "#16a34a", "#ea580c", "#9333ea"]
+    traces = sort_traces_for_plot(traces)
 
     for i, tr in enumerate(traces):
-        label = str(tr.get("label") or f"trace_{i}")
-        color = palette[i % len(palette)]
+        label = trace_display_label(tr)
+        color = PALETTE_FOUR[i % len(PALETTE_FOUR)]
         samples = tr.get("samples") or []
         if not samples:
             continue
@@ -127,3 +150,78 @@ def plot_waveform_overlay(
     fig.savefig(out_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     return out_path
+
+
+def _plot_waveform_single_metric(
+    traces: list[dict[str, Any]],
+    *,
+    metric_key: Literal["cpu_pct", "mem_used_pct"],
+    ylabel: str,
+    title: str,
+    out_path: Path,
+    auto_install: bool = False,
+    save_pdf: bool = True,
+) -> Path:
+    """One figure with all traces overlaid for a single metric."""
+    plt = _ensure_matplotlib(auto_install)
+    fig, ax = plt.subplots(1, 1, figsize=(10, 4.5))
+    traces = sort_traces_for_plot(traces)
+
+    for i, tr in enumerate(traces):
+        label = trace_display_label(tr)
+        color = PALETTE_FOUR[i % len(PALETTE_FOUR)]
+        samples = tr.get("samples") or []
+        if not samples:
+            continue
+        t = [float(s["t_rel_s"]) for s in samples]
+        y = [float(s[metric_key]) for s in samples]
+        ax.plot(t, y, label=label, color=color, linewidth=1.2)
+
+    ax.set_ylabel(ylabel)
+    ax.set_xlabel("Time (s)")
+    ax.set_ylim(0, 100)
+    ax.legend(loc="upper right")
+    ax.grid(True, alpha=0.3)
+    ax.set_title(title)
+    fig.tight_layout()
+    out_path = Path(out_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    if save_pdf:
+        fig.savefig(out_path.with_suffix(".pdf"), bbox_inches="tight")
+    plt.close(fig)
+    return out_path
+
+
+def plot_waveform_compare_pair(
+    traces: list[dict[str, Any]],
+    *,
+    out_dir: Path,
+    title_cpu: str = "UnixBench CPU usage",
+    title_mem: str = "UnixBench memory usage",
+    auto_install: bool = False,
+    save_pdf: bool = True,
+    cpu_basename: str = "resource_waveforms_cpu.png",
+    memory_basename: str = "resource_waveforms_memory.png",
+) -> dict[str, Path]:
+    """Separate CPU and memory overlay figures (paper-style four-curve comparison)."""
+    out_dir = Path(out_dir)
+    cpu_path = _plot_waveform_single_metric(
+        traces,
+        metric_key="cpu_pct",
+        ylabel="CPU (%)",
+        title=title_cpu,
+        out_path=out_dir / cpu_basename,
+        auto_install=auto_install,
+        save_pdf=save_pdf,
+    )
+    mem_path = _plot_waveform_single_metric(
+        traces,
+        metric_key="mem_used_pct",
+        ylabel="Memory used (%)",
+        title=title_mem,
+        out_path=out_dir / memory_basename,
+        auto_install=auto_install,
+        save_pdf=save_pdf,
+    )
+    return {"cpu": cpu_path, "memory": mem_path}
