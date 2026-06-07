@@ -17,7 +17,9 @@ from moebench.probe.vectorizer import ProbeVectorizer
 
 
 def _regressor_base(model_type: str, *, n_rows: int):
-    min_child = max(2, min(8, n_rows // 8)) if n_rows > 0 else 2
+    # Small UnixBench probe sets (~60 rows, ~5 per test_id one-hot) need min_child=1
+    # or LightGBM cannot split on test_onehot_* features.
+    min_child = 1 if n_rows < 120 else max(2, min(8, n_rows // 8))
     n_est = 120 if n_rows < 120 else 200
     if model_type == "lightgbm":
         import lightgbm as lgb
@@ -27,6 +29,7 @@ def _regressor_base(model_type: str, *, n_rows: int):
             learning_rate=0.05,
             num_leaves=8 if n_rows < 120 else 31,
             min_child_samples=min_child,
+            min_data_in_bin=1 if n_rows < 120 else 3,
         )
     import xgboost as xgb
 

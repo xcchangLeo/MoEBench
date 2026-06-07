@@ -58,6 +58,17 @@ class ProbeVectorizer:
         if cat in cats:
             cats[cat] = 1.0
 
+        cpu_ratio = _safe_float(cpu.get("cpu_utilization_ratio"))
+        if cpu_ratio == 0.0:
+            cpu_ratio = _safe_float(cpu.get("user_pct")) + _safe_float(cpu.get("system_pct"))
+        iowait = _safe_float(cpu.get("iowait_ratio"))
+        minor_faults = _safe_float(faults.get("minor_faults_per_sec"))
+        if minor_faults == 0.0:
+            minor_faults = _safe_float(faults.get("minor_faults"))
+        major_faults = _safe_float(faults.get("major_faults_per_sec"))
+        if major_faults == 0.0:
+            major_faults = _safe_float(faults.get("major_faults"))
+
         ebpf_ok = 1.0 if ebpf.get("available") else 0.0
         real = probe.get("real_run") or {}
         return [
@@ -67,11 +78,11 @@ class ProbeVectorizer:
             _safe_float(ebpf.get("sched_switch_per_s")),
             _safe_float(ebpf.get("syscall_enter_per_s")),
             ebpf_ok,
-            _safe_float(cpu.get("user_pct")),
-            _safe_float(cpu.get("system_pct")),
-            _safe_float(cpu.get("idle_pct")),
-            _safe_float(faults.get("minor_faults")),
-            _safe_float(faults.get("major_faults")),
+            cpu_ratio,
+            iowait,
+            max(0.0, 1.0 - cpu_ratio - iowait),
+            minor_faults,
+            major_faults,
             cats["cpu"],
             cats["memory"],
             cats["io"],

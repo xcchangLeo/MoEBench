@@ -252,10 +252,7 @@ def build_training_matrix(
         tid = str(s.get("test_id"))
         if tid not in tid_to_i:
             continue
-        pv = s.get("probe_vector")
-        if not pv:
-            pv = ProbeVectorizer().transform(s.get("probe") or {})
-        row = list(pv)
+        row = list(ProbeVectorizer().transform(s.get("probe") or {}))
         if include_test_onehot:
             oh = [0.0] * n
             oh[tid_to_i[tid]] = 1.0

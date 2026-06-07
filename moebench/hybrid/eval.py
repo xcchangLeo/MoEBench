@@ -45,6 +45,23 @@ def index_probe_dataset(probe_dataset: dict[str, Any]) -> dict[tuple[str, str, s
     return out
 
 
+def index_probe_dataset_by_session(
+    probe_dataset: dict[str, Any],
+) -> dict[tuple[str, str], dict[str, Any]]:
+    """Map (session_dir, test_id) → first probe sample in that session."""
+    out: dict[tuple[str, str], dict[str, Any]] = {}
+    for sample in probe_dataset.get("samples") or []:
+        src = sample.get("source_run")
+        tid = sample.get("test_id")
+        if not src or not tid:
+            continue
+        session, _ = _run_locator(src)
+        key = (session, str(tid))
+        if key not in out:
+            out[key] = sample
+    return out
+
+
 def router_select_test_ids(
     router_meta: dict[str, Any],
     xi: dict[str, Any],

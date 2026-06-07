@@ -1,0 +1,111 @@
+{
+  "schema": "moebench.experiment.probe_ebpf_ablation.v1",
+  "created_at_utc": "2026-06-07T05:36:22.929752+00:00",
+  "machine": "aces-System-Product-Name",
+  "benchmark": "unixbench",
+  "pts_suite": null,
+  "probe_model": "/home/cxc/MoEBench/dataset/models/aces-System-Product-Name/probe_unixbench_lgbm.pkl",
+  "probe_duration_s": 4.0,
+  "probe_mode": "micro",
+  "ground_truth_run": "/home/cxc/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-05.json",
+  "ground_truth_suite": 3185.5,
+  "conditions": {
+    "ebpf_on": {
+      "condition": "ebpf_on",
+      "enable_ebpf": true,
+      "n_subtests_requested": 12,
+      "n_subtests_completed": 12,
+      "n_subtests_predicted": 12,
+      "probe_wall_s_sum": 61.83341618673876,
+      "predicted_subtest": {
+        "dhry2reg": 7337.631768915378,
+        "whetstone-double": 2582.1842509851017,
+        "execl": 982.5983362633557,
+        "fstime": 4043.2799034611744,
+        "fsbuffer": 2579.0946066457836,
+        "fsdisk": 7965.258842163871,
+        "pipe": 3720.2516805168516,
+        "context1": 953.7125311322249,
+        "spawn": 1073.8779775281014,
+        "syscall": 2336.1315101650416,
+        "shell1": 3742.3242103495663,
+        "shell8": 21847.87458589493
+      },
+      "predicted_suite": 3193.9752713537027,
+      "telemetry": {
+        "n_subtests": 12,
+        "ebpf_available_count": 12,
+        "ebpf_available_fraction": 1.0,
+        "mean_sched_switch_per_s": 82832.6875,
+        "mean_syscall_enter_per_s": 693478.5,
+        "unavailable_reasons": {}
+      },
+      "errors": [],
+      "pipeline_ok": true,
+      "suite_comparison": {
+        "predicted_suite": 3193.9752713537027,
+        "ground_truth_suite": 3185.5,
+        "abs_error": 8.475271353702738,
+        "relative_error": 0.0026605780422862147
+      }
+    },
+    "ebpf_off": {
+      "condition": "ebpf_off",
+      "enable_ebpf": false,
+      "n_subtests_requested": 12,
+      "n_subtests_completed": 12,
+      "n_subtests_predicted": 12,
+      "probe_wall_s_sum": 60.584273440530524,
+      "predicted_subtest": {
+        "dhry2reg": 7328.930084733776,
+        "whetstone-double": 2511.0538979416883,
+        "execl": 948.3785552915717,
+        "fstime": 4019.576872224685,
+        "fsbuffer": 2579.0946066457836,
+        "fsdisk": 7965.258842163871,
+        "pipe": 3762.7976283415032,
+        "context1": 953.7125311322249,
+        "spawn": 1112.5667973934665,
+        "syscall": 2340.1313072937646,
+        "shell1": 3781.6678734451784,
+        "shell8": 21848.5302764934
+      },
+      "predicted_suite": 3190.9223832100356,
+      "telemetry": {
+        "n_subtests": 12,
+        "ebpf_available_count": 0,
+        "ebpf_available_fraction": 0.0,
+        "mean_sched_switch_per_s": 0.0,
+        "mean_syscall_enter_per_s": 0.0,
+        "unavailable_reasons": {
+          "disabled": 12
+        }
+      },
+      "errors": [],
+      "pipeline_ok": true,
+      "suite_comparison": {
+        "predicted_suite": 3190.9223832100356,
+        "ground_truth_suite": 3185.5,
+        "abs_error": 5.422383210035605,
+        "relative_error": 0.0017022078826041767
+      }
+    }
+  },
+  "comparison": {
+    "suite_relative_error_ebpf_on": 0.0026605780422862147,
+    "suite_relative_error_ebpf_off": 0.0017022078826041767,
+    "suite_relative_error_pct_ebpf_on": 0.26605780422862146,
+    "suite_relative_error_pct_ebpf_off": 0.17022078826041767,
+    "delta_relative_error_pp_off_minus_on": -0.0958370159682038,
+    "abs_error_ebpf_on": 8.475271353702738,
+    "abs_error_ebpf_off": 5.422383210035605,
+    "predicted_suite_ebpf_on": 3193.9752713537027,
+    "predicted_suite_ebpf_off": 3190.9223832100356,
+    "probe_wall_s_ebpf_on": 61.83341618673876,
+    "probe_wall_s_ebpf_off": 60.584273440530524,
+    "ebpf_available_fraction_on": 1.0,
+    "ebpf_available_fraction_off": 0.0,
+    "pipeline_ok_ebpf_on": true,
+    "pipeline_ok_ebpf_off": true
+  }
+}
