@@ -271,28 +271,33 @@ Third, \ourmethod balances the sparsity of observation with the demand for full-
 \subsection{Benchmark Suites}
 
 Benchmark suites provide reproducible and quantifiable measurements for comparing system performance across machines, configurations, and software versions. Rather than relying on a single workload, a suite decomposes system performance into multiple components, each targeting a specific workload pattern or subsystem, such as computation, memory, storage, networking, process control, or inter-process communication. We denote a suite as
-\[
+\begin{equation}
+\label{eq:suite}
 \mathcal{B}=\{b_1,b_2,\ldots,b_N\},
-\]
+\end{equation}
 where \(b_i\) is the \(i\)-th component.
 
 For a system state \(s\), the full result of component \(b_i\) is
-\[
+\begin{equation}
+\label{eq:component-score}
 y_i = f_i(s,T_i,\epsilon_i),
-\]
+\end{equation}
 where \(T_i\) is the execution budget required by the original benchmark protocol and \(\epsilon_i\) denotes measurement noise. A full-suite run produces
-\[
+\begin{equation}
+\label{eq:result-vector}
 \mathbf{y}=[y_1,y_2,\ldots,y_N],
-\]
+\end{equation}
 and, when defined by the benchmark framework, an aggregate score
-\[
+\begin{equation}
+\label{eq:aggregate-score}
 Y=A(\mathbf{y}).
-\]
+\end{equation}
 
 The cost of full-suite benchmarking comes from two sources: the number of components and the duration of each component. Formally,
-\[
+\begin{equation}
+\label{eq:full-cost}
 C_{\mathrm{full}}=\sum_{i=1}^{N}C_i(T_i).
-\]
+\end{equation}
 This cost can be substantial for suites with many components or long measurement intervals. However, not all observations are equally informative. Components may stress overlapping subsystems and therefore exhibit correlated results (Section~\ref{subsec:motivation-redundancy}, Figure~\ref{fig:unixbench-subtest-correlation}), while short executions may already expose the rate or latency trend of a full run. This motivates our design goal: estimate the full component vector and aggregate score using only sparse component observations and short execution windows.
 
 
@@ -422,9 +427,10 @@ During online evaluation, the trained models are reused on a new target system, 
 Feature collection provides the contextual information required to reduce benchmark cost while preserving the ability to estimate full-suite performance. The framework observes three factors that affect measured performance: what the machine is, what state the machine is in, and how a benchmark behaves.
 
 For the $i$-th benchmark run, we define the system context vector as
-$$
+\begin{equation}
+\label{eq:system-context}
 \mathbf{x}_i = [\mathbf{x}_i^{\mathrm{static}}, \mathbf{x}_i^{\mathrm{dynamic}}]
-$$
+\end{equation}
 where $\mathbf{x}_i^{\mathrm{static}}$ describes stable host properties (e.g., CPU topology, total memory, OS versions) and $\mathbf{x}_i^{\mathrm{dynamic}}$ captures the transient runtime state before benchmark execution (e.g., system load, hardware counters). The vector $\mathbf{x}_i$ is collected once before a full-suite run and is used by both the benchmark router and the early-stopping estimator.
 
 During short-run probing, the framework further collects a probe-specific vector $\mathbf{p}_{i,j}$ for benchmark component $b_j$. Unlike $\mathbf{x}_i$, which describes the global context of the $i$-th run, $\mathbf{p}_{i,j}$ summarizes the execution prefix of a specific component, capturing wall-clock time, context-switch rates, and categorical identifiers. Table~\ref{tab:feature_collection} summarizes these feature groups by collection stage and purpose.
@@ -445,23 +451,27 @@ The informative subset, however, is not fixed across systems. A CPU-bound system
 
 \paragraph{Expert Routing.}
 We treat each independently executable sub-benchmark as a measurement expert in a fixed pool:
-\[
+\begin{equation}
+\label{eq:expert-pool}
 \mathcal{E}=\{e_1,e_2,\ldots,e_n\}.
-\]
+\end{equation}
 Each expert \(e_i\) corresponds to a sub-benchmark identifier and optional metadata such as historical execution cost. Before execution, the router only observes the system feature vector and expert metadata; after execution, expert \(e_i\) returns a measured score \(r_i\) and incurs cost \(c_i\).
 
 Routing is not a standard multi-class classification problem, because the goal is not to assign each system state to a single best benchmark. Instead, the router must estimate the conditional utility of every candidate expert and select a subset. Given \(x\), a scoring model \(f_\theta\) assigns each expert a relevance score:
-\[
+\begin{equation}
+\label{eq:router-score}
 s_i=f_\theta(x,e_i).
-\]
+\end{equation}
 The scores are normalized into selection probabilities:
-\[
+\begin{equation}
+\label{eq:router-prob}
 p_i=\frac{\exp(s_i)}{\sum_{j=1}^{n}\exp(s_j)}.
-\]
+\end{equation}
 The router then executes the Top-\(K\) experts:
-\[
+\begin{equation}
+\label{eq:topk}
 \mathcal{S}_K(x)=\operatorname{TopK}_{e_i\in\mathcal{E}} p_i.
-\]
+\end{equation}
 The resulting partial observation vector is passed to the reconstructor to estimate the full-suite profile.
 
 \paragraph{Training Objective.}
@@ -469,13 +479,15 @@ The router is trained to rank experts by their reconstruction utility rather tha
 
 \paragraph{Budget Control and Adaptive Refinement.}
 The budget parameter \(K\) controls the accuracy--cost trade-off. Smaller \(K\) reduces execution time but provides fewer observations to the reconstructor, while larger \(K\) improves measurement coverage at higher cost. In addition to a fixed Top-\(K\) budget, \ourmethod supports uncertainty-guided refinement. After the initial selected experts are executed, the reconstructor predicts the full-suite score \(\hat{y}_{\mathrm{suite}}\) together with an uncertainty estimate \(\sigma_{\mathrm{suite}}\). If
-\[
+\begin{equation}
+\label{eq:sigma-threshold}
 \sigma_{\mathrm{suite}} > \tau_{\sigma},
-\]
+\end{equation}
 \ourmethod selects an additional unexecuted expert with the highest predicted uncertainty:
-\[
+\begin{equation}
+\label{eq:refinement-expert}
 e_{\mathrm{next}}=\arg\max_{e_i\notin \mathcal{S}} \sigma_i.
-\]
+\end{equation}
 The new measurement is added to the observation vector, and reconstruction is repeated until \(\sigma_{\mathrm{suite}}\leq\tau_{\sigma}\) or the execution budget is exhausted.
 
 
@@ -503,13 +515,15 @@ To address this issue, \ourmethod uses calibrated micro-probing for high-cost ex
 Importantly, this replacement is performed only at the observation level: the training target remains the official full-run score of the original sub-benchmark. Thus, the micro workload is not treated as a substitute benchmark score, but as a low-cost stimulus for eliciting predictive system telemetry. During the micro-probe window, \ourmethod collects the same classes of telemetry signals, including eBPF events and standard \texttt{/proc} counters, and uses them to infer how the system would behave under the corresponding full benchmark.
 
 Formally, for a system instance \(s_i\) and expert \(t_j\), a micro-probe produces a bounded telemetry vector \(x^{\textsc{Micro}}_{i,j}\). The supervised estimator learns a calibrated mapping from this telemetry to the full-run target:
-\[
+\begin{equation}
+\label{eq:probe-predict}
 \hat{y}_{i,j} = f_j(x^{\textsc{Micro}}_{i,j}),
-\]
+\end{equation}
 or, in the shared-estimator setting,
-\[
+\begin{equation}
+\label{eq:probe-predict-shared}
 \hat{y}_{i,j} = f(x^{\textsc{Micro}}_{i,j}, e(t_j)),
-\]
+\end{equation}
 where \(e(t_j)\) encodes the expert identity and \(y_{i,j}\) is the ground-truth score obtained from historical full executions of the original sub-benchmark. This design avoids repeatedly invoking expensive benchmark components during inference while preserving benchmark-defined supervision during training.
 
 The choice between real and micro probing can be made per expert according to the observed probing overhead. Experts with low startup cost can continue to use real probes, while high-cost experts are served by calibrated micro models. In both cases, the downstream reconstruction module only consumes the predicted expert-level score \(\hat{y}_{i,j}\), independent of whether it is produced by a real probe or a micro-probe.
@@ -544,9 +558,10 @@ After the router selects and executes a small subset of sub-benchmarks, \ourmeth
 \paragraph{Input Representation and Multi-Output Target.}
 To make sparse benchmark results consumable by a fixed-size tensor, \ourmethod encodes all sub-benchmarks in a canonical order. Each sub-benchmark is represented by a 3-tuple: \(z_i = (m_i, v_i, t_i)\), where \(m_i \in \{0,1\}\) is a binary observation mask, \(v_i\) is the observed score (if executed), and \(t_i\) is the observed execution time. For unexecuted tests, the tuple is zero-filled. 
 The final input vector concatenates the system context \(x\) with the masked partial observations:
-\[
+\begin{equation}
+\label{eq:recon-input}
 X = [x,\, m_1, v_1, t_1,\, \ldots,\, m_n, v_n, t_n]
-\]
+\end{equation}
 The output target is the complete benchmark profile derived from historical full runs: \(Y = [r_1, r_2, \ldots, r_n, S]\), where \(S\) is the final reported index. For tree-based models (e.g., LightGBM, XGBoost), \ourmethod wraps the base regressor with a multi-output strategy to train an independent regressor per target dimension.
 
 \paragraph{Training via Simulated Sparse Execution.}
@@ -764,11 +779,22 @@ We evaluate our methodology and summarize the results across testbeds using the 
 \end{tabular}
 \end{table*}
 \begin{enumerate}
-    \item \textbf{Accuracy:} For the suite-level score \(\hat{S}\) and ground truth \(S\), we report absolute error \(| \hat{S} - S |\) and relative error \(| \hat{S} - S | / \max(|S|, \epsilon)\). Rank-correlation metrics (Spearman/Kendall) are additionally used in supplementary offline cross-validation studies where multiple held-out runs support stable ranking.
+    \item \textbf{Accuracy:} For the suite-level score \(\hat{S}\) and ground truth \(S\), we report absolute error and relative error:
+    \begin{equation}
+    \label{eq:absolute-error}
+    |\hat{S} - S|, \qquad
+    \frac{|\hat{S} - S|}{\max(|S|, \epsilon)}.
+    \end{equation}
+    Rank-correlation metrics (Spearman/Kendall) are additionally used in supplementary offline cross-validation studies where multiple held-out runs support stable ranking.
     
-    \item \textbf{Cost:} We measure the wall-clock time of benchmark execution. Let $T_{\mathrm{partial}}$ be the executed subset duration and $T_{\mathrm{full}}$ be the complete suite duration (or its dataset-replay equivalent). The fraction of time saved is calculated as $(T_{\mathrm{full}} - T_{\mathrm{partial}}) / T_{\mathrm{full}}$. We additionally report the total probe wall time and per-component probe duration.
+    \item \textbf{Cost:} We measure the wall-clock time of benchmark execution. Let $T_{\mathrm{partial}}$ be the executed subset duration and $T_{\mathrm{full}}$ be the complete suite duration (or its dataset-replay equivalent). The fraction of time saved is
+    \begin{equation}
+    \label{eq:time-saved}
+    f_{\mathrm{saved}} = \frac{T_{\mathrm{full}} - T_{\mathrm{partial}}}{T_{\mathrm{full}}}.
+    \end{equation}
+    We additionally report the total probe wall time and per-component probe duration.
     
-    \item \textbf{Combined trade-off score:} To evaluate Top-$K$ and routing-policy configurations, we utilize a balanced score (where lower is better) that prioritizes prediction accuracy while treating wall-time savings as a secondary factor. Let $e$ denote the mean out-of-fold suite relative error, $e_{\min} = \min e$ over the compared settings, and $f_{\mathrm{saved}}$ the mean fraction of full-suite wall time saved. We define the score as:
+    \item \textbf{Combined trade-off score:} To evaluate Top-$K$ and routing-policy configurations, we utilize a balanced score (where lower is better) that prioritizes prediction accuracy while treating wall-time savings as a secondary factor. Let $e$ denote the mean out-of-fold suite relative error (Equation~\ref{eq:absolute-error}), $e_{\min} = \min e$ over the compared settings, and $f_{\mathrm{saved}}$ the mean fraction of full-suite wall time saved (Equation~\ref{eq:time-saved}). We define the score as:
     \begin{equation}
     \label{eq:balanced-score}
     \mathrm{Bal} \;=\; \frac{e}{e_{\min}} \;+\; \lambda \,(1 - f_{\mathrm{saved}}),
@@ -795,7 +821,7 @@ Execution-free MLP baselines incur the lowest partial cost but exhibit high pred
 \subsection{Uncertainty-Guided Active Refinement}
 \label{subsec:hybrid-active-refinement}
 
-Section~\ref{subsec:router} describes an optional refinement loop: after an initial Top-$K$ subset is probed, the v2 reconstructor outputs per-subtest uncertainties~$\sigma_i$ and suite-level~$\sigma_{\mathrm{suite}}$; if $\sigma_{\mathrm{suite}}>\tau_{\sigma}$, \ourmethod{} micro-probes the unobserved expert with largest~$\sigma_i$ and re-predicts until the budget is exhausted.
+Section~\ref{subsec:router} describes an optional refinement loop: after an initial Top-$K$ subset is probed, the v2 reconstructor outputs per-subtest uncertainties~$\sigma_i$ and suite-level~$\sigma_{\mathrm{suite}}$; if $\sigma_{\mathrm{suite}}>\tau_{\sigma}$ (Equation~\ref{eq:sigma-threshold}), \ourmethod{} micro-probes the unobserved expert with largest~$\sigma_i$ (Equation~\ref{eq:refinement-expert}) and re-predicts until the budget is exhausted.
 We run this loop on the Hybrid path (router $\rightarrow$ micro-probe $\rightarrow$ reconstruct) to answer two practical questions: (i)~does $\sigma$-guided probe selection allocate extra budget better than uniformly raising~$K$? and (ii)~does refinement materially improve suite accuracy once the reconstructor is already confident?
 
 \paragraph{Protocol.}
