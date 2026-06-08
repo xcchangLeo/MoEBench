@@ -10,6 +10,10 @@ Outputs (default under ``paper/``):
   - unixbench_subtest_correlation_heatmap.png
   - unixbench_subtest_correlation_matrix.csv
   - unixbench_subtest_correlation_meta.json
+
+Combined Pearson + Spearman figure (``--combined``):
+  - paper/images/unixbench_subtest_correlation_combined.pdf
+  - paper/images/unixbench_subtest_correlation_combined.png
 """
 
 from __future__ import annotations
@@ -23,6 +27,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import LinearSegmentedColormap, Normalize
 from scipy.stats import pearsonr, spearmanr
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -130,6 +135,110 @@ def correlation_matrix(x: np.ndarray, method: str) -> np.ndarray:
     return corr
 
 
+def _short_labels(labels: list[str]) -> list[str]:
+    short = {
+        "dhry2reg": "dhry2",
+        "whetstone-double": "whet",
+        "fsbuffer": "fsbuf",
+        "context1": "ctx1",
+        "shell1": "sh1",
+        "shell8": "sh8",
+    }
+    return [short.get(x, x) for x in labels]
+
+
+def _strong_corr_cmap() -> LinearSegmentedColormap:
+    colors = [
+        "#053061",
+        "#2166AC",
+        "#4393C3",
+        "#92C5DE",
+        "#FDDBC7",
+        "#F4A582",
+        "#D6604D",
+        "#B2182B",
+        "#67001F",
+    ]
+    return LinearSegmentedColormap.from_list("corr_strong", colors, N=256)
+
+
+def _corr_color_norm(corr: np.ndarray) -> Normalize:
+    off = corr[~np.eye(corr.shape[0], dtype=bool)]
+    vmin = max(0.0, float(np.floor(float(np.min(off)) * 10) / 10) - 0.05)
+    return Normalize(vmin=vmin, vmax=1.0)
+
+
+def load_matrix_csv(path: Path) -> tuple[np.ndarray, list[str]]:
+    with open(path, encoding="utf-8", newline="") as f:
+        rows = list(csv.reader(f))
+    labels = rows[0][1:]
+    data = [[float(x) for x in row[1:]] for row in rows[1:]]
+    return np.asarray(data, dtype=float), labels
+
+
+def plot_heatmap_panel(
+    ax,
+    corr: np.ndarray,
+    labels: list[str],
+    *,
+    method: str,
+    n_samples: int,
+    cmap,
+    norm: Normalize,
+) -> None:
+    tick = _short_labels(labels)
+    n = len(labels)
+    ax.imshow(corr, cmap=cmap, norm=norm, aspect="equal", interpolation="nearest")
+    ax.set_xticks(range(n))
+    ax.set_yticks(range(n))
+    ax.set_xticklabels(tick, rotation=45, ha="right", fontsize=9)
+    ax.set_yticklabels(tick, fontsize=9)
+    method_title = "Pearson" if method == "pearson" else "Spearman"
+    ax.set_title(f"{method_title} (n={n_samples})", fontsize=11, pad=8)
+    for i in range(n):
+        for j in range(n):
+            val = corr[i, j]
+            t = (val - norm.vmin) / (norm.vmax - norm.vmin)
+            color = "white" if t > 0.62 or t < 0.18 else "black"
+            ax.text(j, i, f"{val:.2f}", ha="center", va="center", fontsize=7.5, color=color)
+
+
+def plot_combined_heatmap(
+    pearson: np.ndarray,
+    spearman: np.ndarray,
+    labels: list[str],
+    *,
+    n_samples: int,
+    out_base: Path,
+) -> None:
+    cmap = _strong_corr_cmap()
+    norm = _corr_color_norm(pearson)
+    fig, axes = plt.subplots(1, 2, figsize=(11.2, 5.0), dpi=150)
+    fig.subplots_adjust(left=0.07, right=0.88, bottom=0.18, top=0.88, wspace=0.22)
+    for ax, mat, method in zip(axes, (pearson, spearman), ("pearson", "spearman")):
+        plot_heatmap_panel(ax, mat, labels, method=method, n_samples=n_samples, cmap=cmap, norm=norm)
+    cbar = fig.colorbar(
+        plt.cm.ScalarMappable(norm=norm, cmap=cmap),
+        ax=axes.ravel().tolist(),
+        fraction=0.035,
+        pad=0.02,
+    )
+    cbar.set_label("Correlation coefficient", fontsize=10)
+    cbar.ax.tick_params(labelsize=9)
+    fig.suptitle(
+        f"UnixBench subtest score correlation across five hosts ({n_samples} full runs)",
+        fontsize=12,
+        y=0.98,
+    )
+    pdf = out_base.with_suffix(".pdf")
+    png = out_base.with_suffix(".png")
+    fig.savefig(pdf, bbox_inches="tight", facecolor="white")
+    fig.savefig(png, bbox_inches="tight", facecolor="white", dpi=300)
+    plt.close(fig)
+    print(f"Wrote {pdf}", file=sys.stderr)
+    print(f"Wrote {png}", file=sys.stderr)
+
+
 def plot_heatmap(
     corr: np.ndarray,
     labels: list[str],
@@ -198,11 +307,48 @@ def main() -> int:
         default=None,
         help="Output basename without extension (default: <out-dir>/unixbench_subtest_correlation_heatmap)",
     )
+    ap.add_argument(
+        "--combined",
+        action="store_true",
+        help="Plot Pearson + Spearman side-by-side from existing *_matrix.csv under --out-dir",
+    )
+    ap.add_argument(
+        "--images-dir",
+        type=Path,
+        default=_REPO_ROOT / "paper" / "images",
+        help="Output directory for --combined figure",
+    )
     args = ap.parse_args()
 
-    dataset_root = args.dataset_root.resolve()
     out_dir = args.out_dir.resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
+
+    if args.combined:
+        pearson_csv = out_dir / "unixbench_subtest_correlation_heatmap_matrix.csv"
+        spearman_csv = out_dir / "unixbench_subtest_correlation_heatmap_spearman_matrix.csv"
+        pearson_meta_path = out_dir / "unixbench_subtest_correlation_heatmap_meta.json"
+        if not pearson_csv.is_file() or not spearman_csv.is_file():
+            raise SystemExit(f"Missing CSV under {out_dir}; run pearson and spearman exports first.")
+        pearson, labels = load_matrix_csv(pearson_csv)
+        spearman, labels2 = load_matrix_csv(spearman_csv)
+        if labels != labels2:
+            raise SystemExit("Pearson/Spearman label order mismatch.")
+        n_samples = 25
+        if pearson_meta_path.is_file():
+            with open(pearson_meta_path, encoding="utf-8") as f:
+                n_samples = int(json.load(f).get("n_samples", n_samples))
+        images_dir = args.images_dir.resolve()
+        images_dir.mkdir(parents=True, exist_ok=True)
+        plot_combined_heatmap(
+            pearson,
+            spearman,
+            labels,
+            n_samples=n_samples,
+            out_base=images_dir / "unixbench_subtest_correlation_combined",
+        )
+        return 0
+
+    dataset_root = args.dataset_root.resolve()
     out_base = (args.out_base or out_dir / "unixbench_subtest_correlation_heatmap").resolve()
 
     run_paths = collect_unixbench_run_paths(dataset_root)
