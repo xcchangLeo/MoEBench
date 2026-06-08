@@ -231,7 +231,7 @@ def plot_combined_heatmap(
     elif layout == "horizontal-wide":
         fig, axes = plt.subplots(1, 2, figsize=(11.2, 5.0), dpi=150)
         fig.subplots_adjust(left=0.07, right=0.88, bottom=0.18, top=0.88, wspace=0.22)
-        tick_fs, ann_fs, title_fs = 10.0, 7.5, 15.0
+        tick_fs, ann_fs, title_fs = 12.0, 7.5, 20.0
     else:
         raise ValueError(f"unknown layout: {layout!r}")
 
