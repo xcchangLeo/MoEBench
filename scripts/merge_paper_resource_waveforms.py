@@ -21,8 +21,15 @@ DEFAULT_MACHINES = (
     "iZbp1acaw5wdllhz47922rZ",
 )
 
-DEFAULT_WAVEFORM_DIR = REPO_ROOT / "paper" / "waveforms"
+DEFAULT_WAVEFORM_DIR = REPO_ROOT / "paper" / "images"
 DEFAULT_OUT = REPO_ROOT / "paper" / "images" / "resource_waveforms_2x3.png"
+
+# Legacy per-machine basenames under paper/images/ (waveform_{config}_{cpu|memory}.pdf)
+WAVEFORM_IMAGE_BASENAME: dict[str, tuple[str, str]] = {
+    "aces-System-Product-Name": ("waveform_32U128G_cpu", "waveform_32U128G_memory"),
+    "iZbp15n87643uk1sqjrdvdZ": ("waveform_4U8G_cpu", "waveform_4U8G_memory"),
+    "iZbp1acaw5wdllhz47922rZ": ("waveform_8U8G_cpu", "waveform_8U8G_memory"),
+}
 
 
 def _load_traces(json_path: Path) -> list[dict]:
@@ -50,8 +57,9 @@ def _column_spec(
     prefer_png: bool,
 ) -> dict:
     label = machine_config_label(machine) or machine
-    cpu_image = waveform_dir / f"{machine}_waveform_cpu.png"
-    mem_image = waveform_dir / f"{machine}_waveform_memory.png"
+    cpu_stem, mem_stem = WAVEFORM_IMAGE_BASENAME.get(machine, (f"{machine}_waveform_cpu", f"{machine}_waveform_memory"))
+    cpu_image = waveform_dir / f"{cpu_stem}.png"
+    mem_image = waveform_dir / f"{mem_stem}.png"
     has_png = cpu_image.is_file() and mem_image.is_file()
 
     json_path = (
