@@ -317,21 +317,18 @@ This cost can be substantial for suites with many components or long measurement
 Although comprehensive suites contain dozens of subtests, many of these workloads stress overlapping hardware subsystems. Our profiling reveals that seemingly diverse tasks within UnixBench---such as integer computation (\id{dhry2reg}), process creation (\id{spawn}), and inter-process communication (\id{pipe})---often bottleneck on the same underlying OS scheduling overheads or memory hierarchy mechanisms. Because these subtests are merely different software projections of the same underlying hardware capacity, executing all of them yields diminishing returns in information gain. This physical redundancy indicates that a carefully routed, minimal subset of experts is theoretically sufficient to expose the current system's overall performance limits.
 
 To make this redundancy explicit and quantifiable, we pool $n{=}25$ complete single-copy UnixBench runs (\id{perl Run -c 1}) collected across our five evaluation hosts (2\,U/8\,GiB through 32\,U/128\,GiB; Table~\ref{tab:testbeds}), yielding five independent full-suite repetitions per machine. For each run we extract the official per-subtest index score for all $N{=}12$ components (\id{dhry2reg}, \id{whetstone-double}, \id{execl}, \id{fstime}, \id{fsbuffer}, \id{fsdisk}, \id{pipe}, \id{context1}, \id{spawn}, \id{syscall}, \id{shell1}, \id{shell8}) and compute pairwise association matrices. Figure~\ref{fig:unixbench-subtest-correlation} reports both Pearson (linear) and Spearman (rank) correlations side-by-side; Spearman is less sensitive to outliers when suite indices span more than a $2\times$ range across hosts (roughly 1590--3190 on our testbeds).
-
-The heatmaps reveal strong intra-cluster coupling and comparatively weak cross-cluster coupling---precisely the structure a Mixture-of-Experts router should exploit. Under Pearson correlation, off-diagonal pairs average $0.85$ (median $0.94$; range $[0.19,\,0.999]$). A dense CPU/compute block emerges among \id{dhry2reg}, \id{whetstone-double}, \id{pipe}, and \id{syscall} (e.g., $r{=}0.998$ for \id{pipe} and \id{syscall}, $r{\approx}0.998$ for \id{dhry2reg} and \id{whetstone-double}), indicating that these nominally distinct kernels co-move when overall CPU throughput changes. A separate filesystem block links \id{fstime}, \id{fsbuffer}, and \id{fsdisk} with $r{\ge}0.993$ among the three, reflecting shared dependence on page-cache behavior and block-device latency. Shell-script components \id{shell1} and \id{shell8} also move together ($r{=}0.989$), consistent with both exercising fork/exec and interpreted execution paths on the same host state.
-
-At the same time, several pairs remain weakly coupled, marking natural diversity axes for subset selection. Process-creation stress (\id{spawn}) decorrelates from filesystem micro-benchmarks ($r{\approx}0.28$--$0.33$ with \id{fstime}, \id{fsbuffer}, and \id{fsdisk}) and from \id{execl} ($r{=}0.19$), suggesting that fork-heavy behavior carries information not fully captured by CPU-rate or I/O-throughput proxies alone. Under Spearman rank correlation---which down-weights absolute score scale across machines---the median off-diagonal coefficient remains high ($0.86$), but \id{spawn} decouples further from \id{shell8} ($r{\approx}-0.28$) and shows near-zero association with \id{fstime} ($r{\approx}0$), highlighting that rank-order redundancy is not uniform across workload classes. Together, these patterns empirically justify horizontal cost reduction by \ourmethod: rather than executing all $N$ components, a router can select $K{\ll}N$ experts spanning distinct clusters (compute, filesystem, process control, shell/OS interaction) and a reconstructor can statistically recover the remaining correlated components from partial observations.
 \begin{figure}[t]
     \centering
     \includegraphics[width=1\linewidth]{images/unixbench_subtest_correlation_combined.pdf}
-    \caption{UnixBench subtest score correlation across five heterogeneous hosts ($n{=}25$ full single-copy runs, five repetitions per host).
-    Each cell $(i,j)$ reports the correlation between subtest indices $y_i$ and $y_j$ pooled over all runs; diagonal entries are unity by construction.
-    The left panel shows Pearson $r$ (linear co-movement of absolute index scores; mean off-diagonal $r{=}0.85$, median $0.94$).
-    The right panel shows Spearman rank correlation (median off-diagonal $\rho{=}0.86$), capturing rank-order association across hosts with different baseline performance.
-    Dark red cells indicate highly redundant subtest pairs (e.g., \id{fstime} and \id{fsbuffer}, \id{pipe} and \id{syscall}); lighter cells mark weaker coupling suited to complementary Top-$K$ selection (e.g., \id{spawn} versus filesystem or shell workloads).
-    Scores are the official per-subtest indices from \ourmethod{} UnixBench collection sessions in canonical single-copy suite order.}
+    \caption{Pairwise UnixBench subtest score correlation on five heterogeneous hosts ($n{=}25$ single-copy runs).
+    Left: Pearson $r$; right: Spearman $\rho$.
+    Dark red marks redundant pairs; lighter cells indicate weaker coupling for complementary Top-$K$ selection.}
     \label{fig:unixbench-subtest-correlation}
 \end{figure}
+The heatmaps reveal strong intra-cluster coupling and comparatively weak cross-cluster coupling---precisely the structure a Mixture-of-Experts router should exploit. Under Pearson correlation, off-diagonal pairs average $0.85$ (median $0.94$; range $[0.19,\,0.999]$). A dense CPU/compute block emerges among \id{dhry2reg}, \id{whetstone-double}, \id{pipe}, and \id{syscall} (e.g., $r{=}0.998$ for \id{pipe} and \id{syscall}, $r{\approx}0.998$ for \id{dhry2reg} and \id{whetstone-double}), indicating that these nominally distinct kernels co-move when overall CPU throughput changes. A separate filesystem block links \id{fstime}, \id{fsbuffer}, and \id{fsdisk} with $r{\ge}0.993$ among the three, reflecting shared dependence on page-cache behavior and block-device latency. Shell-script components \id{shell1} and \id{shell8} also move together ($r{=}0.989$), consistent with both exercising fork/exec and interpreted execution paths on the same host state.
+
+At the same time, several pairs remain weakly coupled, marking natural diversity axes for subset selection. Process-creation stress (\id{spawn}) decorrelates from filesystem micro-benchmarks ($r{\approx}0.28$--$0.33$ with \id{fstime}, \id{fsbuffer}, and \id{fsdisk}) and from \id{execl} ($r{=}0.19$), suggesting that fork-heavy behavior carries information not fully captured by CPU-rate or I/O-throughput proxies alone. Under Spearman rank correlation---which down-weights absolute score scale across machines---the median off-diagonal coefficient remains high ($0.86$), but \id{spawn} decouples further from \id{shell8} ($r{\approx}-0.28$) and shows near-zero association with \id{fstime} ($r{\approx}0$), highlighting that rank-order redundancy is not uniform across workload classes. Together, these patterns empirically justify horizontal cost reduction by \ourmethod: rather than executing all $N$ components, a router can select $K{\ll}N$ experts spanning distinct clusters (compute, filesystem, process control, shell/OS interaction) and a reconstructor can statistically recover the remaining correlated components from partial observations.
+
 
 \paragraph{Insight 2: Performance Metrics Exhibit Early Convergence.}
 When full-suite execution is unavoidable, traditional methodologies mandate a rigid run-to-completion model. However, we observe that many benchmark components are fundamentally iterative rate tests. For instance, the Dhrystone and Whetstone components in UnixBench~\cite{smith2011byte} continuously execute integer and floating-point kernels over a prolonged loop. Our telemetry shows that the computed operation rate (e.g., operations per second) typically stabilizes and converges within the first few seconds of execution. Continuing the workload to its official timeout primarily reduces statistical variance rather than altering the fundamental performance metric. This insight reveals a massive opportunity for vertical cost reduction via aggressive, time-bounded probing.
@@ -605,7 +602,7 @@ Consequently, if the reconstructor encounters an anomalous, out-of-distribution 
 
 We deploy \appname{} on five Linux machines spanning a wide range of CPU and memory capacities.
 Table~\ref{tab:testbeds} summarizes the hardware configuration of each host.
-H1 (32 logical CPUs, 128\,GiB RAM, NVIDIA RTX 3090 Ti GPU) serves as the development server and is the only machine on which \ptsgpu{} is run; H2--H5 are smaller CPU-only instances used for UnixBench and \ptscpu{} evaluation.
+H1 (32 vCPUs, Intel Core i9-14900K, 128\,GiB RAM, NVIDIA RTX 3090 Ti GPU) serves as the development server and is the only machine on which \ptsgpu{} is run; H2--H5 are smaller CPU-only cloud instances (Intel Xeon 6982P-C or Xeon Platinum) used for UnixBench and \ptscpu{} evaluation.
 To ensure strict reproducibility, all machines share the same base software stack (Ubuntu 22.04.5 LTS, GCC 11.5.0).
 Furthermore, for H1, the environment is specifically configured with NVIDIA driver version 580.159.03, PyTorch 2.12.0+cu130, and TensorFlow 2.21.0.
 We label hosts by a compact CPU$\times$RAM shorthand used throughout this section.
@@ -613,19 +610,19 @@ We label hosts by a compact CPU$\times$RAM shorthand used throughout this sectio
 
 \begin{table}[t]
 \centering
-\caption{Evaluation testbeds. Five Linux hosts with heterogeneous CPU and memory capacity. \ptsgpu{} runs only on H1.}
+\caption{Evaluation testbeds. Five Linux hosts with heterogeneous CPU and memory capacity. CPU models are taken from \path{/proc/cpuinfo} at collection time. \ptsgpu{} runs only on H1.}
 \label{tab:testbeds}
 \small
-\setlength{\tabcolsep}{6pt} 
-\begin{tabular}{@{}lrrc@{}}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lp{0.36\linewidth}rc@{}}
 \toprule
-\textbf{Host} & \textbf{vCPU} & \textbf{RAM (GiB)} & \textbf{GPU} \\
+\textbf{Host} & \textbf{vCPU (CPU model)} & \textbf{RAM (GiB)} & \textbf{GPU} \\
 \midrule
-H1 & 32 & 128 & NVIDIA RTX 3090 Ti GPU \\
-H2 & 2  & 8   & ---    \\
-H3 & 4  & 8   & ---    \\
-H4 & 4  & 16  & ---    \\
-H5 & 8  & 8   & ---    \\
+H1 & 32 (Intel Core i9-14900K) & 128 & NVIDIA RTX 3090 Ti GPU \\
+H2 & 2 (Intel Xeon 6982P-C) & 8 & --- \\
+H3 & 4 (Intel Xeon 6982P-C) & 8 & --- \\
+H4 & 4 (Intel Xeon 6982P-C) & 16 & --- \\
+H5 & 8 (Intel Xeon Platinum) & 8 & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -670,9 +667,9 @@ For fairness, we evaluate these baselines under the same train/test splits whene
 The remainder of Section~\ref{sec:evaluation} is organized around three execution routes.
 \textbf{(1)~Hybrid pipeline (\ourmethod{} main method):}
 collect $\mathbf{x}$, router Top-$K$, micro-probe selected components, reconstruct the suite score (router $\rightarrow$ probe $\rightarrow$ reconstruct).
-We first report five-host end-to-end effectiveness (Section~\ref{subsec:overall-effectiveness}), followed by an online uncertainty-guided active-refinement study on H1 (Section~\ref{subsec:hybrid-active-refinement}).
+We first report five-host end-to-end effectiveness (Section~\ref{subsec:overall-effectiveness}), followed by a runtime overhead analysis using UnixBench resource waveforms (Section~\ref{subsec:resource-waveforms}), then an online uncertainty-guided active-refinement study on H1 (Section~\ref{subsec:hybrid-active-refinement}).
 \textbf{(2)~Route~A ablation:}
-replace probe predictions with \emph{measured} partial sub-benchmark scores on the router-selected subset, then reconstruct (Section~\ref{subsec:model-combination}), with supplementary offline studies on Top-$K$, routing policy, system-feature ablation, and resource waveforms (Sections~\ref{subsec:topk-tradeoff}--\ref{subsec:feature-ablation}, Section~\ref{subsec:resource-waveforms}).
+replace probe predictions with \emph{measured} partial sub-benchmark scores on the router-selected subset, then reconstruct (Section~\ref{subsec:model-combination}), with supplementary offline studies on Top-$K$, routing policy, and system-feature ablation (Sections~\ref{subsec:topk-tradeoff}--\ref{subsec:feature-ablation}).
 \textbf{(3)~Route~B ablation:}
 probe every component without router selection or reconstruction (Section~\ref{subsec:probe-evaluation}), followed by telemetry-degradation and probe-duration sweeps (Sections~\ref{subsec:probe-ebpf-ablation},~\ref{subsec:probe-duration-sensitivity}).
 Unless noted, Hybrid and Route~A accuracy evaluations replay ground-truth scores from previously collected full runs on the same host; Route~B studies use online micro-probes on H1.
@@ -817,6 +814,69 @@ Table~\ref{tab:overall-effectiveness-expanded} reports suite-level relative erro
 UnixBench and \ptscpu{} rows cover five hosts; \ptsgpu{} rows report H1 only.
 \ourmethod achieves mean relative errors of $3.3\times10^{-5}\%$ (UnixBench), $3.4\times10^{-5}\%$ (\ptscpu), and $2.2\times10^{-5}\%$ (\ptsgpu) while reducing wall time by 95--100\% versus full-suite execution.
 Execution-free MLP baselines incur the lowest partial cost but exhibit high prediction error on \ptscpu{} and most UnixBench hosts.
+
+\subsection{Runtime Overhead Analysis}
+\label{subsec:resource-waveforms}
+
+Table~\ref{tab:overall-effectiveness-expanded} reports aggregate wall-time savings, but scalar execution times alone do not show \emph{how} CPU and memory footprints evolve during execution.
+To substantiate that \ourmethod{} incurs low runtime overhead beyond accuracy metrics, we capture online resource traces while running UnixBench under four conditions on each host: \emph{Full run} (complete \id{perl Run -c 1} suite), \emph{router only} (Route~A partial execution of router-selected Top-$K$ subtests), \emph{probe only} (Route~B micro-probes on all 12 components), and \emph{BenchScout} (full Hybrid: $\mathbf{x}$ collection, router Top-$K$, probe selected subtests, reconstruct).
+Each trace is sampled every $0.5$\,s and aligned to $t{=}0$ at the start of the corresponding run; curves in a panel are overlaid on shared axes for direct duration comparison.
+
+Figure~\ref{fig:resource-waveforms} summarizes traces from three representative hosts---32U128G (H1), 4U8G (H3), and 8U8G (H5)---arranged as a $2{\times}3$ grid (panels (a)--(f)).
+The top row reports CPU utilization (\%); the bottom row reports memory used (\%).
+On all three machines, the \emph{Full run} curve (blue) spans the entire ${\approx}1680$\,s UnixBench wall clock and exhibits repeated CPU bursts as subtests rotate through compute-, I/O-, and OS-intensive phases.
+\emph{Router only} (green) terminates after ${\approx}250$--$400$\,s once the Top-$K$ partial suite finishes, reaching similar peak CPU during active phases but eliminating the long tail of remaining subtests.
+\emph{Probe only} (orange) and \emph{BenchScout} (purple) complete within the first minute: probe-only executes twelve $D{=}4$\,s micro-probes sequentially, while BenchScout adds a short $\mathbf{x}$/router preamble plus three probes before reconstruction inference.
+Memory usage stays comparatively flat across modes (${\approx}15$--$30\%$ on 4U8G/8U8G hosts, slightly higher on 32U128G), confirming that wall-time reduction comes primarily from shorter CPU-active intervals rather than lower resident footprint.
+These traces visually corroborate the 95--100\% wall-time reductions in Table~\ref{tab:overall-effectiveness-expanded} and show that Hybrid and Route~B paths concentrate resource usage in the first minute rather than occupying the machine for the full ${\approx}28$\,min UnixBench duration.
+
+\begin{figure*}[t]
+    \centering
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/waveform_32U128G_cpu.pdf}
+        \caption{32U128G, CPU.}
+        \label{fig:waveform-32u-cpu}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/waveform_4U8G_cpu.pdf}
+        \caption{4U8G, CPU.}
+        \label{fig:waveform-4u-cpu}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/waveform_8U8G_cpu.pdf}
+        \caption{8U8G, CPU.}
+        \label{fig:waveform-8u-cpu}
+    \end{subfigure}
+
+    \vspace{0.6em}
+
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/waveform_32U128G_memory.pdf}
+        \caption{32U128G, memory.}
+        \label{fig:waveform-32u-mem}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/waveform_4U8G_memory.pdf}
+        \caption{4U8G, memory.}
+        \label{fig:waveform-4u-mem}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/waveform_8U8G_memory.pdf}
+        \caption{8U8G, memory.}
+        \label{fig:waveform-8u-mem}
+    \end{subfigure}
+    \caption{UnixBench CPU and memory waveforms under four execution modes on three hosts ($0.5$\,s sampling).
+    Each panel overlays \emph{Full run}, \emph{router only}, \emph{probe only}, and \emph{BenchScout} on shared axes ($t{=}0$ at run start).
+    Top row (a--c): CPU utilization; bottom row (d--f): memory used.
+    Router-only traces end after partial Top-$K$ execution; probe-only and BenchScout traces concentrate in the first minute.}
+    \label{fig:resource-waveforms}
+\end{figure*}
 
 \subsection{Uncertainty-Guided Active Refinement}
 \label{subsec:hybrid-active-refinement}
@@ -995,8 +1055,8 @@ On H1, suite relative error varies across policies for UnixBench and \ptscpu{}; 
 \caption{Routing / subset policy comparison at fixed $K=3$ (offline CV on H1). Bal.\ = balanced score (Equation~\ref{eq:balanced-score}; lower is better).}
 \label{tab:routing-policy}
 \small
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{l@{\hspace{4pt}}p{0.11\linewidth}cccc}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}l@{\hspace{4pt}}p{0.22\linewidth}cccc@{}}
 \toprule
 \textbf{Suite} & \textbf{Policy} & \textbf{Rel.\ err. (\%)} & \textbf{Saved (\%)} & \textbf{Bal.} & \textbf{Rank} \\
 \midrule
@@ -1027,71 +1087,8 @@ On H1, suite relative error varies across policies for UnixBench and \ptscpu{}; 
  & \id{greedy\_fastest} & 0.918 & 99.6 & 1.00 & 1 \\
  & \id{router}          & 0.918 & 96.2 & 1.01 & 5 \\
 \bottomrule
-\end{tabular}
+\end{tabular*}
 \end{table}
-
-\subsection{UnixBench Resource Usage Waveforms}
-\label{subsec:resource-waveforms}
-
-Table~\ref{tab:overall-effectiveness-expanded} and the Route~A ablation tables report aggregate wall-time savings, but they do not show \emph{how} CPU and memory footprints evolve during execution.
-To make the cost difference tangible, we capture online resource traces while running UnixBench under four conditions on each host: \emph{Full run} (complete \id{perl Run -c 1} suite), \emph{router only} (Route~A partial execution of router-selected Top-$K$ subtests), \emph{probe only} (Route~B micro-probes on all 12 components), and \emph{BenchScout} (full Hybrid: $\mathbf{x}$ collection, router Top-$K$, probe selected subtests, reconstruct).
-Each trace is sampled every $0.5$\,s and aligned to $t{=}0$ at the start of the corresponding run; curves in a panel are overlaid on shared axes for direct duration comparison.
-
-Figure~\ref{fig:resource-waveforms} summarizes traces from three representative hosts---32U128G (H1), 4U8G (H3), and 8U8G (H5)---arranged as a $2{\times}3$ grid (panels (a)--(f)).
-The top row reports CPU utilization (\%); the bottom row reports memory used (\%).
-On all three machines, the \emph{Full run} curve (blue) spans the entire ${\approx}1680$\,s UnixBench wall clock and exhibits repeated CPU bursts as subtests rotate through compute-, I/O-, and OS-intensive phases.
-\emph{Router only} (green) terminates after ${\approx}250$--$400$\,s once the Top-$K$ partial suite finishes, reaching similar peak CPU during active phases but eliminating the long tail of remaining subtests.
-\emph{Probe only} (orange) and \emph{BenchScout} (purple) complete within the first minute: probe-only executes twelve $D{=}4$\,s micro-probes sequentially, while BenchScout adds a short $\mathbf{x}$/router preamble plus three probes before reconstruction inference.
-Memory usage stays comparatively flat across modes (${\approx}15$--$30\%$ on 4U8G/8U8G hosts, slightly higher on 32U128G), confirming that wall-time reduction comes primarily from shorter CPU-active intervals rather than lower resident footprint.
-These traces visually corroborate the ${\approx}78$--$96\%$ wall-time savings reported for router-based partial execution and the sub-minute Hybrid/Route~B paths in Section~\ref{subsec:overall-effectiveness}.
-
-\begin{figure*}[t]
-    \centering
-    \begin{subfigure}[b]{0.32\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{images/waveform_32U128G_cpu.pdf}
-        \caption{32U128G, CPU.}
-        \label{fig:waveform-32u-cpu}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.32\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{images/waveform_4U8G_cpu.pdf}
-        \caption{4U8G, CPU.}
-        \label{fig:waveform-4u-cpu}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.32\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{images/waveform_8U8G_cpu.pdf}
-        \caption{8U8G, CPU.}
-        \label{fig:waveform-8u-cpu}
-    \end{subfigure}
-
-    \vspace{0.6em}
-
-    \begin{subfigure}[b]{0.32\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{images/waveform_32U128G_memory.pdf}
-        \caption{32U128G, memory.}
-        \label{fig:waveform-32u-mem}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.32\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{images/waveform_4U8G_memory.pdf}
-        \caption{4U8G, memory.}
-        \label{fig:waveform-4u-mem}
-    \end{subfigure}\hfill
-    \begin{subfigure}[b]{0.32\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{images/waveform_8U8G_memory.pdf}
-        \caption{8U8G, memory.}
-        \label{fig:waveform-8u-mem}
-    \end{subfigure}
-    \caption{UnixBench CPU and memory waveforms under four execution modes on three hosts ($0.5$\,s sampling).
-    Each panel overlays \emph{Full run}, \emph{router only}, \emph{probe only}, and \emph{BenchScout} on shared axes ($t{=}0$ at run start).
-    Top row (a--c): CPU utilization; bottom row (d--f): memory used.
-    Router-only traces end after partial Top-$K$ execution; probe-only and BenchScout traces concentrate in the first minute.}
-    \label{fig:resource-waveforms}
-\end{figure*}
 
 \subsection{System Context Feature Ablation}
 \label{subsec:feature-ablation}
@@ -1113,7 +1110,7 @@ On \ptsgpu, \id{no\_gpu} yields the largest shift ($\Delta e_m = -0.10$~pp), ind
 \label{tab:feature-ablation}
 \small
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{l@{\hspace{4pt}}p{0.13\linewidth}ccc}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}l@{\hspace{4pt}}p{0.26\linewidth}ccc@{}}
 \toprule
 \textbf{Suite} & \textbf{Ablation mode} & \textbf{Rel.\ err. (\%)} & $\Delta e$ (pp) & \textbf{Imp.\ rank} \\
 \midrule
@@ -1135,7 +1132,7 @@ On \ptsgpu, \id{no\_gpu} yields the largest shift ($\Delta e_m = -0.10$~pp), ind
  & \id{no\_dynamic\_proc} & 0.957 & +0.04 & 2 \\
  & \id{no\_gpu}           & 0.818 & $-$0.10 & 4 \\
 \bottomrule
-\end{tabular}
+\end{tabular*}
 \end{table}
 
 \subsection{Probe Model Evaluation}
@@ -1251,40 +1248,6 @@ $D$ (s) & \textbf{Err (\%)} & $|\hat{Y}{-}Y|$ & $\hat{Y}$ & $T_{\mathrm{pr}}$ (s
 \bottomrule
 \end{tabular*}
 \end{table}
-
-\subsection{Summary of Findings}
-\label{subsec:eval-summary}
-
-Our evaluation on five heterogeneous Linux hosts is organized into Hybrid main/supplementary experiments, Route~A ablations with supplementary studies, and Route~B ablations (Section~\ref{subsec:exp-setup}).
-We run UnixBench and \ptscpu{} on all five machines and \ptsgpu{} on H1 only.
-\textbf{Q1:} Can the Hybrid pipeline approximate full-suite scores with significantly less execution time than full-suite execution and execution-free predictors?
-\textbf{Q2:} Does uncertainty-guided active refinement improve Hybrid accuracy on H1, and when is extra probing worthwhile?
-\textbf{Q3:} Which router--reconstructor combination works best under Route~A, and how should practitioners choose $K$, subset policy, and system features?
-\textbf{Q4:} How accurate and robust is probe-only suite prediction (Route~B), and which probe regressor and duration should be used?
-
-\begin{itemize}
-    \item \textbf{Overall effectiveness (Q1).} Hybrid reduces UnixBench wall time by 95.3\% on average with $3.3\times10^{-5}\%$ mean relative suite error, outperforming execution-free predictors and full-suite cost (Table~\ref{tab:overall-effectiveness-expanded}).
-
-    \item \textbf{Active refinement (Q2).} On H1 Hybrid, $\sigma$-guided refinement adds three micro-probes (${\approx}15$\,s) but suite relative error stays at 0.39\% (Table~\ref{tab:hybrid-active-refinement}) because partial observations are probe-predicted and $\sigma_{\mathrm{suite}}$ is already low after $K{=}3$; the loop is validated end-to-end.
-
-    \item \textbf{Route~A model combinations (Q3a).} On H1, MLP\,+\,LightGBM reconstruction is best for UnixBench (0.133\%) and \ptscpu{} (0.218\%); LightGBM\,+\,LightGBM is best for \ptsgpu{} (1.60\%). MLP reconstruction remains unstable on several combinations (Table~\ref{tab:model-combination}).
-
-    \item \textbf{Top-$K$ trade-off (Q3b).} Top-$K$ sweep on H1 recommends $K^\star=3$ for UnixBench and \ptsgpu, and $K^\star=2$ for \ptscpu{} on balanced score (Figure~\ref{fig:topk-pareto}); suite relative error improves modestly with larger $K$, so ranking reflects both accuracy and wall-time savings.
-
-    \item \textbf{Routing policies (Q3c).} At $K=3$ on H1, \id{greedy\_fastest} ranks first on balanced score for \ptscpu{} and \ptsgpu; on UnixBench \id{random} has the lowest error but \id{router} ranks third on balanced score (Table~\ref{tab:routing-policy}).
-
-    \item \textbf{Feature importance (Q3d).} On H1, static hardware and dynamic \path{/proc} ablations increase \ptscpu{} error by ${\approx}0.28$~pp; UnixBench shifts stay below $0.01$~pp. On \ptsgpu, removing GPU/OpenCL dimensions shifts error by $-0.10$~pp, the largest among ablated groups (Table~\ref{tab:feature-ablation}).
-
-    \item \textbf{Route~B probe models (Q4a).} On H1, XGBoost yields lower Route~B suite error than LightGBM on all three suites at the same probe wall time (Table~\ref{tab:probe-models}).
-
-    \item \textbf{Telemetry robustness (Q4b).} On H1 UnixBench Route~B, disabling eBPF completes all 12 micro-probes without failure and yields 0.17\% suite relative error vs.\ 0.27\% with bpftrace enabled (Table~\ref{tab:probe-ebpf-ablation}), confirming graceful degradation when high-fidelity tracing is unavailable.
-
-    \item \textbf{Probe budget (Q4c).} Duration-matched training on H1 shows sub-percent suite error for $D \in \{2,4,8\}$\,s (0.80\%, 0.56\%, 0.44\%; Table~\ref{tab:probe-duration-sensitivity}); accuracy improves with longer probes but with diminishing returns, while $D{=}2$\,s saves 88.6\% wall time vs.\ full execution.
-\end{itemize}
-
-These results collectively demonstrate that \appname{} makes full-suite benchmarking practical in settings where repeated, low-disruption measurement is required.
-This includes multi-machine comparison, configuration tuning, and production-adjacent monitoring, without abandoning the interpretability of established suite scores.
-
 
 
 \section{Related Work}
