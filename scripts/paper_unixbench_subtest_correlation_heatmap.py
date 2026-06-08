@@ -210,26 +210,57 @@ def plot_combined_heatmap(
     *,
     n_samples: int,
     out_base: Path,
+    layout: str = "horizontal",
 ) -> None:
+    """Render Pearson + Spearman panels.
+
+    ``horizontal``: side-by-side panels sized for a single paper column.
+    ``vertical``: stacked panels for a single paper column.
+    ``horizontal-wide``: side-by-side panels for a full-page (two-column) span.
+    """
     cmap = _strong_corr_cmap()
     norm = _corr_color_norm(pearson)
-    fig, axes = plt.subplots(1, 2, figsize=(11.2, 5.0), dpi=150)
-    fig.subplots_adjust(left=0.07, right=0.88, bottom=0.18, top=0.88, wspace=0.22)
-    for ax, mat, method in zip(axes, (pearson, spearman), ("pearson", "spearman")):
-        plot_heatmap_panel(ax, mat, labels, method=method, n_samples=n_samples, cmap=cmap, norm=norm)
+    if layout == "horizontal":
+        fig, axes = plt.subplots(1, 2, figsize=(3.45, 2.05), dpi=150)
+        fig.subplots_adjust(left=0.13, right=0.86, bottom=0.28, top=0.82, wspace=0.42)
+        tick_fs, ann_fs, title_fs = 5.5, 4.2, 7.0
+    elif layout == "vertical":
+        fig, axes = plt.subplots(2, 1, figsize=(3.45, 7.2), dpi=150)
+        fig.subplots_adjust(left=0.22, right=0.92, bottom=0.06, top=0.94, hspace=0.38)
+        tick_fs, ann_fs, title_fs = 7.5, 6.0, 9.5
+    elif layout == "horizontal-wide":
+        fig, axes = plt.subplots(1, 2, figsize=(11.2, 5.0), dpi=150)
+        fig.subplots_adjust(left=0.07, right=0.88, bottom=0.18, top=0.88, wspace=0.22)
+        tick_fs, ann_fs, title_fs = 9.0, 7.5, 11.0
+    else:
+        raise ValueError(f"unknown layout: {layout!r}")
+
+    axes_flat = np.atleast_1d(axes).ravel()
+    for ax, mat, method in zip(axes_flat, (pearson, spearman), ("pearson", "spearman")):
+        tick = _short_labels(labels)
+        n = len(labels)
+        ax.imshow(mat, cmap=cmap, norm=norm, aspect="equal", interpolation="nearest")
+        ax.set_xticks(range(n))
+        ax.set_yticks(range(n))
+        ax.set_xticklabels(tick, rotation=45, ha="right", fontsize=tick_fs)
+        ax.set_yticklabels(tick, fontsize=tick_fs)
+        method_title = "Pearson" if method == "pearson" else "Spearman"
+        ax.set_title(f"{method_title} (n={n_samples})", fontsize=title_fs, pad=4)
+        for i in range(n):
+            for j in range(n):
+                val = mat[i, j]
+                t = (val - norm.vmin) / (norm.vmax - norm.vmin)
+                color = "white" if t > 0.62 or t < 0.18 else "black"
+                ax.text(j, i, f"{val:.2f}", ha="center", va="center", fontsize=ann_fs, color=color)
+
     cbar = fig.colorbar(
         plt.cm.ScalarMappable(norm=norm, cmap=cmap),
-        ax=axes.ravel().tolist(),
-        fraction=0.035,
+        ax=axes_flat.tolist(),
+        fraction=0.04 if layout == "horizontal" else 0.035,
         pad=0.02,
     )
-    cbar.set_label("Correlation coefficient", fontsize=10)
-    cbar.ax.tick_params(labelsize=9)
-    fig.suptitle(
-        f"UnixBench subtest score correlation across five hosts ({n_samples} full runs)",
-        fontsize=12,
-        y=0.98,
-    )
+    cbar.set_label("Correlation coefficient", fontsize=7.5 if layout == "horizontal" else 9)
+    cbar.ax.tick_params(labelsize=7 if layout == "horizontal" else 8)
     pdf = out_base.with_suffix(".pdf")
     png = out_base.with_suffix(".png")
     fig.savefig(pdf, bbox_inches="tight", facecolor="white")
@@ -310,7 +341,13 @@ def main() -> int:
     ap.add_argument(
         "--combined",
         action="store_true",
-        help="Plot Pearson + Spearman side-by-side from existing *_matrix.csv under --out-dir",
+        help="Plot Pearson + Spearman from existing *_matrix.csv under --out-dir",
+    )
+    ap.add_argument(
+        "--combined-layout",
+        choices=("horizontal", "vertical", "horizontal-wide"),
+        default="horizontal-wide",
+        help="Panel arrangement for --combined (default: horizontal-wide, two-column paper figure)",
     )
     ap.add_argument(
         "--images-dir",
@@ -345,6 +382,7 @@ def main() -> int:
             labels,
             n_samples=n_samples,
             out_base=images_dir / "unixbench_subtest_correlation_combined",
+            layout=args.combined_layout,
         )
         return 0
 

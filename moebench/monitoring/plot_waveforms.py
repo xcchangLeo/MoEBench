@@ -217,3 +217,129 @@ def plot_waveform_compare_pair(
         save_pdf=save_pdf,
     )
     return {"cpu": cpu_path, "memory": mem_path}
+
+
+def _plot_traces_metric_on_ax(
+    ax: Any,
+    traces: list[dict[str, Any]],
+    *,
+    metric_key: Literal["cpu_pct", "mem_used_pct"],
+) -> None:
+    """Overlay four-mode traces on one axes (no title or legend)."""
+    traces = sort_traces_for_plot(traces)
+    for i, tr in enumerate(traces):
+        label = trace_display_label(tr)
+        color = PALETTE_FOUR[i % len(PALETTE_FOUR)]
+        samples = tr.get("samples") or []
+        if not samples:
+            continue
+        t = [float(s["t_rel_s"]) for s in samples]
+        y = [float(s[metric_key]) for s in samples]
+        ax.plot(t, y, label=label, color=color, linewidth=1.0)
+
+    ax.set_ylim(0, 100)
+    ax.grid(True, alpha=0.3)
+
+
+def _show_waveform_panel_image(
+    ax: Any,
+    image_path: Path,
+    *,
+    crop_title_frac: float = 0.11,
+) -> None:
+    """Render a pre-generated waveform PNG, optionally cropping the title band."""
+    plt = _ensure_matplotlib(auto_install=False)
+    import matplotlib.image as mpimg
+
+    img = mpimg.imread(str(image_path))
+    if crop_title_frac > 0:
+        top = int(img.shape[0] * crop_title_frac)
+        img = img[top:, ...]
+    ax.imshow(img, aspect="auto")
+    ax.axis("off")
+
+
+def plot_waveform_multimachine_grid(
+    columns: list[dict[str, Any]],
+    *,
+    out_path: Path,
+    auto_install: bool = False,
+    save_pdf: bool = True,
+    crop_image_title_frac: float = 0.11,
+) -> Path:
+    """2×N grid: row 0 CPU, row 1 memory; one column per machine.
+
+    Each column dict accepts either:
+      - ``{"label": "32U128G", "traces": [...]}`` for live plotting, or
+      - ``{"label": "32U128G", "cpu_image": Path, "memory_image": Path}`` fallback.
+    """
+    plt = _ensure_matplotlib(auto_install)
+    n = len(columns)
+    if n == 0:
+        raise ValueError("columns must be non-empty")
+
+    fig_w = max(4.2 * n, 12.0)
+    fig, axes = plt.subplots(2, n, figsize=(fig_w, 6.2), squeeze=False, sharex=False)
+
+    legend_handles: list[Any] = []
+    legend_labels: list[str] = []
+
+    for col, spec in enumerate(columns):
+        label = str(spec.get("label") or f"M{col + 1}")
+        traces = spec.get("traces")
+        cpu_image = spec.get("cpu_image")
+        memory_image = spec.get("memory_image")
+
+        ax_cpu = axes[0, col]
+        ax_mem = axes[1, col]
+
+        if traces:
+            _plot_traces_metric_on_ax(ax_cpu, traces, metric_key="cpu_pct")
+            _plot_traces_metric_on_ax(ax_mem, traces, metric_key="mem_used_pct")
+            if not legend_handles:
+                legend_handles, legend_labels = ax_cpu.get_legend_handles_labels()
+            ax_cpu.set_title(label, fontsize=11)
+            if col == 0:
+                ax_cpu.set_ylabel("CPU (%)")
+                ax_mem.set_ylabel("Memory used (%)")
+            ax_mem.set_xlabel("Time (s)")
+        else:
+            if cpu_image is None or memory_image is None:
+                raise ValueError(f"column {label!r}: need traces or cpu/memory images")
+            _show_waveform_panel_image(
+                ax_cpu, Path(cpu_image), crop_title_frac=crop_image_title_frac
+            )
+            _show_waveform_panel_image(
+                ax_mem, Path(memory_image), crop_title_frac=crop_image_title_frac
+            )
+            if crop_image_title_frac > 0:
+                ax_cpu.set_title(label, fontsize=11, pad=6)
+
+        for ax in (ax_cpu, ax_mem):
+            if traces:
+                continue
+            ax.set_xticks([])
+            ax.set_yticks([])
+
+    if legend_handles:
+        fig.legend(
+            legend_handles,
+            legend_labels,
+            loc="lower center",
+            ncol=len(legend_labels),
+            bbox_to_anchor=(0.5, -0.02),
+            frameon=False,
+            fontsize=9,
+        )
+
+    fig.tight_layout()
+    if legend_handles:
+        fig.subplots_adjust(bottom=0.12)
+
+    out_path = Path(out_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    if save_pdf:
+        fig.savefig(out_path.with_suffix(".pdf"), bbox_inches="tight")
+    plt.close(fig)
+    return out_path
