@@ -324,7 +324,7 @@ def plot_waveform_paper_2x3_grid(
             ncol=len(legend_labels),
             bbox_to_anchor=(0.5, 1.04),
             frameon=False,
-            fontsize=20,
+            fontsize=15,
         )
 
     fig.tight_layout()
