@@ -248,7 +248,7 @@ Comprehensive suites often contain many heterogeneous workloads, each consuming 
 In the middle ground, execution-free predictors attempt to bypass benchmark runs by estimating performance from static host configurations, public specifications, or offline training data~\cite{wang2019predicting,tousi2022comparative}. 
 
 
-Because the system itself cannot magically compress the execution time of standard workloads, various approaches have attempted to mitigate this overhead. ``Static-subset'' approaches manually cherry-pick a fixed group of subtests, but they face a high barrier to generalization: a subset chosen for a CPU-bound instance falls short on an I/O-heavy machine~\cite{smith2011byte}. Recentlly, execution-free predictors attempt to bypass benchmark runs by estimating performance from static host configurations, public specifications, or offline training data~\cite{wang2019predicting,tousi2022comparative}. However, without executing the target workloads on the current system, such predictors cannot directly observe transient runtime effects. 
+Because the system itself cannot magically compress the execution time of standard workloads, various approaches have attempted to mitigate this overhead. ``Static-subset'' approaches manually cherry-pick a fixed group of subtests, but they face a high barrier to generalization: a subset chosen for a CPU-bound instance falls short on an I/O-heavy machine~\cite{smith2011byte}. However, without executing the target workloads on the current system, such predictors cannot directly observe transient runtime effects. 
 As a result, they can be unreliable under distribution shifts common in production environments. 
 Consequently, when a trustworthy performance profile is required, practitioners often still fall back to running the full suite to completion, which preserves measurement fidelity but incurs long execution delays and resource interference in shared environments.
 
@@ -802,18 +802,9 @@ Execution-free MLP baselines incur the lowest partial cost but exhibit high pred
 \subsection{Runtime Overhead Analysis}
 \label{subsec:resource-waveforms}
 
-Table~\ref{tab:overall-effectiveness-expanded} reports aggregate wall-time savings, but scalar execution times alone do not show \emph{how} CPU and memory footprints evolve during execution.
-To substantiate that \ourmethod{} incurs low runtime overhead beyond accuracy metrics, we capture online resource traces while running UnixBench under four conditions on each host: \emph{Full run} (complete \id{perl Run -c 1} suite), \emph{router only} (Route~A partial execution of router-selected Top-$K$ subtests), \emph{probe only} (Route~B micro-probes on all 12 components), and \emph{BenchScout} (full Hybrid: $\mathbf{x}$ collection, router Top-$K$, probe selected subtests, reconstruct).
-Each trace is sampled every $0.5$\,s and aligned to $t{=}0$ at the start of the corresponding run; curves in a panel are overlaid on shared axes spanning the full-suite horizon (${\approx}1680$\,s) for direct duration comparison.
-
-Figure~\ref{fig:resource-waveforms} summarizes traces from three representative hosts---32U128G (H1), 4U8G (H3), and 4U16G (H4)---in a single $2{\times}3$ grid: the top row reports CPU utilization (\%) and the bottom row reports memory used (\%).
-On all three machines, the \emph{Full run} curve (blue) spans the entire ${\approx}1680$\,s UnixBench wall clock and exhibits multi-phase CPU activity as subtests rotate through compute-, I/O-, and OS-intensive phases.
-\emph{Router only} (green) terminates after ${\approx}380$\,s once the Top-$K$ partial suite finishes, reaching comparable peak CPU during active subtests but eliminating the long tail of remaining components; on 32U128G it also produces a transient memory rise from real partial UnixBench execution.
-\emph{Probe only} (orange) completes in ${\approx}48$\,s by executing twelve $D{=}4$\,s category-aligned micro-probes sequentially; \emph{BenchScout} (purple) finishes in ${\approx}12$\,s by running router selection, Top-$K$ micro-probes, and reconstruction inside the traced window (system-feature collection for $\mathbf{x}$ is performed immediately beforehand and is excluded from the trace).
-On 32U128G, probe-only and BenchScout curves stay near the bottom of the CPU panel for most of the ${\approx}28$\,min axis, whereas on 4U8G and 4U16G they appear as brief initial bursts (${\approx}40$--$45\%$ system CPU) that still end within the first minute while the full-suite curve continues for the entire run.
-Memory usage remains comparatively flat on the 4U8G and 4U16G hosts (${\approx}17$--$20\%$ and ${\approx}8$--$12\%$, respectively), confirming that wall-time reduction comes primarily from shorter CPU-active intervals rather than from a substantially lower resident footprint during probe-based execution.
-These traces visually corroborate the 95--100\% wall-time reductions in Table~\ref{tab:overall-effectiveness-expanded} and show that Hybrid and Route~B paths concentrate resource usage in the first minute rather than occupying the machine for the full UnixBench duration.
-Table~\ref{tab:resource-overhead} quantifies the same observation: traced wall time, time-averaged CPU utilization, and time-averaged memory footprint for each execution mode on H1, H3, and H4.
+Table~\ref{tab:overall-effectiveness-expanded} reports aggregate wall-time savings, but not how CPU and memory evolve during execution.
+We therefore capture online resource traces ($0.5$\,s sampling, $t{=}0$ at run start) on three representative hosts---H1 (32U128G), H3 (4U8G), and H4 (4U16G)---under four UnixBench conditions: \emph{Full run} (complete \id{perl Run -c 1}), \emph{router only} (Route~A Top-$K$ partial execution), \emph{probe only} (twelve $D{=}4$\,s micro-probes), and \emph{BenchScout} (router, Top-$K$ probes, and reconstruction in the traced window; $\mathbf{x}$ collection precedes the trace).
+Table~\ref{tab:resource-overhead} summarizes traced wall time and time-averaged CPU/memory utilization; Figure~\ref{fig:resource-waveforms} overlays the corresponding waveforms on a shared ${\approx}1680$\,s axis.
 
 \begin{table*}[t]
 \centering
@@ -838,18 +829,15 @@ Probe only    &   49 &   48 &   48 &  4.4 & 30.1 & 27.5 & 21.0 & 19.7 &  9.2 & 9
 \end{tabular}
 \end{table*}
 
-Across all three hosts, BenchScout reduces traced wall time by ${\approx}99.3\%$ versus a full UnixBench run (${\approx}12$\,s vs.\ ${\approx}1680$\,s) and is ${\approx}4\times$ faster than probe-only execution of all twelve components (${\approx}12$\,s vs.\ ${\approx}48$\,s), while router-only partial execution still requires ${\approx}380$\,s.
-On H1, BenchScout also lowers time-averaged CPU utilization to $4.0\%$---well below full run ($15.6\%$) and router only ($33.5\%$)---with memory remaining near the system baseline ($21.4\%$).
-On H3 and H4, BenchScout exhibits brief probe bursts comparable to probe only, yet finishes in one quarter of the probe-only wall time; memory means stay within one to four percentage points of the other modes on these smaller-memory hosts.
-Taken together, Table~\ref{tab:resource-overhead} and Figure~\ref{fig:resource-waveforms} show that \ourmethod{} achieves suite-level inference with negligible runtime overhead: its traced execution window is more than two orders of magnitude shorter than a full benchmark run, without introducing a sustained memory penalty.
+BenchScout finishes in ${\approx}12$\,s on all three hosts---${\approx}99.3\%$ less wall time than a full run and ${\approx}4\times$ faster than probe only---with the lowest CPU mean on H1 ($4.0\%$) and no sustained memory penalty on H3/H4.
+Together, Table~\ref{tab:resource-overhead} and Figure~\ref{fig:resource-waveforms} confirm that \ourmethod{} incurs negligible runtime overhead: resource usage concentrates in the first minute rather than occupying the machine for the full UnixBench duration.
 
 \begin{figure*}[t]
     \centering
     \includegraphics[width=\textwidth]{images/resource_waveforms_2x3.pdf}
-    \caption{UnixBench CPU and memory waveforms under four execution modes on three hosts ($0.5$\,s sampling).
-    Columns (left to right): 32U128G, 4U8G, and 4U16G; rows: CPU utilization (\%) and memory used (\%).
-    A shared legend at the top identifies \emph{Full run} (blue), \emph{router only} (green), \emph{probe only} (orange), and \emph{BenchScout} (purple); all curves in a panel share the same axes with $t{=}0$ at run start and span the full-suite horizon (${\approx}1680$\,s).
-    Full-run traces cover the entire axis; router-only traces end after ${\approx}380$\,s; probe-only (${\approx}48$\,s) and BenchScout (${\approx}12$\,s) complete within the first minute.}
+    \caption{UnixBench CPU and memory waveforms on H1, H3, and H4 ($0.5$\,s sampling).
+    Rows: CPU utilization (\%) and memory used (\%); columns: 32U128G, 4U8G, and 4U16G.
+    Curves show \emph{Full run}, \emph{router only}, \emph{probe only}, and \emph{BenchScout} on shared axes (${\approx}1680$\,s horizon).}
     \label{fig:resource-waveforms}
 \end{figure*}
 
