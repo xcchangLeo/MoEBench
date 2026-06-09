@@ -223,7 +223,8 @@ def _plot_traces_metric_on_ax(
     ax: Any,
     traces: list[dict[str, Any]],
     *,
-    metric_key: Literal["cpu_pct", "mem_used_pct"],
+    metric_key: Literal["cpu_pct", "mem_used_pct", "mem_delta_pct"],
+    t_max: float | None = None,
 ) -> None:
     """Overlay four-mode traces on one axes (no title or legend)."""
     traces = sort_traces_for_plot(traces)
@@ -233,11 +234,17 @@ def _plot_traces_metric_on_ax(
         samples = tr.get("samples") or []
         if not samples:
             continue
+        if t_max is not None:
+            samples = [s for s in samples if float(s["t_rel_s"]) <= t_max]
+        if not samples:
+            continue
         t = [float(s["t_rel_s"]) for s in samples]
         y = [float(s[metric_key]) for s in samples]
         ax.plot(t, y, label=label, color=color, linewidth=1.0)
 
     ax.set_ylim(0, 100)
+    if t_max is not None:
+        ax.set_xlim(0.0, t_max)
     ax.grid(True, alpha=0.3)
 
 
@@ -257,6 +264,79 @@ def _show_waveform_panel_image(
         img = img[top:, ...]
     ax.imshow(img, aspect="auto")
     ax.axis("off")
+
+
+def plot_waveform_paper_2x3_grid(
+    columns: list[dict[str, Any]],
+    *,
+    out_path: Path,
+    auto_install: bool = False,
+    save_pdf: bool = True,
+    memory_metric: Literal["mem_used_pct", "mem_delta_pct"] = "mem_used_pct",
+    xlim_max: float | None = None,
+) -> Path:
+    """Paper-style 2×3 grid: row 0 CPU, row 1 memory; shared legend on top.
+
+    Each column dict: ``{"label": "32U128G", "traces": [...]}``.
+    Every subplot is titled ``{label}, CPU`` or ``{label}, Memory``.
+    When ``xlim_max`` is set, all panels zoom to ``[0, xlim_max]``; otherwise the
+    full trace duration is shown (full-run horizon, typically ~1680 s).
+    """
+    plt = _ensure_matplotlib(auto_install)
+    n = len(columns)
+    if n == 0:
+        raise ValueError("columns must be non-empty")
+
+    fig_w = max(4.5 * n, 13.5)
+    fig, axes = plt.subplots(2, n, figsize=(fig_w, 6.8), squeeze=False, sharex=True)
+
+    legend_handles: list[Any] = []
+    legend_labels: list[str] = []
+
+    for col, spec in enumerate(columns):
+        config = str(spec.get("label") or f"M{col + 1}")
+        traces = spec.get("traces") or []
+        if not traces:
+            raise ValueError(f"column {config!r}: missing traces")
+
+        ax_cpu = axes[0, col]
+        ax_mem = axes[1, col]
+
+        _plot_traces_metric_on_ax(ax_cpu, traces, metric_key="cpu_pct", t_max=xlim_max)
+        _plot_traces_metric_on_ax(ax_mem, traces, metric_key=memory_metric, t_max=xlim_max)
+
+        if not legend_handles:
+            legend_handles, legend_labels = ax_cpu.get_legend_handles_labels()
+
+        ax_cpu.set_title(f"{config}, CPU", fontsize=11)
+        ax_mem.set_title(f"{config}, Memory", fontsize=11)
+
+        if col == 0:
+            ax_cpu.set_ylabel("CPU (%)")
+            ax_mem.set_ylabel("Memory used (%)" if memory_metric == "mem_used_pct" else "Memory Δ (%)")
+        ax_mem.set_xlabel("Time (s)")
+
+    if legend_handles:
+        fig.legend(
+            legend_handles,
+            legend_labels,
+            loc="upper center",
+            ncol=len(legend_labels),
+            bbox_to_anchor=(0.5, 1.04),
+            frameon=False,
+            fontsize=20,
+        )
+
+    fig.tight_layout()
+    fig.subplots_adjust(top=0.86)
+
+    out_path = Path(out_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    if save_pdf:
+        fig.savefig(out_path.with_suffix(".pdf"), bbox_inches="tight")
+    plt.close(fig)
+    return out_path
 
 
 def plot_waveform_multimachine_grid(
