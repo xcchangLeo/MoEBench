@@ -35,14 +35,6 @@ from moebench.dataset_machines import (
     resolve_training_machine,
 )
 from moebench.ml_venv import ensure_ml_interpreter
-from moebench.monitoring.plot_waveforms import MODE_ORDER
-from moebench.monitoring.waveform_capture import (
-    capture_benchscout,
-    capture_full,
-    capture_route_a,
-    capture_route_b,
-    default_copies,
-)
 
 SCHEMA_COMPARE = "moebench.experiment.unixbench_resource_waveforms.v3"
 
@@ -112,6 +104,15 @@ ensure_ml_interpreter(
     need_modules=_early_ml_modules(),
     auto_install="--auto-install" in sys.argv,
     label="waveform-collect",
+)
+
+from moebench.monitoring.plot_waveforms import MODE_ORDER
+from moebench.monitoring.waveform_capture import (
+    capture_benchscout,
+    capture_full,
+    capture_route_a,
+    capture_route_b,
+    default_copies,
 )
 
 

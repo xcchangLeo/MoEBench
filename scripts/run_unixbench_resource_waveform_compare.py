@@ -25,21 +25,6 @@ from moebench.dataset_machines import (
     resolve_training_machine,
 )
 from moebench.ml_venv import ensure_ml_interpreter
-from moebench.monitoring.plot_waveforms import (
-    MODE_DISPLAY_LABELS,
-    MODE_ORDER,
-    plot_waveform_compare_pair,
-    plot_waveform_grid,
-    plot_waveform_overlay,
-)
-from moebench.monitoring.waveform_capture import (
-    capture_benchscout,
-    capture_full,
-    capture_route_a,
-    capture_route_b,
-    default_copies,
-)
-from moebench.unixbench.experts import INDEX_SUITE_TEST_IDS
 
 SCHEMA_COMPARE = "moebench.experiment.unixbench_resource_waveforms.v3"
 
@@ -140,6 +125,23 @@ ensure_ml_interpreter(
     auto_install="--auto-install" in sys.argv,
     label="waveform",
 )
+
+from moebench.monitoring.plot_waveforms import (
+    MODE_DISPLAY_LABELS,
+    MODE_ORDER,
+    plot_waveform_compare_pair,
+    plot_waveform_grid,
+    plot_waveform_overlay,
+)
+from moebench.monitoring.waveform_capture import (
+    capture_benchscout,
+    capture_full,
+    capture_route_a,
+    capture_route_b,
+    default_copies,
+)
+from moebench.unixbench.experts import INDEX_SUITE_TEST_IDS
+
 
 def _resolve_waveform_models(
     args: argparse.Namespace,
