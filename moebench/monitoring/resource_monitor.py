@@ -21,6 +21,8 @@ class ResourceSample:
     mem_used_mib: float
     mem_avail_mib: float
     mem_total_mib: float
+    mem_delta_pct: float = 0.0
+    mem_delta_mib: float = 0.0
 
     def to_dict(self) -> dict[str, float]:
         return {
@@ -30,6 +32,8 @@ class ResourceSample:
             "mem_used_mib": self.mem_used_mib,
             "mem_avail_mib": self.mem_avail_mib,
             "mem_total_mib": self.mem_total_mib,
+            "mem_delta_pct": self.mem_delta_pct,
+            "mem_delta_mib": self.mem_delta_mib,
         }
 
 
@@ -84,6 +88,7 @@ class ResourceMonitor:
         self._thread: threading.Thread | None = None
         self._t0: float | None = None
         self._prev_cpu: CpuStatDelta | None = None
+        self._baseline_mem_avail_mib: float | None = None
 
     def elapsed_s(self) -> float:
         if self._t0 is None:
@@ -97,6 +102,7 @@ class ResourceMonitor:
         self._stop.clear()
         self._t0 = time.perf_counter()
         self._prev_cpu = read_proc_stat_cpu()
+        self._baseline_mem_avail_mib = None
         self._thread = threading.Thread(target=self._loop, name="moebench-resource-monitor", daemon=True)
         self._thread.start()
 
@@ -111,6 +117,11 @@ class ResourceMonitor:
             if curr is not None:
                 self._prev_cpu = curr
             used_pct = (100.0 * used_mib / total_mib) if total_mib > 0 else 0.0
+            if self._baseline_mem_avail_mib is None:
+                self._baseline_mem_avail_mib = avail_mib
+            baseline = self._baseline_mem_avail_mib or avail_mib
+            mem_delta_mib = max(0.0, baseline - avail_mib)
+            mem_delta_pct = (100.0 * mem_delta_mib / total_mib) if total_mib > 0 else 0.0
             self._samples.append(
                 ResourceSample(
                     t_rel_s=time.perf_counter() - self._t0,
@@ -119,6 +130,8 @@ class ResourceMonitor:
                     mem_used_mib=used_mib,
                     mem_avail_mib=avail_mib,
                     mem_total_mib=total_mib,
+                    mem_delta_pct=mem_delta_pct,
+                    mem_delta_mib=mem_delta_mib,
                 )
             )
 
@@ -126,7 +139,10 @@ class ResourceMonitor:
         self._stop.set()
         if self._thread is not None:
             self._thread.join(timeout=self.interval_s + 2.0)
-        wall_s = (self._samples[-1].t_rel_s if self._samples else 0.0) if self._t0 else 0.0
+        if self._t0 is not None:
+            wall_s = time.perf_counter() - self._t0
+        else:
+            wall_s = self._samples[-1].t_rel_s if self._samples else 0.0
         return trace_dict(
             samples=self._samples,
             label="",
@@ -152,6 +168,7 @@ def trace_dict(
 ) -> dict[str, Any]:
     cpu_vals = [s.cpu_pct for s in samples]
     mem_vals = [s.mem_used_pct for s in samples]
+    mem_delta_vals = [s.mem_delta_pct for s in samples]
     out: dict[str, Any] = {
         "schema": SCHEMA_RESOURCE_TRACE,
         "label": label,
@@ -165,6 +182,10 @@ def trace_dict(
             "mem_used_pct_mean": _mean(mem_vals),
             "mem_used_pct_max": max(mem_vals) if mem_vals else None,
             "mem_used_mib_mean": _mean([s.mem_used_mib for s in samples]),
+            "mem_delta_pct_mean": _mean(mem_delta_vals),
+            "mem_delta_pct_max": max(mem_delta_vals) if mem_delta_vals else None,
+            "mem_delta_mib_mean": _mean([s.mem_delta_mib for s in samples]),
+            "mem_delta_mib_max": max([s.mem_delta_mib for s in samples]) if samples else None,
         },
         "captured_at_utc": datetime.now(timezone.utc).isoformat(),
     }
