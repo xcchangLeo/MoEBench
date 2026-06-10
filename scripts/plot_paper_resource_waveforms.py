@@ -14,6 +14,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from moebench.dataset_machines import machine_config_label, machine_experiments_dir
 from moebench.monitoring.plot_waveforms import (
+    PAPER_INSET_ZOOM_END_S,
     plot_waveform_compare_pair,
     plot_waveform_paper_2x3_grid,
 )
@@ -26,6 +27,7 @@ DEFAULT_MACHINES = (
 
 WAVEFORM_SUBDIR = "ub_resource_waveforms_v3"
 DEFAULT_OUT = REPO_ROOT / "paper" / "images" / "resource_waveforms_2x3.png"
+DEFAULT_COMBINE_OUT = REPO_ROOT / "paper" / "images" / "resource_waveforms_2x3_combine.png"
 
 CONFIG_BASENAME = {
     "aces-System-Product-Name": "32U128G",
@@ -77,11 +79,24 @@ def main() -> int:
         default=0.0,
         help="Shared x-axis upper bound in seconds (0 = full trace, e.g. full-run ~1680s)",
     )
+    ap.add_argument(
+        "--combine-inset",
+        action="store_true",
+        help="Add 12s magnifier inset per panel; default output resource_waveforms_2x3_combine",
+    )
+    ap.add_argument(
+        "--inset-zoom-end",
+        type=float,
+        default=PAPER_INSET_ZOOM_END_S,
+        help="Inset x-axis upper bound in seconds (default: BenchScout wall ~12s)",
+    )
     args = ap.parse_args()
 
     machines = [m.strip() for m in args.machines.split(",") if m.strip()]
     dataset_root = Path(args.dataset_root).resolve()
     out_path = Path(args.output).resolve()
+    if args.combine_inset and args.output == str(DEFAULT_OUT):
+        out_path = DEFAULT_COMBINE_OUT.resolve()
     images_dir = out_path.parent
 
     columns: list[dict] = []
@@ -98,6 +113,7 @@ def main() -> int:
         out_path=out_path,
         auto_install=args.auto_install,
         xlim_max=args.xlim_max if args.xlim_max > 0 else None,
+        inset_zoom_end_s=args.inset_zoom_end if args.combine_inset else None,
     )
     print(f"Wrote {saved}")
     pdf = saved.with_suffix(".pdf")

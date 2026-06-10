@@ -16,6 +16,23 @@ MODE_DISPLAY_LABELS: dict[str, str] = {
 
 PALETTE_FOUR = ["#2563eb", "#16a34a", "#ea580c", "#9333ea"]
 
+# Paper 2×3 figure: highlight BenchScout; other modes as semi-transparent overlays.
+PAPER_MODE_LINE_STYLES: dict[str, dict[str, float | str]] = {
+    "benchscout": {"color": "#ea580c", "alpha": 0.92, "linewidth": 2.4},
+    "full": {"color": "#2563eb", "alpha": 0.42, "linewidth": 2.2},
+    "route_a": {"color": "#16a34a", "alpha": 0.42, "linewidth": 2.2},
+    "route_b": {"color": "#6b7280", "alpha": 0.42, "linewidth": 2.2},
+}
+
+PAPER_SUBPLOT_TITLE_FONTSIZE = 14  # was 11pt; +3pt
+PAPER_AXIS_LABEL_FONTSIZE = 15  # default ~10pt; +5pt
+PAPER_INSET_ZOOM_END_S = 12.0
+PAPER_INSET_TICK_FONTSIZE = 8
+PAPER_INSET_FACE_ALPHA = 0.38
+PAPER_INSET_MARK_ALPHA = 0.42
+# [left, bottom, width, height] in axes fraction; bottom at 45% subplot height.
+PAPER_INSET_BOUNDS = (0.40, 0.45, 0.44, 0.40)
+
 
 def trace_display_label(tr: dict[str, Any]) -> str:
     mode = str(tr.get("mode") or "")
@@ -225,12 +242,22 @@ def _plot_traces_metric_on_ax(
     *,
     metric_key: Literal["cpu_pct", "mem_used_pct", "mem_delta_pct"],
     t_max: float | None = None,
+    paper_highlight_style: bool = False,
 ) -> None:
     """Overlay four-mode traces on one axes (no title or legend)."""
     traces = sort_traces_for_plot(traces)
     for i, tr in enumerate(traces):
         label = trace_display_label(tr)
-        color = PALETTE_FOUR[i % len(PALETTE_FOUR)]
+        mode = str(tr.get("mode") or "")
+        if paper_highlight_style and mode in PAPER_MODE_LINE_STYLES:
+            style = PAPER_MODE_LINE_STYLES[mode]
+            color = str(style["color"])
+            alpha = float(style["alpha"])
+            linewidth = float(style["linewidth"])
+        else:
+            color = PALETTE_FOUR[i % len(PALETTE_FOUR)]
+            alpha = 1.0
+            linewidth = 1.0
         samples = tr.get("samples") or []
         if not samples:
             continue
@@ -240,12 +267,102 @@ def _plot_traces_metric_on_ax(
             continue
         t = [float(s["t_rel_s"]) for s in samples]
         y = [float(s[metric_key]) for s in samples]
-        ax.plot(t, y, label=label, color=color, linewidth=1.0)
+        ax.plot(t, y, label=label, color=color, linewidth=linewidth, alpha=alpha)
 
     ax.set_ylim(0, 100)
     if t_max is not None:
         ax.set_xlim(0.0, t_max)
     ax.grid(True, alpha=0.3)
+
+
+def _metric_values_in_window(
+    traces: list[dict[str, Any]],
+    *,
+    metric_key: Literal["cpu_pct", "mem_used_pct", "mem_delta_pct"],
+    t_max: float,
+) -> list[float]:
+    vals: list[float] = []
+    for tr in traces:
+        for sample in tr.get("samples") or []:
+            if float(sample["t_rel_s"]) <= t_max:
+                vals.append(float(sample[metric_key]))
+    return vals
+
+
+def _ylim_for_zoom_window(
+    traces: list[dict[str, Any]],
+    *,
+    metric_key: Literal["cpu_pct", "mem_used_pct", "mem_delta_pct"],
+    t_max: float,
+) -> tuple[float, float]:
+    vals = _metric_values_in_window(traces, metric_key=metric_key, t_max=t_max)
+    if not vals:
+        return 0.0, 100.0
+    lo = min(vals)
+    hi = max(vals)
+    pad = max((hi - lo) * 0.18, 0.8)
+    return max(0.0, lo - pad), min(100.0, hi + pad)
+
+
+def _add_paper_zoom_inset(
+    ax: Any,
+    traces: list[dict[str, Any]],
+    *,
+    metric_key: Literal["cpu_pct", "mem_used_pct", "mem_delta_pct"],
+    zoom_end_s: float = PAPER_INSET_ZOOM_END_S,
+) -> None:
+    """Overlay a magnifier-style inset for the first ``zoom_end_s`` seconds."""
+    from mpl_toolkits.axes_grid1.inset_locator import mark_inset
+
+    axins = ax.inset_axes(PAPER_INSET_BOUNDS)
+    _plot_traces_metric_on_ax(
+        axins,
+        traces,
+        metric_key=metric_key,
+        t_max=zoom_end_s,
+        paper_highlight_style=True,
+    )
+    y_lo, y_hi = _ylim_for_zoom_window(traces, metric_key=metric_key, t_max=zoom_end_s)
+    axins.set_xlim(0.0, zoom_end_s)
+    axins.set_ylim(y_lo, y_hi)
+    axins.set_facecolor("white")
+    axins.patch.set_alpha(PAPER_INSET_FACE_ALPHA)
+    for spine in axins.spines.values():
+        spine.set_edgecolor("#9ca3af")
+        spine.set_linewidth(0.9)
+    axins.tick_params(labelsize=PAPER_INSET_TICK_FONTSIZE, pad=1)
+    axins.grid(True, alpha=0.25, linewidth=0.6)
+    for line in axins.get_lines():
+        line.set_zorder(6)
+    axins.text(
+        0.04,
+        0.96,
+        f"0–{zoom_end_s:.0f}s",
+        transform=axins.transAxes,
+        va="top",
+        ha="left",
+        fontsize=PAPER_INSET_TICK_FONTSIZE,
+        color="#374151",
+        zorder=7,
+        bbox={
+            "boxstyle": "round,pad=0.2",
+            "facecolor": "white",
+            "edgecolor": "none",
+            "alpha": 0.55,
+        },
+    )
+    mark_inset(
+        ax,
+        axins,
+        loc1=2,
+        loc2=4,
+        fc="#f9fafb",
+        ec="#6b7280",
+        alpha=PAPER_INSET_MARK_ALPHA,
+        linestyle="--",
+        linewidth=1.4,
+        zorder=0,
+    )
 
 
 def _show_waveform_panel_image(
@@ -274,6 +391,7 @@ def plot_waveform_paper_2x3_grid(
     save_pdf: bool = True,
     memory_metric: Literal["mem_used_pct", "mem_delta_pct"] = "mem_used_pct",
     xlim_max: float | None = None,
+    inset_zoom_end_s: float | None = None,
 ) -> Path:
     """Paper-style 2×3 grid: row 0 CPU, row 1 memory; shared legend on top.
 
@@ -281,6 +399,8 @@ def plot_waveform_paper_2x3_grid(
     Every subplot is titled ``{label}, CPU`` or ``{label}, Memory``.
     When ``xlim_max`` is set, all panels zoom to ``[0, xlim_max]``; otherwise the
     full trace duration is shown (full-run horizon, typically ~1680 s).
+    When ``inset_zoom_end_s`` is set, each panel also gets a magnifier inset for
+    the first ``inset_zoom_end_s`` seconds (e.g. BenchScout's ~12s window).
     """
     plt = _ensure_matplotlib(auto_install)
     n = len(columns)
@@ -302,19 +422,34 @@ def plot_waveform_paper_2x3_grid(
         ax_cpu = axes[0, col]
         ax_mem = axes[1, col]
 
-        _plot_traces_metric_on_ax(ax_cpu, traces, metric_key="cpu_pct", t_max=xlim_max)
-        _plot_traces_metric_on_ax(ax_mem, traces, metric_key=memory_metric, t_max=xlim_max)
+        _plot_traces_metric_on_ax(
+            ax_cpu, traces, metric_key="cpu_pct", t_max=xlim_max, paper_highlight_style=True
+        )
+        _plot_traces_metric_on_ax(
+            ax_mem, traces, metric_key=memory_metric, t_max=xlim_max, paper_highlight_style=True
+        )
+
+        if inset_zoom_end_s is not None and inset_zoom_end_s > 0:
+            _add_paper_zoom_inset(
+                ax_cpu, traces, metric_key="cpu_pct", zoom_end_s=inset_zoom_end_s
+            )
+            _add_paper_zoom_inset(
+                ax_mem, traces, metric_key=memory_metric, zoom_end_s=inset_zoom_end_s
+            )
 
         if not legend_handles:
             legend_handles, legend_labels = ax_cpu.get_legend_handles_labels()
 
-        ax_cpu.set_title(f"{config}, CPU", fontsize=11)
-        ax_mem.set_title(f"{config}, Memory", fontsize=11)
+        ax_cpu.set_title(f"{config}, CPU", fontsize=PAPER_SUBPLOT_TITLE_FONTSIZE)
+        ax_mem.set_title(f"{config}, Memory", fontsize=PAPER_SUBPLOT_TITLE_FONTSIZE)
 
         if col == 0:
-            ax_cpu.set_ylabel("CPU (%)")
-            ax_mem.set_ylabel("Memory used (%)" if memory_metric == "mem_used_pct" else "Memory Δ (%)")
-        ax_mem.set_xlabel("Time (s)")
+            ax_cpu.set_ylabel("CPU (%)", fontsize=PAPER_AXIS_LABEL_FONTSIZE)
+            ax_mem.set_ylabel(
+                "Memory used (%)" if memory_metric == "mem_used_pct" else "Memory Δ (%)",
+                fontsize=PAPER_AXIS_LABEL_FONTSIZE,
+            )
+        ax_mem.set_xlabel("Time (s)", fontsize=PAPER_AXIS_LABEL_FONTSIZE)
 
     if legend_handles:
         fig.legend(
@@ -327,8 +462,11 @@ def plot_waveform_paper_2x3_grid(
             fontsize=15,
         )
 
-    fig.tight_layout()
-    fig.subplots_adjust(top=0.86)
+    if inset_zoom_end_s is not None and inset_zoom_end_s > 0:
+        fig.subplots_adjust(top=0.86, hspace=0.30, wspace=0.16)
+    else:
+        fig.tight_layout()
+        fig.subplots_adjust(top=0.86)
 
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)

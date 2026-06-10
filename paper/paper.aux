@@ -11,12 +11,12 @@
 \@writefile{toc}{\contentsline {section}{Abstract}{1}{section*.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}\protected@file@percent }
 \providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
-\newlabel{fig:tuning_breakdown_pies}{{1a}{1}{Time breakdown of two representative KeenTune tasks}{figure.caption.5}{}}
-\newlabel{sub@fig:tuning_breakdown_pies}{{a}{1}{Time breakdown of two representative KeenTune tasks}{figure.caption.5}{}}
-\newlabel{tab:fullsuite_execution_time}{{1b}{1}{Full-suite PTS-CPU benchmark execution time across machines}{figure.caption.5}{}}
-\newlabel{sub@tab:fullsuite_execution_time}{{b}{1}{Full-suite PTS-CPU benchmark execution time across machines}{figure.caption.5}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces  Execution-time cost of benchmark-driven tuning and full-suite benchmark evaluation. }}{1}{figure.caption.5}\protected@file@percent }
-\newlabel{fig:tuning_and_fullsuite_cost}{{1}{1}{Execution-time cost of benchmark-driven tuning and full-suite benchmark evaluation}{figure.caption.5}{}}
+\newlabel{fig:tuning_breakdown_pies}{{1a}{2}{Time breakdown of two representative KeenTune tasks}{figure.caption.5}{}}
+\newlabel{sub@fig:tuning_breakdown_pies}{{a}{2}{Time breakdown of two representative KeenTune tasks}{figure.caption.5}{}}
+\newlabel{tab:fullsuite_execution_time}{{1b}{2}{Full-suite PTS-CPU benchmark execution time across machines}{figure.caption.5}{}}
+\newlabel{sub@tab:fullsuite_execution_time}{{b}{2}{Full-suite PTS-CPU benchmark execution time across machines}{figure.caption.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces  Execution-time cost of benchmark-driven tuning and full-suite benchmark evaluation. }}{2}{figure.caption.5}\protected@file@percent }
+\newlabel{fig:tuning_and_fullsuite_cost}{{1}{2}{Execution-time cost of benchmark-driven tuning and full-suite benchmark evaluation}{figure.caption.5}{}}
 \newlabel{subsec:problem-scope}{{1}{2}{Problem scope and credibility}{section*.6}{}}
 \@writefile{toc}{\contentsline {paragraph}{Problem scope and credibility.}{2}{section*.6}\protected@file@percent }
 \@writefile{toc}{\contentsline {paragraph}{Contributions.}{2}{section*.7}\protected@file@percent }
@@ -27,102 +27,105 @@
 \newlabel{eq:result-vector}{{3}{2}{Benchmark Suites}{equation.2.3}{}}
 \newlabel{eq:aggregate-score}{{4}{2}{Benchmark Suites}{equation.2.4}{}}
 \newlabel{eq:full-cost}{{5}{2}{Benchmark Suites}{equation.2.5}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Motivation}{2}{subsection.2.2}\protected@file@percent }
-\newlabel{subsec:motivation-redundancy}{{2.2}{2}{Insight 1: Sub-benchmarks Exhibit High Subsystem Redundancy}{section*.8}{}}
-\@writefile{toc}{\contentsline {paragraph}{Insight 1: Sub-benchmarks Exhibit High Subsystem Redundancy.}{2}{section*.8}\protected@file@percent }
 \citation{smith2011byte}
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Pairwise UnixBench subtest score correlation on five heterogeneous hosts ($n{=}25$ single-copy runs). Left: Pearson $r$; right: Spearman $\rho $. Dark red marks redundant pairs; lighter cells indicate weaker coupling for complementary Top-$K$ selection.}}{3}{figure.caption.9}\protected@file@percent }
-\newlabel{fig:unixbench-subtest-correlation}{{2}{3}{Pairwise UnixBench subtest score correlation on five heterogeneous hosts ($n{=}25$ single-copy runs). Left: Pearson $r$; right: Spearman $\rho $. Dark red marks redundant pairs; lighter cells indicate weaker coupling for complementary Top-$K$ selection}{figure.caption.9}{}}
+\citation{wang2019predicting,tousi2022comparative}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Motivation}{3}{subsection.2.2}\protected@file@percent }
+\newlabel{subsec:motivation-redundancy}{{2.2}{3}{Insight 1: Sub-benchmarks Exhibit High Subsystem Redundancy}{section*.8}{}}
+\@writefile{toc}{\contentsline {paragraph}{Insight 1: Sub-benchmarks Exhibit High Subsystem Redundancy.}{3}{section*.8}\protected@file@percent }
 \newlabel{subsec:motivation-convergence}{{2.2}{3}{Insight 2: Performance Metrics Exhibit Early Convergence}{section*.10}{}}
 \@writefile{toc}{\contentsline {paragraph}{Insight 2: Performance Metrics Exhibit Early Convergence.}{3}{section*.10}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Pairwise UnixBench subtest score correlation on five heterogeneous hosts ($n{=}25$ single-copy runs). Left: Pearson $r$; right: Spearman $\rho $. Dark red marks redundant pairs; lighter cells indicate weaker coupling for complementary Top-$K$ selection.}}{3}{figure.caption.9}\protected@file@percent }
+\newlabel{fig:unixbench-subtest-correlation}{{2}{3}{Pairwise UnixBench subtest score correlation on five heterogeneous hosts ($n{=}25$ single-copy runs). Left: Pearson $r$; right: Spearman $\rho $. Dark red marks redundant pairs; lighter cells indicate weaker coupling for complementary Top-$K$ selection}{figure.caption.9}{}}
 \@writefile{toc}{\contentsline {paragraph}{Insight 3: Production Telemetry is Inherently Fragile.}{3}{section*.11}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {3}Methods}{3}{section.3}\protected@file@percent }
 \newlabel{sec:methods}{{3}{3}{Methods}{section.3}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Overview}{3}{subsection.3.1}\protected@file@percent }
 \newlabel{subsec:method-overview}{{3.1}{3}{Overview}{subsection.3.1}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Overview of the \textsc  {BenchScout}\xspace  architecture. (1)\nonbreakingspace \textbf  {Host OS:} collector aggregates static and dynamic metrics into $\mathbf  {x}$. (2)\nonbreakingspace \textbf  {Router:} scores experts and selects Top-$K$. (3)\nonbreakingspace \textbf  {Probing:} category micro-workloads (or real subtests) run under a fixed budget and emit $\mathbf  {p}$. (4)\nonbreakingspace \textbf  {Reconstructor:} multi-output regressor predicts $\hat  {\mathbf  {y}}$ and $\hat  {Y}$; an optional uncertainty head estimates per-target $\sigma $ (Section\nonbreakingspace \ref {subsec:uncertainty-estimator}) but is \emph  {not} used in the default single-pass pipeline.}}{3}{figure.caption.12}\protected@file@percent }
-\newlabel{fig:mob}{{3}{3}{Overview of the \ourmethod architecture. (1)~\textbf {Host OS:} collector aggregates static and dynamic metrics into $\mathbf {x}$. (2)~\textbf {Router:} scores experts and selects Top-$K$. (3)~\textbf {Probing:} category micro-workloads (or real subtests) run under a fixed budget and emit $\mathbf {p}$. (4)~\textbf {Reconstructor:} multi-output regressor predicts $\hat {\mathbf {y}}$ and $\hat {Y}$; an optional uncertainty head estimates per-target $\sigma $ (Section~\ref {subsec:uncertainty-estimator}) but is \emph {not} used in the default single-pass pipeline}{figure.caption.12}{}}
-\@writefile{toc}{\contentsline {paragraph}{End-to-end data flow.}{3}{section*.13}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Online execution protocol.}{3}{section*.14}\protected@file@percent }
-\citation{wang2019predicting,tousi2022comparative}
-\@writefile{toc}{\contentsline {paragraph}{Systems contribution beyond score regression.}{4}{section*.15}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Offline training and online protocol.}{3}{section*.13}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Overview of the \textsc  {BenchScout}\xspace  architecture. (1)\nonbreakingspace \textbf  {Host OS:} collector aggregates static and dynamic metrics into $\mathbf  {x}$. (2)\nonbreakingspace \textbf  {Router:} scores experts and selects Top-$K$. (3)\nonbreakingspace \textbf  {Probing:} category micro-workloads (or real subtests) run under a fixed budget and emit $\mathbf  {p}$. (4)\nonbreakingspace \textbf  {Reconstructor:} multi-output regressor predicts $\hat  {\mathbf  {y}}$ and $\hat  {Y}$; an optional uncertainty head estimates per-target $\sigma $ (Section\nonbreakingspace \ref {subsec:uncertainty-estimator}) but is \emph  {not} used in the default single-pass pipeline.}}{4}{figure.caption.12}\protected@file@percent }
+\newlabel{fig:mob}{{3}{4}{Overview of the \ourmethod architecture. (1)~\textbf {Host OS:} collector aggregates static and dynamic metrics into $\mathbf {x}$. (2)~\textbf {Router:} scores experts and selects Top-$K$. (3)~\textbf {Probing:} category micro-workloads (or real subtests) run under a fixed budget and emit $\mathbf {p}$. (4)~\textbf {Reconstructor:} multi-output regressor predicts $\hat {\mathbf {y}}$ and $\hat {Y}$; an optional uncertainty head estimates per-target $\sigma $ (Section~\ref {subsec:uncertainty-estimator}) but is \emph {not} used in the default single-pass pipeline}{figure.caption.12}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Feature Collection and Engineering}{4}{subsection.3.2}\protected@file@percent }
 \newlabel{subsec:feature-collection}{{3.2}{4}{Feature Collection and Engineering}{subsection.3.2}{}}
 \newlabel{eq:system-context}{{6}{4}{Feature Collection and Engineering}{equation.3.6}{}}
-\@writefile{toc}{\contentsline {paragraph}{Feature Processing and Domain-Aware Scaling.}{4}{section*.17}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Cost-Aware Collection and Fallbacks.}{4}{section*.18}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Feature Processing and Fallbacks.}{4}{section*.15}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Router: Conditional Expert Selection}{4}{subsection.3.3}\protected@file@percent }
 \newlabel{subsec:router}{{3.3}{4}{Router: Conditional Expert Selection}{subsection.3.3}{}}
-\@writefile{toc}{\contentsline {paragraph}{Expert Routing.}{4}{section*.19}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Expert Routing.}{4}{section*.16}\protected@file@percent }
 \newlabel{eq:expert-pool}{{7}{4}{Expert Routing}{equation.3.7}{}}
 \newlabel{eq:router-score}{{8}{4}{Expert Routing}{equation.3.8}{}}
 \newlabel{eq:router-prob}{{9}{4}{Expert Routing}{equation.3.9}{}}
 \newlabel{eq:topk}{{10}{4}{Expert Routing}{equation.3.10}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Purpose-oriented feature groups organized by collection stage. Pre-run signals form the system context \(\mathbf  {x}_i\), while in-run probe signals form the probe vector \(\mathbf  {p}_{i,j}\).}}{5}{table.caption.16}\protected@file@percent }
-\newlabel{tab:feature_collection}{{1}{5}{Purpose-oriented feature groups organized by collection stage. Pre-run signals form the system context \(\mathbf {x}_i\), while in-run probe signals form the probe vector \(\mathbf {p}_{i,j}\)}{table.caption.16}{}}
-\@writefile{toc}{\contentsline {paragraph}{Training Objective.}{5}{section*.20}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Budget Control.}{5}{section*.21}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Time-Bounded Probing}{5}{subsection.3.4}\protected@file@percent }
-\newlabel{subsec:time-bounded-probing}{{3.4}{5}{Time-Bounded Probing}{subsection.3.4}{}}
-\@writefile{toc}{\contentsline {paragraph}{Dual-Mode Probing: Micro and Real.}{5}{section*.22}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Calibrated Micro-Probing for High-Cost Experts.}{5}{section*.23}\protected@file@percent }
-\newlabel{eq:probe-predict}{{11}{5}{Calibrated Micro-Probing for High-Cost Experts}{equation.3.11}{}}
-\newlabel{eq:probe-predict-shared}{{12}{5}{Calibrated Micro-Probing for High-Cost Experts}{equation.3.12}{}}
-\@writefile{toc}{\contentsline {paragraph}{Engineering Robustness over Outlier Rejection.}{5}{section*.24}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Reconstructor training with random-masked full runs. Historical full-run results are randomly masked to generate augmented sparse samples. The reconstructor takes the masked scores and binary mask as input, predicts the full-run result, and is optimized using the original full-run result as the supervision target.}}{6}{figure.caption.26}\protected@file@percent }
-\newlabel{fig:reconstructor-training}{{4}{6}{Reconstructor training with random-masked full runs. Historical full-run results are randomly masked to generate augmented sparse samples. The reconstructor takes the masked scores and binary mask as input, predicts the full-run result, and is optimized using the original full-run result as the supervision target}{figure.caption.26}{}}
-\@writefile{toc}{\contentsline {paragraph}{Training objective and inference.}{6}{section*.25}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Reconstructor: Full-Suite Result Recovery}{6}{subsection.3.5}\protected@file@percent }
-\newlabel{subsec:reconstructor}{{3.5}{6}{Reconstructor: Full-Suite Result Recovery}{subsection.3.5}{}}
-\@writefile{toc}{\contentsline {paragraph}{Input Representation and Multi-Output Target.}{6}{section*.27}\protected@file@percent }
-\newlabel{eq:recon-input}{{13}{6}{Input Representation and Multi-Output Target}{equation.3.13}{}}
-\@writefile{toc}{\contentsline {paragraph}{Training via simulated sparse execution.}{6}{section*.28}\protected@file@percent }
-\newlabel{subsec:aggregator}{{3.5}{6}{Official aggregator $A(\cdot )$ across suites}{section*.29}{}}
-\@writefile{toc}{\contentsline {paragraph}{Official aggregator $A(\cdot )$ across suites.}{6}{section*.29}\protected@file@percent }
-\newlabel{eq:pts-logmean}{{14}{6}{Official aggregator $A(\cdot )$ across suites}{equation.3.14}{}}
-\@writefile{toc}{\contentsline {paragraph}{Scale compression for heterogeneous targets.}{6}{section*.30}\protected@file@percent }
-\newlabel{subsec:uncertainty-estimator}{{3.5}{6}{Uncertainty estimator (Figure~\ref {fig:mob})}{section*.31}{}}
-\@writefile{toc}{\contentsline {paragraph}{Uncertainty estimator (Figure\nonbreakingspace \ref {fig:mob}).}{6}{section*.31}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Training Objective.}{4}{section*.17}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Time-Bounded Probing}{4}{subsection.3.4}\protected@file@percent }
+\newlabel{subsec:time-bounded-probing}{{3.4}{4}{Time-Bounded Probing}{subsection.3.4}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Purpose-oriented feature groups organized by collection stage. Pre-run signals form the system context \(\mathbf  {x}_i\), while in-run probe signals form the probe vector \(\mathbf  {p}_{i,j}\).}}{5}{table.caption.14}\protected@file@percent }
+\newlabel{tab:feature_collection}{{1}{5}{Purpose-oriented feature groups organized by collection stage. Pre-run signals form the system context \(\mathbf {x}_i\), while in-run probe signals form the probe vector \(\mathbf {p}_{i,j}\)}{table.caption.14}{}}
+\@writefile{toc}{\contentsline {paragraph}{Dual-Mode Probing.}{5}{section*.18}\protected@file@percent }
+\newlabel{eq:probe-predict}{{11}{5}{Dual-Mode Probing}{equation.3.11}{}}
+\newlabel{eq:probe-predict-shared}{{12}{5}{Dual-Mode Probing}{equation.3.12}{}}
+\@writefile{toc}{\contentsline {paragraph}{Training objective.}{5}{section*.19}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Reconstructor: Full-Suite Result Recovery}{5}{subsection.3.5}\protected@file@percent }
+\newlabel{subsec:reconstructor}{{3.5}{5}{Reconstructor: Full-Suite Result Recovery}{subsection.3.5}{}}
+\@writefile{toc}{\contentsline {paragraph}{Input Representation.}{5}{section*.21}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Reconstructor training with random-masked full runs. Historical full-run results are randomly masked to generate augmented sparse samples. The reconstructor takes the masked scores and binary mask as input, predicts the full-run result, and is optimized using the original full-run result as the supervision target.}}{5}{figure.caption.20}\protected@file@percent }
+\newlabel{fig:reconstructor-training}{{4}{5}{Reconstructor training with random-masked full runs. Historical full-run results are randomly masked to generate augmented sparse samples. The reconstructor takes the masked scores and binary mask as input, predicts the full-run result, and is optimized using the original full-run result as the supervision target}{figure.caption.20}{}}
+\newlabel{eq:recon-input}{{13}{5}{Input Representation}{equation.3.13}{}}
 \citation{wang2019predicting}
 \citation{tousi2022comparative}
-\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Evaluation testbeds. Five Linux hosts with heterogeneous CPU and memory capacity. CPU models are taken from \unhbox \voidb@x \begingroup \url@ttstyle \begingroup \let \relax \relax \relax \endgroup \Url {/proc/cpuinfo} at collection time. PTS-GPU{} runs only on H1.}}{7}{table.caption.33}\protected@file@percent }
-\newlabel{tab:testbeds}{{2}{7}{Evaluation testbeds. Five Linux hosts with heterogeneous CPU and memory capacity. CPU models are taken from \path {/proc/cpuinfo} at collection time. \ptsgpu {} runs only on H1}{table.caption.33}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {4}Evaluation}{7}{section.4}\protected@file@percent }
-\newlabel{sec:evaluation}{{4}{7}{Evaluation}{section.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Experimental Setup}{7}{subsection.4.1}\protected@file@percent }
-\newlabel{subsec:exp-setup}{{4.1}{7}{Experimental Setup}{subsection.4.1}{}}
-\@writefile{toc}{\contentsline {paragraph}{Hardware environment.}{7}{section*.32}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Software environment.}{7}{section*.34}\protected@file@percent }
-\newlabel{subsubsec:benchmark-suites}{{4.1}{7}{Benchmark Suites}{section*.35}{}}
-\@writefile{toc}{\contentsline {paragraph}{Benchmark Suites}{7}{section*.35}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Why UnixBench and PTS, not SPEC CPU2017.}{7}{section*.36}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Baselines.}{7}{section*.37}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Evaluation organization.}{7}{section*.38}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Hybrid evaluation protocol.}{7}{section*.39}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Evaluation testbeds. Five Linux hosts with heterogeneous CPU and memory capacity. CPU models are taken from \unhbox \voidb@x \begingroup \url@ttstyle \begingroup \let \relax \relax \relax \endgroup \Url {/proc/cpuinfo} at collection time. PTS-GPU{} runs only on H1.}}{6}{table.caption.25}\protected@file@percent }
+\newlabel{tab:testbeds}{{2}{6}{Evaluation testbeds. Five Linux hosts with heterogeneous CPU and memory capacity. CPU models are taken from \path {/proc/cpuinfo} at collection time. \ptsgpu {} runs only on H1}{table.caption.25}{}}
+\newlabel{subsec:aggregator}{{3.5}{6}{Training and aggregation}{section*.22}{}}
+\@writefile{toc}{\contentsline {paragraph}{Training and aggregation.}{6}{section*.22}\protected@file@percent }
+\newlabel{eq:pts-logmean}{{14}{6}{Training and aggregation}{equation.3.14}{}}
+\newlabel{subsec:uncertainty-estimator}{{3.5}{6}{Optional uncertainty head}{section*.23}{}}
+\@writefile{toc}{\contentsline {paragraph}{Optional uncertainty head.}{6}{section*.23}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Evaluation}{6}{section.4}\protected@file@percent }
+\newlabel{sec:evaluation}{{4}{6}{Evaluation}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Experimental Setup}{6}{subsection.4.1}\protected@file@percent }
+\newlabel{subsec:exp-setup}{{4.1}{6}{Experimental Setup}{subsection.4.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{Hardware environment.}{6}{section*.24}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Software environment.}{6}{section*.26}\protected@file@percent }
+\newlabel{subsubsec:benchmark-suites}{{4.1}{6}{Benchmark Suites}{section*.27}{}}
+\@writefile{toc}{\contentsline {paragraph}{Benchmark Suites}{6}{section*.27}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Why UnixBench and PTS, not SPEC CPU2017.}{6}{section*.28}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Baselines.}{6}{section*.29}\protected@file@percent }
 \citation{wang2019predicting,tousi2022comparative}
 \citation{wang2019predicting,tousi2022comparative}
-\newlabel{subsubsec:metrics}{{4.1}{8}{Metrics and Evaluation Criteria}{section*.40}{}}
-\@writefile{toc}{\contentsline {paragraph}{Metrics and Evaluation Criteria}{8}{section*.40}\protected@file@percent }
-\newlabel{eq:absolute-error}{{15}{8}{Metrics and Evaluation Criteria}{equation.4.15}{}}
-\newlabel{eq:time-saved}{{16}{8}{Metrics and Evaluation Criteria}{equation.4.16}{}}
-\newlabel{eq:balanced-score}{{17}{8}{Metrics and Evaluation Criteria}{equation.4.17}{}}
-\newlabel{eq:xi-importance}{{18}{8}{Metrics and Evaluation Criteria}{equation.4.18}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Overall Effectiveness}{8}{subsection.4.2}\protected@file@percent }
-\newlabel{subsec:overall-effectiveness}{{4.2}{8}{Overall Effectiveness}{subsection.4.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{Evaluation organization.}{7}{section*.30}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Hybrid evaluation protocol.}{7}{section*.31}\protected@file@percent }
+\newlabel{subsubsec:metrics}{{4.1}{7}{Metrics and Evaluation Criteria}{section*.32}{}}
+\@writefile{toc}{\contentsline {paragraph}{Metrics and Evaluation Criteria}{7}{section*.32}\protected@file@percent }
+\newlabel{eq:absolute-error}{{15}{7}{Metrics and Evaluation Criteria}{equation.4.15}{}}
+\newlabel{eq:time-saved}{{16}{7}{Metrics and Evaluation Criteria}{equation.4.16}{}}
+\newlabel{eq:balanced-score}{{17}{7}{Metrics and Evaluation Criteria}{equation.4.17}{}}
+\newlabel{eq:xi-importance}{{18}{7}{Metrics and Evaluation Criteria}{equation.4.18}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Overall Effectiveness}{7}{subsection.4.2}\protected@file@percent }
+\newlabel{subsec:overall-effectiveness}{{4.2}{7}{Overall Effectiveness}{subsection.4.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Overall effectiveness across five heterogeneous hosts. \textsc  {BenchScout}\xspace  {} rows use the Hybrid pipeline: router Top-$K$, \emph  {probe-model-predicted} partial scores, and reconstruction (Section\nonbreakingspace \ref {subsec:overall-effectiveness}). Wang/Tousi rows are execution-free MLP proxies\nonbreakingspace \citep  {wang2019predicting,tousi2022comparative} (static hardware features only). Execution time is in seconds; lower is better for error and time. Bold marks best among tested methods.}}{8}{table.caption.33}\protected@file@percent }
+\newlabel{tab:overall-effectiveness-expanded}{{3}{8}{Overall effectiveness across five heterogeneous hosts. \ourmethod {} rows use the Hybrid pipeline: router Top-$K$, \emph {probe-model-predicted} partial scores, and reconstruction (Section~\ref {subsec:overall-effectiveness}). Wang/Tousi rows are execution-free MLP proxies~\cite {wang2019predicting,tousi2022comparative} (static hardware features only). Execution time is in seconds; lower is better for error and time. Bold marks best among tested methods}{table.caption.33}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Runtime Overhead Analysis}{8}{subsection.4.3}\protected@file@percent }
 \newlabel{subsec:resource-waveforms}{{4.3}{8}{Runtime Overhead Analysis}{subsection.4.3}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Model Combination Study}{8}{subsection.4.4}\protected@file@percent }
 \newlabel{subsec:model-combination}{{4.4}{8}{Model Combination Study}{subsection.4.4}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Overall effectiveness across five heterogeneous hosts. \textsc  {BenchScout}\xspace  {} rows use the Hybrid pipeline: router Top-$K$, \emph  {probe-model-predicted} partial scores, and reconstruction (Section\nonbreakingspace \ref {subsec:overall-effectiveness}). Wang/Tousi rows are execution-free MLP proxies\nonbreakingspace \citep  {wang2019predicting,tousi2022comparative} (static hardware features only). Execution time is in seconds; lower is better for error and time. Bold marks best among tested methods.}}{9}{table.caption.41}\protected@file@percent }
-\newlabel{tab:overall-effectiveness-expanded}{{3}{9}{Overall effectiveness across five heterogeneous hosts. \ourmethod {} rows use the Hybrid pipeline: router Top-$K$, \emph {probe-model-predicted} partial scores, and reconstruction (Section~\ref {subsec:overall-effectiveness}). Wang/Tousi rows are execution-free MLP proxies~\cite {wang2019predicting,tousi2022comparative} (static hardware features only). Execution time is in seconds; lower is better for error and time. Bold marks best among tested methods}{table.caption.41}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces UnixBench runtime resource summary on three representative hosts ($0.5$\,s online sampling). Wall time is the end-to-end traced duration; CPU and memory columns report time-averaged system utilization over each trace. \textbf  {Wall saved} is the reduction in traced wall time relative to a full-suite run on the same host. Bold highlights BenchScout (\textsc  {BenchScout}\xspace  ).}}{9}{table.caption.42}\protected@file@percent }
-\newlabel{tab:resource-overhead}{{4}{9}{UnixBench runtime resource summary on three representative hosts ($0.5$\,s online sampling). Wall time is the end-to-end traced duration; CPU and memory columns report time-averaged system utilization over each trace. \textbf {Wall saved} is the reduction in traced wall time relative to a full-suite run on the same host. Bold highlights BenchScout (\ourmethod )}{table.caption.42}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Router--reconstructor combination study on H1 with online partial execution and reconstruction.}}{9}{table.caption.44}\protected@file@percent }
-\newlabel{tab:model-combination}{{5}{9}{Router--reconstructor combination study on H1 with online partial execution and reconstruction}{table.caption.44}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}Probe Model Evaluation}{9}{subsection.4.5}\protected@file@percent }
-\newlabel{subsec:probe-evaluation}{{4.5}{9}{Probe Model Evaluation}{subsection.4.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}Probe Model Evaluation}{8}{subsection.4.5}\protected@file@percent }
+\newlabel{subsec:probe-evaluation}{{4.5}{8}{Probe Model Evaluation}{subsection.4.5}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces UnixBench runtime resource summary on three representative hosts ($0.5$\,s online sampling). Wall time is the end-to-end traced duration; CPU and memory columns report time-averaged system utilization over each trace. \textbf  {Wall saved} is the reduction in traced wall time relative to a full-suite run on the same host. Bold highlights BenchScout (\textsc  {BenchScout}\xspace  ).}}{9}{table.caption.34}\protected@file@percent }
+\newlabel{tab:resource-overhead}{{4}{9}{UnixBench runtime resource summary on three representative hosts ($0.5$\,s online sampling). Wall time is the end-to-end traced duration; CPU and memory columns report time-averaged system utilization over each trace. \textbf {Wall saved} is the reduction in traced wall time relative to a full-suite run on the same host. Bold highlights BenchScout (\ourmethod )}{table.caption.34}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces UnixBench CPU and memory waveforms on H1, H3, and H4 ($0.5$\,s sampling). Rows: CPU utilization (\%) and memory used (\%); columns: 32U128G, 4U8G, and 4U16G. Curves show \emph  {Full run}, \emph  {router only}, \emph  {probe only}, and \emph  {BenchScout} on shared axes (${\approx }1680$\,s horizon).}}{9}{figure.caption.35}\protected@file@percent }
+\newlabel{fig:resource-waveforms}{{5}{9}{UnixBench CPU and memory waveforms on H1, H3, and H4 ($0.5$\,s sampling). Rows: CPU utilization (\%) and memory used (\%); columns: 32U128G, 4U8G, and 4U16G. Curves show \emph {Full run}, \emph {router only}, \emph {probe only}, and \emph {BenchScout} on shared axes (${\approx }1680$\,s horizon)}{figure.caption.35}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.6}Top-\(K\) Sweep}{9}{subsection.4.6}\protected@file@percent }
 \newlabel{subsec:topk-tradeoff}{{4.6}{9}{Top-\(K\) Sweep}{subsection.4.6}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Router--reconstructor combination study on H1 with online partial execution and reconstruction.}}{10}{table.caption.36}\protected@file@percent }
+\newlabel{tab:model-combination}{{5}{10}{Router--reconstructor combination study on H1 with online partial execution and reconstruction}{table.caption.36}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Probe model comparison on H1.}}{10}{table.caption.37}\protected@file@percent }
+\newlabel{tab:probe-models}{{6}{10}{Probe model comparison on H1}{table.caption.37}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.7}System Context Feature Ablation}{10}{subsection.4.7}\protected@file@percent }
+\newlabel{subsec:feature-ablation}{{4.7}{10}{System Context Feature Ablation}{subsection.4.7}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Top-\(K\) error--saving trade-off using the best router--reconstructor pair for each suite. Each point corresponds to a candidate \(K\), with numbers indicating \(K\). Stars mark the selected \(K\) according to the balanced score in Equation\nonbreakingspace \ref {eq:balanced-score}. Points closer to the lower-right corner achieve lower prediction error and higher time savings.}}{10}{figure.caption.38}\protected@file@percent }
+\newlabel{fig:topk-pareto}{{6}{10}{Top-\(K\) error--saving trade-off using the best router--reconstructor pair for each suite. Each point corresponds to a candidate \(K\), with numbers indicating \(K\). Stars mark the selected \(K\) according to the balanced score in Equation~\ref {eq:balanced-score}. Points closer to the lower-right corner achieve lower prediction error and higher time savings}{figure.caption.38}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.8}Probe Telemetry Degradation (eBPF On vs.\ Off)}{10}{subsection.4.8}\protected@file@percent }
+\newlabel{subsec:probe-ebpf-ablation}{{4.8}{10}{Probe Telemetry Degradation (eBPF On vs.\ Off)}{subsection.4.8}{}}
+\@writefile{toc}{\contentsline {paragraph}{Protocol.}{10}{section*.40}\protected@file@percent }
 \citation{hatt2007benchmarking}
 \citation{brown1997operating}
 \citation{smith2011byte}
@@ -133,12 +136,17 @@
 \citation{garre2014performance}
 \citation{watfa2014benchmarking}
 \citation{silva2019operating}
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces UnixBench CPU and memory waveforms on H1, H3, and H4 ($0.5$\,s sampling). Rows: CPU utilization (\%) and memory used (\%); columns: 32U128G, 4U8G, and 4U16G. Curves show \emph  {Full run}, \emph  {router only}, \emph  {probe only}, and \emph  {BenchScout} on shared axes (${\approx }1680$\,s horizon).}}{10}{figure.caption.43}\protected@file@percent }
-\newlabel{fig:resource-waveforms}{{5}{10}{UnixBench CPU and memory waveforms on H1, H3, and H4 ($0.5$\,s sampling). Rows: CPU utilization (\%) and memory used (\%); columns: 32U128G, 4U8G, and 4U16G. Curves show \emph {Full run}, \emph {router only}, \emph {probe only}, and \emph {BenchScout} on shared axes (${\approx }1680$\,s horizon)}{figure.caption.43}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Probe model comparison on H1.}}{10}{table.caption.45}\protected@file@percent }
-\newlabel{tab:probe-models}{{6}{10}{Probe model comparison on H1}{table.caption.45}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.7}System Context Feature Ablation}{10}{subsection.4.7}\protected@file@percent }
-\newlabel{subsec:feature-ablation}{{4.7}{10}{System Context Feature Ablation}{subsection.4.7}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces System-feature ablation at fixed router policy and $K=3$ (offline CV on H1). $\Delta e$ = relative-error change vs.\ complete $\mathbf  {x}$ baseline (Equation\nonbreakingspace \ref {eq:xi-importance}; pp = percentage points; baseline row omitted). Importance rank orders ablated modes by descending $\Delta e$.}}{11}{table.caption.39}\protected@file@percent }
+\newlabel{tab:feature-ablation}{{7}{11}{System-feature ablation at fixed router policy and $K=3$ (offline CV on H1). $\Delta e$ = relative-error change vs.\ complete $\mathbf {x}$ baseline (Equation~\ref {eq:xi-importance}; pp = percentage points; baseline row omitted). Importance rank orders ablated modes by descending $\Delta e$}{table.caption.39}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces eBPF degradation on H1 UnixBench \emph  {Probe only} (LightGBM; $D{=}4$\,s; $Y{=}3185.5$). \textbf  {sched}: mean context-switch rate ($10^4$/s).}}{11}{table.caption.42}\protected@file@percent }
+\newlabel{tab:probe-ebpf-ablation}{{8}{11}{eBPF degradation on H1 UnixBench \emph {Probe only} (LightGBM; $D{=}4$\,s; $Y{=}3185.5$). \textbf {sched}: mean context-switch rate ($10^4$/s)}{table.caption.42}{}}
+\@writefile{toc}{\contentsline {paragraph}{Results.}{11}{section*.41}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.9}Probe Duration Sensitivity}{11}{subsection.4.9}\protected@file@percent }
+\newlabel{subsec:probe-duration-sensitivity}{{4.9}{11}{Probe Duration Sensitivity}{subsection.4.9}{}}
+\@writefile{toc}{\contentsline {paragraph}{Protocol.}{11}{section*.43}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Results.}{11}{section*.44}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Related Work}{11}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}System Benchmarking and Performance Evaluation}{11}{subsection.5.1}\protected@file@percent }
 \citation{ipek2005approach,ipek2006efficiently,lee2006accurate,sharkawi2009performance}
 \citation{ipek2006efficiently}
 \citation{lee2006accurate}
@@ -148,22 +156,19 @@
 \citation{ardalani2015cross}
 \citation{zheng2016accurate}
 \citation{wang2019predicting}
-\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Top-\(K\) error--saving trade-off using the best router--reconstructor pair for each suite. Each point corresponds to a candidate \(K\), with numbers indicating \(K\). Stars mark the selected \(K\) according to the balanced score in Equation\nonbreakingspace \ref {eq:balanced-score}. Points closer to the lower-right corner achieve lower prediction error and higher time savings.}}{11}{figure.caption.46}\protected@file@percent }
-\newlabel{fig:topk-pareto}{{6}{11}{Top-\(K\) error--saving trade-off using the best router--reconstructor pair for each suite. Each point corresponds to a candidate \(K\), with numbers indicating \(K\). Stars mark the selected \(K\) according to the balanced score in Equation~\ref {eq:balanced-score}. Points closer to the lower-right corner achieve lower prediction error and higher time savings}{figure.caption.46}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces System-feature ablation at fixed router policy and $K=3$ (offline CV on H1). $\Delta e$ = relative-error change vs.\ complete $\mathbf  {x}$ baseline (Equation\nonbreakingspace \ref {eq:xi-importance}; pp = percentage points; baseline row omitted). Importance rank orders ablated modes by descending $\Delta e$.}}{11}{table.caption.47}\protected@file@percent }
-\newlabel{tab:feature-ablation}{{7}{11}{System-feature ablation at fixed router policy and $K=3$ (offline CV on H1). $\Delta e$ = relative-error change vs.\ complete $\mathbf {x}$ baseline (Equation~\ref {eq:xi-importance}; pp = percentage points; baseline row omitted). Importance rank orders ablated modes by descending $\Delta e$}{table.caption.47}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5}Related Work}{11}{section.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}System Benchmarking and Performance Evaluation}{11}{subsection.5.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Performance Prediction}{11}{subsection.5.2}\protected@file@percent }
-\newlabel{subsec:rw-performance-prediction}{{5.2}{11}{Performance Prediction}{subsection.5.2}{}}
 \bibstyle{acm}
 \bibdata{sample-base}
 \newlabel{tocindent-1}{0pt}
 \newlabel{tocindent0}{0pt}
-\newlabel{tocindent1}{4.185pt}
+\newlabel{tocindent1}{4.65pt}
 \newlabel{tocindent2}{14.53499pt}
 \newlabel{tocindent3}{18.198pt}
+\@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces Probe duration sweep on H1 UnixBench \emph  {Probe only} (LightGBM; micro; eBPF off; $Y{=}3185.5$, $T_{\mathrm  {full}}{=}319.9$\,s).}}{12}{table.caption.45}\protected@file@percent }
+\newlabel{tab:probe-duration-sensitivity}{{9}{12}{Probe duration sweep on H1 UnixBench \emph {Probe only} (LightGBM; micro; eBPF off; $Y{=}3185.5$, $T_{\mathrm {full}}{=}319.9$\,s)}{table.caption.45}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Performance Prediction}{12}{subsection.5.2}\protected@file@percent }
+\newlabel{subsec:rw-performance-prediction}{{5.2}{12}{Performance Prediction}{subsection.5.2}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {6}Conclusion}{12}{section.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{References}{12}{section*.49}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7}Limitation and Future Work}{12}{section.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{References}{12}{section*.47}\protected@file@percent }
 \newlabel{TotPages}{{12}{12}{}{page.12}{}}
 \gdef \@abspage@last{12}

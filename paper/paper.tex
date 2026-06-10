@@ -44,7 +44,9 @@
 %% for your publication.
 %%
 %%
-\documentclass[sigconf]{acmart}
+% \documentclass[sigconf]{acmart}
+\documentclass[sigplan,10pt, anonymous]{acmart}
+
 %%
 %% \BibTeX command to typeset BibTeX logo in the docs
 \AtBeginDocument{%
@@ -182,8 +184,9 @@ Benchmark suites are vital for evaluating computing platforms, but their compreh
 %%
 %% Keywords. The author(s) should pick words that accurately describe
 %% the work being presented. Separate the keywords with commas.
-\keywords{Do, Not, Use, This, Code, Put, the, Correct, Terms, for,
-  Your, Paper}
+\keywords{System Benchmarking, Benchmark Suites, Performance Evaluation,
+  Machine Learning, Mixture of Experts, Sparse Measurement,
+  Time-bounded Probing}
 %% A "teaser" image appears between the author and affiliation
 %% information and the body of the document, and typically spans the
 %% page.
@@ -248,9 +251,9 @@ Comprehensive suites often contain many heterogeneous workloads, each consuming 
 In the middle ground, execution-free predictors attempt to bypass benchmark runs by estimating performance from static host configurations, public specifications, or offline training data~\cite{wang2019predicting,tousi2022comparative}. 
 
 
-Because the system itself cannot magically compress the execution time of standard workloads, various approaches have attempted to mitigate this overhead. ``Static-subset'' approaches manually cherry-pick a fixed group of subtests, but they face a high barrier to generalization: a subset chosen for a CPU-bound instance falls short on an I/O-heavy machine~\cite{smith2011byte}. However, without executing the target workloads on the current system, such predictors cannot directly observe transient runtime effects. 
-As a result, they can be unreliable under distribution shifts common in production environments. 
-Consequently, when a trustworthy performance profile is required, practitioners often still fall back to running the full suite to completion, which preserves measurement fidelity but incurs long execution delays and resource interference in shared environments.
+Because the system itself cannot magically compress the execution time of standard workloads, various approaches have attempted to mitigate this overhead. ``Static-subset'' approaches manually cherry-pick a fixed group of subtests, but they face a high barrier to generalization: a subset chosen for a CPU-bound instance falls short on an I/O-heavy machine~\cite{smith2011byte}. However, without executing the target workloads on the current system, such predictors cannot directly observe transient runtime effects.
+As a result, they can be unreliable under distribution shifts common in production environments.
+When a trustworthy performance profile is required, practitioners therefore still fall back to full-suite run-to-completion, preserving measurement fidelity at the cost of long delays and resource interference in shared environments.
 
 
 We take a different approach: rather than eliminating benchmark execution, \ourmethod keeps real measurements in the loop but makes them sparse and adaptive. 
@@ -330,7 +333,7 @@ Our goal is therefore to estimate $(\mathbf{y},Y)$ from sparse, time-bounded pro
 \label{subsec:motivation-redundancy}
 Although comprehensive suites contain dozens of subtests, many workloads stress overlapping hardware subsystems. Our profiling reveals that seemingly diverse UnixBench tasks---integer computation (\id{dhry2reg}), process creation (\id{spawn}), and inter-process communication (\id{pipe})---often bottleneck on the same OS scheduling overheads or memory-hierarchy mechanisms. Because these subtests are merely different software projections of the same underlying hardware capacity, executing all of them yields diminishing returns in information gain. This physical redundancy indicates that a carefully routed, minimal subset of experts is theoretically sufficient to expose the current system's overall performance limits.
 
-To make this redundancy explicit and quantifiable, we pool $n{=}25$ complete single-copy UnixBench runs (\id{perl Run -c 1}) collected across our five evaluation hosts (2\,U/8\,GiB through 32\,U/128\,GiB; Table~\ref{tab:testbeds}), yielding five independent full-suite repetitions per machine. For each run we extract the official per-subtest index score for all $N{=}12$ components (\id{dhry2reg}, \id{whetstone-double}, \id{execl}, \id{fstime}, \id{fsbuffer}, \id{fsdisk}, \id{pipe}, \id{context1}, \id{spawn}, \id{syscall}, \id{shell1}, \id{shell8}) and compute pairwise association matrices. Figure~\ref{fig:unixbench-subtest-correlation} reports both Pearson (linear) and Spearman (rank) correlations side-by-side; Spearman is less sensitive to outliers when suite indices span more than a $2\times$ range across hosts (roughly 1590--3190 on our testbeds).
+To make this redundancy explicit and quantifiable, we pool $n{=}25$ complete single-copy UnixBench runs (\id{perl Run -c 1}) collected across our five evaluation hosts (2\,U/8\,GiB through 32\,U/128\,GiB; Table~\ref{tab:testbeds}), yielding five independent full-suite repetitions per machine. For each run we extract the official per-subtest index score for all $N{=}12$ components and compute pairwise association matrices. Figure~\ref{fig:unixbench-subtest-correlation} reports both Pearson (linear) and Spearman (rank) correlations side-by-side; Spearman is less sensitive to outliers when suite indices span more than a $2\times$ range across hosts (roughly 1590--3190 on our testbeds).
 \begin{figure}[t]
     \centering
     \includegraphics[width=1\linewidth]{images/unixbench_subtest_correlation_combined.pdf}
@@ -375,29 +378,34 @@ This requirement shapes both feature collection (Section~\ref{subsec:feature-col
 \subsection{Overview}
 \label{subsec:method-overview}
 
-\ourmethod approximates a complete benchmark run by observing only a small subset of informative sub-benchmarks (Figure~\ref{fig:mob}; scope in Section~\ref{subsec:problem-scope}). 
-Given target system state, it collects context \(\mathbf{x}\), routes Top-$K$ subtests, runs fixed-duration probes on the selected components, and reconstructs the full official profile (Sections~\ref{subsec:router}--\ref{subsec:reconstructor}).
-The pipeline is \emph{single-pass}: budgets ($K$, probe duration) are fixed at deployment time---there is no adaptive re-probing loop.
+\ourmethod approximates a complete benchmark run by observing only a small informative subset (Figure~\ref{fig:mob}; scope in Section~\ref{subsec:problem-scope}).
+Given the current system state, it collects context \(\mathbf{x}\), routes Top-$K$ subtests, runs fixed-duration probes on the selected components, and reconstructs the full official profile (Sections~\ref{subsec:router}--\ref{subsec:reconstructor}).
+The pipeline is \emph{single-pass}: budgets ($K$, probe duration) are fixed at deployment; there is no adaptive re-probing loop.
 
-\paragraph{End-to-end data flow.}
-\textbf{Offline (per host $h$):} collect $M$ complete suite runs $\{(\mathbf{x}_i,\mathbf{y}_i,Y_i)\}_{i=1}^M$ with official per-component scores $\mathbf{y}_i$ and suite index $Y_i$.
-Train (1) router $f_\theta$ from $(\mathbf{x}_i,\mathbf{y}_i)$, (2) probe estimators $f_{e_j}$ from prefix telemetry $(\mathbf{p}_{i,j},y_{i,j})$ for each expert $e_j$, and (3) reconstructor $g_\phi$ from masked partial vectors and full labels.
-\textbf{Online (new run on $h$):} collect $\mathbf{x}$ $\rightarrow$ select $\mathcal{S}_K(\mathbf{x})$ $\rightarrow$ for each selected expert $e_j\in\mathcal{S}_K$, execute one bounded probe and predict $\hat{y}_j=f_{e_j}(\mathbf{p}_j)$ $\rightarrow$ form sparse tuple $Z=[\mathbf{x},m_j,\hat{y}_j,\tau_j]$ $\rightarrow$ output $\hat{\mathbf{y}},\hat{Y}=g_\phi(Z)$, where $m_j$ is the observation mask and $\tau_j$ is probe wall time.
-Error propagates sequentially: probe error on the $K$ observed components is absorbed by $g_\phi$ when imputing unobserved $y_j$ and the aggregate $Y$; we do not re-route or extend probes based on posterior uncertainty.
+\paragraph{Offline training and online protocol.}
+\textbf{Offline (per host $h$):} collect $M$ complete runs $\{(\mathbf{x}_i,\mathbf{y}_i,Y_i)\}_{i=1}^M$ and train (1)~router $f_\theta$ from $(\mathbf{x}_i,\mathbf{y}_i)$, (2)~probe estimators $f_{e_j}$ from $(\mathbf{p}_{i,j},y_{i,j})$, and (3)~reconstructor $g_\phi$ from masked partial vectors and full labels.
+Each module is persisted as a host-local checkpoint bundle; no cross-host weight sharing is required at inference.
+\textbf{Online:} \ourmethod executes four deterministic stages on the target host:
+(1)~\textbf{Profile}---collect $\mathbf{x}$ with 3\,s warmup and 0.5\,s \path{/proc} sampling (perf PMU when permitted, otherwise \path{/proc}-only proxies);
+(2)~\textbf{Route}---score experts with $f_\theta$ and select $\mathcal{S}_K(\mathbf{x})$;
+(3)~\textbf{Probe}---for each $e_j\in\mathcal{S}_K$, run one micro-probe (default $T_{\mathrm{probe}}{=}4$\,s) and predict $\hat{y}_j=f_{e_j}(\mathbf{p}_j)$;
+(4)~\textbf{Reconstruct}---assemble $Z=[\mathbf{x},m_j,\hat{y}_j,\tau_j]$ and output $\hat{\mathbf{y}},\hat{Y}=g_\phi(Z)$ with $\hat{Y}=A(\hat{\mathbf{y}})$.
+Default wall time is $T_{\mathbf{x}}+K{\cdot}T_{\mathrm{probe}}$ (${\approx}15$\,s for $K{=}3$) versus $C_{\mathrm{full}}$ (Equation~\ref{eq:full-cost}); probe error on observed components is absorbed by $g_\phi$ when imputing unobserved scores.
+Unlike execution-free predictors~\cite{wang2019predicting,tousi2022comparative}, \ourmethod binds every prediction to bounded on-host probes, live telemetry with explicit degradation paths, official aggregation $A(\cdot)$, and per-host training.
 
-\paragraph{Online execution protocol.}
-On a target host, \ourmethod executes four deterministic stages without adaptive re-probing.
-(1)~\textbf{Profile:} collect $\mathbf{x}$ with a 3\,s warmup, 0.5\,s \path{/proc} sampling, and perf PMU counters when permitted; if PMU access is blocked, the collector records a degradation flag and continues with \path{/proc}-only proxies.
-(2)~\textbf{Route:} score every expert $e_j\in\mathcal{E}$ with $f_\theta$ and select $\mathcal{S}_K(\mathbf{x})$.
-(3)~\textbf{Probe:} for each $e_j\in\mathcal{S}_K$, launch one micro-probe (default $T_{\mathrm{probe}}{=}4$\,s), collect $\mathbf{p}_j$, and predict $\hat{y}_j$.
-(4)~\textbf{Reconstruct:} assemble $Z$ and emit all component scores $\hat{\mathbf{y}}$ plus the official suite index $\hat{Y}=A(\hat{\mathbf{y}})$.
-Default wall time is $T_{\mathbf{x}}+K{\cdot}T_{\mathrm{probe}}$ (${\approx}15$\,s for $K{=}3$), versus $C_{\mathrm{full}}$ in Equation~\ref{eq:full-cost}.
-All models are trained and deployed per host so $\mathbf{x}$, probes, and labels share the same telemetry semantics at inference time.
-
-\paragraph{Systems contribution beyond score regression.}
-Execution-free predictors~\cite{wang2019predicting,tousi2022comparative} map static host descriptors to suite scores without measuring the target machine under contention.
-\ourmethod instead defines a \emph{bounded measurement protocol}: sparse real workloads, live /proc/perf/eBPF telemetry with explicit degradation paths, official suite aggregation $A(\cdot)$, and per-host model training.
-The contribution is therefore jointly algorithmic (conditional Top-$K$ selection plus reconstruction from sparse observations) and systems-oriented (predictable $T_{\mathrm{partial}}$, timeout/missing-tracer encoding, and deployability on restricted cloud kernels), rather than improving offline regression $R^2$ on a static feature table alone.
+\paragraph{Complexity and design invariants.}
+The online cost is dominated by context collection and probing rather than model inference:
+\begin{equation}
+\label{eq:partial-cost}
+C_{\mathrm{partial}} \approx T_{\mathbf{x}} + K \cdot T_{\mathrm{probe}} + T_{\mathrm{infer}},
+\end{equation}
+where $T_{\mathrm{infer}}$ is sub-second tree/MLP forward passes and $T_{\mathbf{x}}$ is fixed regardless of suite cardinality $N$.
+By contrast, $C_{\mathrm{full}}$ scales with every component (Equation~\ref{eq:full-cost}).
+Three invariants govern deployment.
+\textbf{(i)~Semantic fidelity:} all supervised targets and reported indices follow each suite's official definitions; \ourmethod never substitutes surrogate metrics.
+\textbf{(ii)~Bounded observation:} every score is either probe-predicted from live telemetry or reconstructor-imputed from probe-predicted partial observations---never from static specifications alone.
+\textbf{(iii)~Deterministic budgets:} $K$ and $T_{\mathrm{probe}}$ are fixed at deployment time so operators can provision wall-clock and interference budgets without re-tuning per suite run.
+The pipeline is intentionally single-pass: there is no adaptive re-routing or probe extension loop at inference, which keeps behavior auditable in shared production hosts.
 
 \begin{table*}[t]
 \centering
@@ -406,7 +414,7 @@ The contribution is therefore jointly algorithmic (conditional Top-$K$ selection
 \small
 \setlength{\tabcolsep}{5pt}
 \renewcommand{\arraystretch}{1.10}
-\begin{tabular}{p{0.08\linewidth}| p{0.17\linewidth} p{0.27\linewidth} p{0.42\linewidth}}
+\begin{tabular}{p{0.07\linewidth}| p{0.15\linewidth} p{0.29\linewidth} p{0.43\linewidth}}
 \toprule
 \textbf{Stage} & \textbf{Signal type} & \textbf{Purpose} & \textbf{Representative signals} \\
 \midrule
@@ -414,14 +422,14 @@ The contribution is therefore jointly algorithmic (conditional Top-$K$ selection
 \multirow{3}{=}{Pre-run}
 & Static host profile
 & Identify stable host configuration.
-& CPU topology, NUMA layout, memory size, compiler versions \\
+& CPU topology, NUMA layout, memory size, gcc versions \\
 
 & System pressure
 & Capture transient pre-run load.
 & CPU/GPU utilization, iowait, load average, runnable tasks \\
 
 & PMU / perf
-& Characterize microarchitectural behavior.
+& Profile microarchitectural behavior.
 & IPC, cycles/s, instructions/s, cache/branch miss ratios \\
 
 \midrule
@@ -454,48 +462,43 @@ The contribution is therefore jointly algorithmic (conditional Top-$K$ selection
 \subsection{Feature Collection and Engineering}
 \label{subsec:feature-collection}
 
-Feature collection provides the contextual information required to reduce benchmark cost while preserving the ability to estimate full-suite performance. The framework observes three factors that affect measured performance: what the machine is, what state the machine is in, and how a benchmark behaves.
-
-For the $i$-th benchmark run, we define the system context vector as
+Feature collection captures what the machine is, its pre-run state, and how each probe behaves.
+For run $i$, the pre-run system context is
 \begin{equation}
 \label{eq:system-context}
-\mathbf{x}_i = [\mathbf{x}_i^{\mathrm{static}}, \mathbf{x}_i^{\mathrm{dynamic}}]
+\mathbf{x}_i = [\mathbf{x}_i^{\mathrm{static}}, \mathbf{x}_i^{\mathrm{dynamic}}],
 \end{equation}
-where $\mathbf{x}_i^{\mathrm{static}}$ covers stable host descriptors---CPU topology, total memory, OS and compiler versions---and $\mathbf{x}_i^{\mathrm{dynamic}}$ captures pre-run transient state---system load, runnable-task counts, and hardware-counter snapshots from perf or \path{/proc}.
-The vector $\mathbf{x}_i$ is collected once before a full-suite run and is consumed by both the router and the probe estimators.
+where $\mathbf{x}_i^{\mathrm{static}}$ covers stable descriptors (CPU topology, memory, OS/compiler versions) and $\mathbf{x}_i^{\mathrm{dynamic}}$ captures transient pre-run state (load, runnable tasks, perf/\path{/proc} counters).
+During probing, each component $b_j$ additionally yields a prefix vector $\mathbf{p}_{i,j}$ with wall time, context-switch rates, and workload identifiers (Table~\ref{tab:feature_collection}).
+Both vectors are materialized as fixed-order float arrays so that tree and neural models receive deterministic feature layouts across training and inference runs.
+Missing dimensions never collapse the feature order: unavailable signals occupy zero-valued slots with explicit availability flags.
 
-During short-run probing, the framework further collects a probe-specific vector $\mathbf{p}_{i,j}$ for benchmark component $b_j$. Unlike $\mathbf{x}_i$, which describes the global context of the $i$-th run, $\mathbf{p}_{i,j}$ summarizes the execution prefix of a specific component, capturing wall-clock time, context-switch rates, and categorical identifiers. Table~\ref{tab:feature_collection} summarizes these feature groups by collection stage and purpose.
+\paragraph{Feature Processing and Fallbacks.}
+\ourmethod uses domain-aware scaling rather than global MinMax/z-score normalization: static capacities keep physical magnitudes; dynamic counters become ratios or per-second rates; categorical and failure indicators are one-hot encoded; missing values are zero-filled for deterministic inference.
+When \texttt{perf}, eBPF, or GPU telemetry is unavailable, the collector records degradation flags and zero-masks the affected dimensions instead of aborting, preserving deployability on restricted cloud kernels.
 
-\paragraph{Feature Processing and Domain-Aware Scaling.}
-Raw system telemetry cannot be directly fed into the models.
-Global MinMax or z-score normalization obscures physical limits across heterogeneous machines; \ourmethod instead employs domain-aware semantic scaling.
-Static capacities (total CPU cores, memory in GiB) keep physical magnitudes so the model sees each host's ceiling.
-Dynamic metrics become ratios or rates: CPU utilization and I/O wait map to percentages; monotonic counters (page faults, context switches, PMU instructions) convert to per-second rates.
-Workload-type and probe-failure indicators use one-hot encoding.
-All missing values are zero-filled to maintain a deterministic tensor shape for inference.
-
-\paragraph{Cost-Aware Collection and Fallbacks.}
-Extracting PMU (Performance Monitoring Unit) events and eBPF traces incurs overhead and relies on specific kernel configurations. Rather than statistically pruning these informative features, \ourmethod adopts an engineering-driven fallback strategy to balance extraction cost and prediction accuracy. If high-overhead \texttt{perf} counters are unavailable or blocked by the hypervisor, the collector safely degrades to standard \texttt{/proc} statistics. Similarly, if eBPF tracing is disabled or GPU telemetry is absent on CPU-only instances, the framework zero-masks the corresponding vector dimensions. This robust collection pipeline ensures that the benchmarking methodology remains lightweight and executable across strictly isolated cloud tenants or bare-metal machines.
+\paragraph{Feature dimensionality and semantics.}
+The pre-run context $\mathbf{x}$ aggregates roughly 80--120 numeric dimensions depending on host capabilities (PMU availability, GPU inventory, NUMA topology depth).
+Static descriptors encode \emph{capacity}---core counts, cache sizes, memory tiers---while dynamic counters encode \emph{pressure}---load average, runnable tasks, fault rates, and PMU-derived IPC or miss ratios normalized to per-second rates.
+Probe vectors $\mathbf{p}_{i,j}$ use a fixed 19-dimensional schema (Table~\ref{tab:feature_collection}): metadata (configured duration, elapsed wall time, workload exit code), optional eBPF rates, \path{/proc} CPU and fault summaries, category one-hot indicators, and real-probe flags.
+For UnixBench probe training, a 12-dimensional test-identity one-hot augments $\mathbf{p}_{i,j}$ so a shared regressor can distinguish experts within the same category; PTS uses per-profile estimators and omits this augmentation.
+This separation---context for routing, prefix telemetry for score estimation---mirrors the Mixture-of-Experts pattern where a gating network conditions on global state while each expert observes task-local signals.
 
 
 \subsection{Router: Conditional Expert Selection}
 \label{subsec:router}
 
-A full benchmark suite contains inherent redundancy. Although each sub-benchmark targets a specific subsystem, their outputs are jointly determined by the underlying system state, including CPU throughput, memory hierarchy behavior, operating-system overhead, and scheduler effects.
-In UnixBench, \id{dhry2reg} and \id{whetstone-double} reflect computation capability, while \id{pipe} and \id{syscall} capture OS-level overheads.
-Because these sub-benchmarks provide different projections of the same system configuration, a carefully selected subset can retain sufficient information for reconstructing the full-suite profile.
-
-The informative subset, however, is not fixed across systems. A CPU-bound system state may require different probes than an I/O- or OS-overhead-bound state. \ourmethod therefore formulates benchmark acceleration as a conditional expert selection problem: given a current system feature vector \(\mathbf{x}\), the router selects a small set of sub-benchmarks whose measurements are expected to be most useful for reconstructing the full-suite result.
+Because sub-benchmark outputs are correlated projections of the same system state (Section~\ref{subsec:motivation-redundancy}), a small diverse subset can suffice for full-suite reconstruction.
+The informative subset is not fixed: CPU-bound and I/O-bound states favor different experts.
+\ourmethod therefore treats benchmark acceleration as conditional expert selection: given \(\mathbf{x}\), the router picks sub-benchmarks whose measurements are most useful for reconstruction.
 
 \paragraph{Expert Routing.}
-We treat each independently executable sub-benchmark as a measurement expert in a fixed pool:
+Each executable sub-benchmark is a measurement expert in a fixed pool:
 \begin{equation}
 \label{eq:expert-pool}
 \mathcal{E}=\{e_1,e_2,\ldots,e_n\}.
 \end{equation}
-Each expert \(e_i\) corresponds to a sub-benchmark identifier and optional metadata including historical execution cost. Before execution, the router only observes the system feature vector and expert metadata; after execution, expert \(e_i\) returns a measured score \(r_i\) and incurs cost \(c_i\).
-
-Routing is not a standard multi-class classification problem, because the goal is not to assign each system state to a single best benchmark. Instead, the router must estimate the conditional utility of every candidate expert and select a subset. Given \(\mathbf{x}\), a scoring model \(f_\theta\) assigns each expert a relevance score:
+Given \(\mathbf{x}\), scoring model \(f_\theta\) assigns each expert a relevance score:
 \begin{equation}
 \label{eq:router-score}
 s_i=f_\theta(\mathbf{x},e_i).
@@ -513,31 +516,30 @@ The router then executes the Top-\(K\) experts:
 The resulting partial observation vector is passed to the reconstructor to estimate the full-suite profile.
 
 \paragraph{Training Objective.}
-For each historical run $i$, we form one ranking query over the full expert pool $\mathcal{E}$: all experts share the same context $\mathbf{x}_i$, and expert $e_j$ receives label $y_{i,j}$, the official full-run component index from $\mathbf{y}_i$.
-The LightGBM router minimizes a pairwise ranking loss over these query groups; neural routers minimize cross-entropy to the normalized label vector $\{y_{i,j}/\sum_k y_{i,k}\}$.
-The goal is to rank conditionally informative experts, not to predict $Y$ directly---suite recovery is delegated to the reconstructor fed with probe-imputed partial scores.
-At inference, only the Top-$K$ ranked experts are executed; unselected experts contribute mask bits but no observed scores to the reconstructor input.
+For each run $i$, all experts share context $\mathbf{x}_i$ and receive label $y_{i,j}$ from $\mathbf{y}_i$.
+LightGBM routers minimize pairwise ranking loss; neural routers minimize cross-entropy to normalized labels $\{y_{i,j}/\sum_k y_{i,k}\}$.
+The router ranks conditionally informative experts; suite recovery is delegated to the reconstructor.
+Budget $K$ trades accuracy for cost: smaller $K$ saves time but leaves fewer observations for reconstruction.
 
-\paragraph{Budget Control.}
-The budget parameter \(K\) controls the accuracy--cost trade-off. Smaller \(K\) reduces execution time but provides fewer observations to the reconstructor, while larger \(K\) improves measurement coverage at higher cost.
+\paragraph{Router architectures and inference.}
+We implement three router families evaluated in Section~\ref{subsec:model-combination}.
+\textbf{LightGBM ranker} treats each $(\mathbf{x}, e_i)$ pair as a ranking instance and minimizes pairwise loss over historical full runs on the same host.
+\textbf{MLP and GNN-expert routers} embed $\mathbf{x}$ and emit a logit vector of length $n$, softmax-normalized into $p_i$ (Equations~\ref{eq:router-score}--\ref{eq:router-prob}).
+At inference, the router selects the Top-$K$ experts by descending $p_i$ without replacement; ties are broken deterministically by expert index order.
+Each host trains its own router checkpoint from $M$ local full runs (typically 15--60 labeled sessions per suite), isolating hardware-specific routing policies from cross-machine distribution shift.
+The router does \emph{not} observe probe outcomes at selection time: routing is conditioned solely on pre-run context $\mathbf{x}$, preserving the causal order Profile $\rightarrow$ Route $\rightarrow$ Probe $\rightarrow$ Reconstruct.
 
 
 \subsection{Time-Bounded Probing}
 \label{subsec:time-bounded-probing}
 
-In addition to reducing the number of executed sub-benchmarks, \ourmethod further reduces the evaluation cost of each selected expert through time-bounded probing. Instead of running an iterative sub-benchmark until its official loop completes, \ourmethod executes a short probe for a predefined time window and leverages the collected telemetry, calibrated against historical full-run labels, to estimate the full sub-benchmark score.
+Beyond horizontal subset selection, \ourmethod reduces per-expert cost via time-bounded probing: a fixed wall-clock window replaces run-to-completion execution, and a supervised estimator maps prefix telemetry to the official full-run score (Section~\ref{subsec:motivation-convergence}).
 
-The probe duration is strictly clamped within a fixed and safe operational window to avoid runaway executions caused by anomalous inputs or unstable runtime behavior. \ourmethod does not repeatedly query a model to decide whether to halt. Instead, it enforces a hard wall-clock limit and uses a supervised estimator to map the truncated execution signature to the final benchmark score. This design converts an unpredictable benchmark execution into a bounded observation procedure with a controllable time budget.
-
-\paragraph{Dual-Mode Probing: Micro and Real.}
-\ourmethod supports \textbf{micro-probes} and \textbf{real-probes}.
-Micro-probes map each selected expert $e_j$ to a coarse category (CPU, memory, I/O, syscall, thread, or GPU) and run a short synthetic stimulus for a fixed budget---for example, a tight sqrt loop for CPU experts such as \id{dhry2reg}, or repeated temp-file read/write for I/O experts such as \id{fstime}---while collecting eBPF/\path{/proc} telemetry.
-Real-probes invoke the original subtest under a hard timeout and record the same telemetry channels when permitted.
-Both modes emit the same interface: bounded telemetry $\mathbf{p}_{i,j}$ and predicted full-run score $\hat{y}_{i,j}$ against the official label $y_{i,j}$; only the observation stimulus differs.
-
-\paragraph{Calibrated Micro-Probing for High-Cost Experts.}
-Real probes match benchmark semantics but can incur large startup overhead; micro-probes replace the observation stimulus with a short category-level workload while the \emph{supervision target remains the official full-run score} of the original sub-benchmark.
-Formally, for run $i$ and expert $e_j$, a micro-probe yields telemetry vector \(\mathbf{p}^{\mathrm{micro}}_{i,j}\) and the estimator learns:
+\paragraph{Dual-Mode Probing.}
+\textbf{Micro-probes} map expert $e_j$ to a coarse category (CPU, memory, I/O, syscall, thread, GPU) and run a short synthetic stimulus (e.g., sqrt loop for \id{dhry2reg}, temp-file I/O for \id{fstime}) while collecting eBPF/\path{/proc} telemetry.
+\textbf{Real-probes} invoke the original subtest under a hard timeout.
+Both emit bounded telemetry $\mathbf{p}_{i,j}$ and predicted score $\hat{y}_{i,j}$; supervision always targets the official full-run label $y_{i,j}$.
+Formally, for run $i$ and expert $e_j$:
 \begin{equation}
 \label{eq:probe-predict}
 \hat{y}_{i,j} = f_{e_j}(\mathbf{p}^{\mathrm{micro}}_{i,j}),
@@ -547,29 +549,32 @@ or, in the shared-estimator setting,
 \label{eq:probe-predict-shared}
 \hat{y}_{i,j} = f(\mathbf{p}^{\mathrm{micro}}_{i,j}, \mathrm{id}(e_j)),
 \end{equation}
-where $\mathrm{id}(e_j)$ one-hot-encodes expert identity and $y_{i,j}$ is the historical full-run label.
-The reconstructor consumes only \(\hat{y}_{i,j}\), regardless of probe mode.
-
-\paragraph{Engineering Robustness over Outlier Rejection.}
-Unlike conventional machine learning pipelines that aggressively discard truncated executions, timeouts, or noisy runs as statistical outliers, \ourmethod treats these execution anomalies as measurable system states when they arise from the bounded probing procedure. In production environments, telemetry collection can be imperfect due to permission restrictions, missing tracing tools, or heavy system load. \ourmethod therefore encodes such conditions explicitly rather than terminating the evaluation pipeline.
-
+where $\mathrm{id}(e_j)$ one-hot-encodes expert identity.
+Production telemetry is often incomplete; \ourmethod encodes anomalies as features rather than discarding runs:
 \begin{itemize}
-    \item \textbf{Encoding Truncation as Features:} If a real probe is killed by the timeout, the event is not discarded. Instead, \id{real\_timed\_out}, \id{workload\_rc}, and elapsed wall-clock time are explicitly encoded into the feature vector so the estimator can interpret forcefully truncated runs.
-    \item \textbf{Graceful Degradation for eBPF:} If high-fidelity eBPF tracing is unavailable due to kernel restrictions, missing tools, or insufficient privileges, the framework does not crash. It records \id{ebpf\_available}${=}0$ and zero-masks the corresponding eBPF dimensions, allowing the estimator to fall back on standard \path{/proc} counters and other available system features.
-    \item \textbf{Rate Conversion:} To ensure telemetry is comparable across probes with slightly different elapsed durations, monotonically increasing eBPF counters (\id{sched\_switch}, \id{syscall\_enter}) are converted to per-second rates before vectorization.
+    \item \textbf{Truncation:} timeout events set \id{real\_timed\_out} and record elapsed wall time.
+    \item \textbf{eBPF fallback:} when tracing is unavailable, \id{ebpf\_available}${=}0$ and eBPF dimensions are zero-masked.
+    \item \textbf{Rate normalization:} monotonic counters (\id{sched\_switch}, \id{syscall\_enter}) convert to per-second rates.
 \end{itemize}
 
-\paragraph{Training objective and inference.}
-Each probe sample pairs prefix telemetry $\mathbf{p}_{i,j}$ with full-run label $y_{i,j}$ from the same historical run.
-The estimator minimizes squared error in label space---official UnixBench indices for UB, $\log(1+y)$-transformed PTS primaries for PTS---$\mathcal{L}_{\mathrm{probe}}=\sum_{i,j}(\hat{y}_{i,j}-y_{i,j})^2$, with invalid labels filtered at dataset construction.
-At inference, one bounded probe on expert $e_j$ produces $\mathbf{p}_j$ and $\hat{y}_j=f_{e_j}(\mathbf{p}_j)$ in official benchmark units after inverse scaling.
-This replaces unpredictable run-to-completion cost with fixed $T_{\mathrm{probe}}$.
+\paragraph{Parallel probe collection.}
+Each probe executes three concurrent activities within the fixed wall-clock window $T_{\mathrm{probe}}$: an eBPF sampling thread (when permitted), the workload stimulus (micro or real), and a trailing \path{/proc} snapshot (${\approx}0.5$\,s).
+This design captures kernel-level scheduling dynamics and user-space resource usage under the same time budget, rather than serializing telemetry after the workload completes.
+Micro-probes map each expert to one of six coarse categories---CPU, memory, I/O, thread, syscall, and GPU---and run a lightweight synthetic stimulus: e.g., a tight \texttt{sqrt} loop for CPU-bound experts such as \id{dhry2reg}, 64\,MiB array copies for memory stress, 64\,KiB temp-file read/write for filesystem experts (\id{fstime}, \id{fsbuffer}, \id{fsdisk}), and dense \texttt{getpid} loops for \id{syscall}.
+Category identity is encoded as a one-hot in $\mathbf{p}_{i,j}$ so the regressor can disambiguate experts that share a stimulus class.
+Real-probes invoke the official subtest binary under a hard \texttt{timeout}; when the protocol exceeds $T_{\mathrm{probe}}$, the probe records \id{real\_timed\_out}${=}1$ and uses elapsed wall time as a feature rather than aborting the pipeline.
+Production deployments default to micro-probes for predictable latency; real-probes remain available when fidelity to the original binary path is required.
+
+\paragraph{Training objective.}
+The estimator minimizes $\mathcal{L}_{\mathrm{probe}}=\sum_{i,j}(\hat{y}_{i,j}-y_{i,j})^2$ in official label space (UnixBench indices; $\log(1+y)$-transformed PTS primaries), yielding fixed $T_{\mathrm{probe}}$ at inference.
+Probe estimators are trained per host alongside the router and reconstructor; at Hybrid inference, only the $K$ router-selected experts invoke live probes, while the remaining $n{-}K$ component scores are imputed exclusively by the reconstructor from the sparse tuple $Z$.
 
 
 \subsection{Reconstructor: Full-Suite Result Recovery}
 \label{subsec:reconstructor}
 
-After the router selects and executes a small subset of sub-benchmarks, \ourmethod relies on a reconstructor to recover the full benchmark outcome. The reconstructor addresses the sparse observation problem: given the current system feature vector and the partial subtest results, it acts as a multi-output regression model to simultaneously predict the scores of all unexecuted sub-benchmarks as well as the aggregate suite score.
+Given system context and sparse probe-imputed partial scores, the reconstructor is a multi-output regressor that predicts all unexecuted component scores and the aggregate suite index.
+Its input deliberately interleaves global context $\mathbf{x}$ with per-expert tuples $(m_i,v_i,\tau_i)$ so that imputation can exploit both pre-run system state and which experts were actually probed, for how long, and with what estimated scores.
 
 \begin{figure}
     \centering
@@ -578,48 +583,45 @@ After the router selects and executes a small subset of sub-benchmarks, \ourmeth
     \label{fig:reconstructor-training}
 \end{figure}
 
-\paragraph{Input Representation and Multi-Output Target.}
-To make sparse benchmark results consumable by a fixed-size tensor, \ourmethod encodes all experts $e_1,\ldots,e_n$ in a canonical order aligned with $\mathcal{E}$.
-Each expert $e_i$ is represented by a 3-tuple \(z_i = (m_i, v_i, \tau_i)\), where \(m_i \in \{0,1\}\) is a binary observation mask, \(v_i\) is the observed or probe-predicted score when $e_i$ is selected, and \(\tau_i\) is the corresponding probe wall time.
-For unexecuted experts, the tuple is zero-filled.
-The final input vector concatenates the system context \(x\) with the masked partial observations:
+\paragraph{Input Representation.}
+Each expert $e_i$ is a 3-tuple \(z_i = (m_i, v_i, \tau_i)\) with mask $m_i$, score $v_i$, and probe wall time $\tau_i$ (zero-filled if unexecuted).
+The reconstructor input is
 \begin{equation}
 \label{eq:recon-input}
 X = [x,\, m_1, v_1, \tau_1,\, \ldots,\, m_n, v_n, \tau_n]
 \end{equation}
-The output target is the complete benchmark profile derived from historical full runs: \(Y = [r_1, r_2, \ldots, r_n, S]\), where \(S\) is the final reported index.
-For tree-based models (LightGBM and XGBoost), \ourmethod wraps the base regressor with a multi-output strategy to train an independent regressor per target dimension.
+Target \(Y = [r_1, \ldots, r_n, S]\) includes all component scores and suite index $S$; tree models use independent regressors per dimension.
 
-\paragraph{Training via simulated sparse execution.}
-Because historical data contain only complete runs, training augments each $(\mathbf{x}_i,\mathbf{y}_i,Y_i)$ into multiple masked samples (Figure~\ref{fig:reconstructor-training}): sample $k\in[k_{\min},k_{\max}]$, mask unexecuted components in $Z$, and supervise with the full target $Y_i$ and all $y_{i,j}$.
-The reconstructor minimizes per-dimension squared error, $\mathcal{L}_{\mathrm{recon}}=\|\hat{\mathbf{y}}-\mathbf{y}\|^2+(\hat{Y}-Y)^2$, over augmented masks so it generalizes to router-chosen sparsity patterns at inference.
-
-\paragraph{Official aggregator $A(\cdot)$ across suites.}
+\paragraph{Training and aggregation.}
 \label{subsec:aggregator}
-\ourmethod never invents a surrogate suite metric: training labels and evaluation references always follow each framework's official semantics.
-\textbf{UnixBench:} component labels $y_{i,j}$ are per-subtest \emph{Index} scores from the run JSON; the suite label $Y$ is the published \emph{System Benchmarks Index Score} (\texttt{system\_benchmarks\_index\_score}), i.e., UnixBench's own $A(\mathbf{y})$, not recomputed from components at label time.
-\textbf{PTS:} each profile reports a primary throughput/latency value $v_j$; when a profile emits multiple result blocks, we reduce them with the same log-mean used for suite aggregation:
+Historical full runs are augmented with random masks (Figure~\ref{fig:reconstructor-training}) and supervised with $\mathcal{L}_{\mathrm{recon}}=\|\hat{\mathbf{y}}-\mathbf{y}\|^2+(\hat{Y}-Y)^2$.
+Labels follow each suite's official semantics: UnixBench uses per-subtest \emph{Index} scores and the published \emph{System Benchmarks Index Score}; PTS profiles use primary throughput/latency values aggregated via log-mean:
 \begin{equation}
 \label{eq:pts-logmean}
 A_{\mathrm{logmean}}(\mathbf{v})=\exp\!\left(\tfrac{1}{N}\sum_{j=1}^{N}\log(1+v_j)\right)-1.
 \end{equation}
-The reconstructor's last output dimension is supervised with this $Y$ (UnixBench: official index; PTS: $A_{\mathrm{logmean}}$ over profile primaries).
-\textbf{Probe-only path:} when all components are probe-predicted without reconstruction, UnixBench suite scores use the same geometric-mean-over-indices rule $A_{\mathrm{geomean}}(\hat{\mathbf{y}})=\exp(\mathrm{mean}_j(\log(1+\hat{y}_j))-1$.
+Probe and reconstructor inputs for PTS use $\log(1+y)$ scaling; suite supervision always uses the official $Y$.
+When all components are probe-predicted without reconstruction, UnixBench suite scores use the geometric-mean-over-indices rule $A_{\mathrm{geomean}}(\hat{\mathbf{y}})=\exp(\mathrm{mean}_j(\log(1+\hat{y}_j))-1$.
 
-\paragraph{Scale compression for heterogeneous targets.}
-PTS profile primaries span orders of magnitude; probe estimators therefore train in $\log(1+y)$ space and apply \texttt{expm1} at inference.
-Reconstructor training applies $\log(1+\cdot)$ to \emph{partial} UnixBench index inputs and to all PTS partial values when building $Z$, while still supervising the suite dimension with the official $Y$ above.
-This keeps per-component and suite targets on comparable scales without per-profile instance weighting.
+\paragraph{Mask augmentation and inference consistency.}
+Offline reconstructor training simulates the online sparsity pattern by randomly masking component scores from historical full runs (Figure~\ref{fig:reconstructor-training}).
+For each training sample, a random subset of size $k \sim \mathrm{Uniform}\{1,\ldots,n\}$ is marked observed ($m_i{=}1$) with ground-truth scores $v_i{=}y_i$; unobserved slots receive $m_i{=}0$, $v_i{=}0$, and $\tau_i{=}0$.
+This augmentation exposes the model to diverse partial-observation patterns at train time, including the fixed Top-$K$ mask induced by the router at inference.
+At inference, observed slots carry probe-predicted scores $\hat{y}_j$ and measured probe durations $\tau_j$; unobserved slots retain $m_i{=}0$.
+The reconstructor therefore learns to impute correlated experts from sparse tuples rather than memorizing a single fixed subset.
+Tree-based reconstructors (XGBoost, LightGBM) train independent regressors per output dimension, which handles heterogeneous score scales across UnixBench indices and PTS primary metrics without shared output layers.
+Neural reconstructors use a shared trunk with multi-head outputs; both variants optimize the same $\mathcal{L}_{\mathrm{recon}}$ against official full-run labels.
 
-\paragraph{Uncertainty estimator (Figure~\ref{fig:mob}).}
+\paragraph{Optional uncertainty head.}
 \label{subsec:uncertainty-estimator}
-Figure~\ref{fig:mob} shows an optional uncertainty head attached to the reconstructor.
-It is exported with v2 model bundles but \emph{not} consulted in the evaluated single-pass Hybrid pipeline (fixed $K$, no adaptive re-probing; Section~\ref{subsec:method-overview}).
-\textbf{Tree reconstructors (LightGBM/XGBoost):} after fitting the main multi-output regressor, a secondary multi-output model predicts the absolute training residual $|\hat{y}^{(k)}-y^{(k)}|$ per target dimension $k$ (including the suite index); at inference $\sigma_k$ is this residual model's output, used as a heteroscedasticity proxy.
-\textbf{MLP reconstructor:} a twin-head network minimizes Gaussian negative log-likelihood with per-target mean and $\log$-variance outputs; $\sigma_k=\exp(\tfrac{1}{2}\log v_k)$.
-The estimator exposes $\sigma^{\mathrm{suite}}$ and per-expert $\sigma_j$; $1/(1+\sigma^{\mathrm{suite}})$ is reported as a confidence proxy.
-An optional active-refinement mode (not evaluated in Table~\ref{tab:overall-effectiveness-expanded}) could probe the unexecuted expert with largest $\sigma_j$, but our production protocol stops after the router's Top-$K$ budget.
+An optional uncertainty head (Figure~\ref{fig:mob}) predicts per-target $\sigma_k$ from training residuals (tree models) or Gaussian NLL (MLP twin-head outputs), exported with v2 model bundles but \emph{not} used in the evaluated single-pass Hybrid pipeline (fixed $K$, no adaptive re-probing).
 
+\paragraph{End-to-end information flow.}
+Figure~\ref{fig:mob} summarizes how the three modules compose.
+The router consumes only $\mathbf{x}$ and outputs a discrete expert subset; probe estimators consume prefix telemetry $\mathbf{p}_j$ and produce continuous score estimates for observed experts; the reconstructor consumes the concatenated context-and-sparse-score tuple $Z$ and emits the full vector $\hat{\mathbf{y}}$ plus aggregate $\hat{Y}=A(\hat{\mathbf{y}})$.
+Errors propagate in one direction: probe bias on observed components is partially corrected by the reconstructor, which has been trained on masked full runs that include imperfect partial observations.
+This staged decomposition---discrete routing, continuous prefix estimation, and masked imputation---is what allows \ourmethod to preserve official suite semantics while reducing both horizontal (subset size $K$) and vertical (probe duration $T_{\mathrm{probe}}$) measurement cost.
+Section~\ref{sec:evaluation} validates each stage independently (\emph{router only}, \emph{probe only}) and in the integrated Hybrid configuration.
 
 
 \section{Evaluation}
@@ -657,16 +659,16 @@ We label hosts by a compact CPU$\times$RAM shorthand used throughout this sectio
 \caption{Evaluation testbeds. Five Linux hosts with heterogeneous CPU and memory capacity. CPU models are taken from \path{/proc/cpuinfo} at collection time. \ptsgpu{} runs only on H1.}
 \label{tab:testbeds}
 \small
-\setlength{\tabcolsep}{4pt}
+\setlength{\tabcolsep}{2pt}
 \begin{tabular}{@{}lp{0.36\linewidth}rc@{}}
 \toprule
 \textbf{Host} & \textbf{vCPU (CPU model)} & \textbf{RAM} & \textbf{GPU} \\
 \midrule
-H1 & 32 (Intel Core i9-14900K) & 128GB & NVIDIA RTX 3090 Ti GPU \\
-H2 & 2 (Intel Xeon 6982P-C) & 8GB & --- \\
-H3 & 4 (Intel Xeon 6982P-C) & 8GB & --- \\
-H4 & 4 (Intel Xeon 6982P-C) & 16GB & --- \\
-H5 & 8 (Intel Xeon Platinum) & 8GB & --- \\
+H1 & 32(Intel Core i9-14900K) & 128GB & NVIDIA RTX 3090 Ti GPU \\
+H2 & 2(Intel Xeon 6982P-C) & 8GB & --- \\
+H3 & 4(Intel Xeon 6982P-C) & 8GB & --- \\
+H4 & 4(Intel Xeon 6982P-C) & 16GB & --- \\
+H5 & 8(Intel Xeon Platinum) & 8GB & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -723,15 +725,14 @@ We first report five-host end-to-end effectiveness (Section~\ref{subsec:overall-
 \textbf{(2)~\emph{Router only} ablation:}
 replace probe predictions with \emph{measured} partial sub-benchmark scores on the router-selected subset, then reconstruct (Section~\ref{subsec:model-combination}), with supplementary offline studies on Top-$K$ and system-feature ablation (Sections~\ref{subsec:topk-tradeoff},~\ref{subsec:feature-ablation}).
 \textbf{(3)~\emph{Probe only} ablation:}
-probe every component without router selection or reconstruction (Section~\ref{subsec:probe-evaluation}).
+probe every component without router selection or reconstruction (Section~\ref{subsec:probe-evaluation}), followed by telemetry-degradation and probe-duration sweeps (Sections~\ref{subsec:probe-ebpf-ablation},~\ref{subsec:probe-duration-sensitivity}).
 
 \paragraph{Hybrid evaluation protocol.}
-Table~\ref{tab:overall-effectiveness-expanded} reports the primary Hybrid path (router $\rightarrow$ probe $\rightarrow$ reconstruct).
-For each historical run, we replay only the pre-run context $\mathbf{x}$ and the probe telemetry $\mathbf{p}$ from prior micro-probes on that run; the router, probe estimators, and reconstructor then produce $\hat{\mathbf{y}}$ and $\hat{Y}$.
-The reconstructor input contains \emph{probe-imputed} scores $\hat{y}_j$ on the router-selected subset---never measured partial subtest scores from the full-run JSON.
-We compare $\hat{Y}$ against the reference full-suite index $Y$ from the same run solely to compute error.
-This offline protocol avoids re-executing thousand-second full suites during cross-validation; Section~\ref{subsec:resource-waveforms} corroborates wall-time savings with online traces.
-\emph{Router only} ablations (Sections~\ref{subsec:model-combination}--\ref{subsec:feature-ablation}) deliberately substitute \emph{measured} partial scores to isolate routing and reconstruction; their higher errors (0.1--2\%) must not be conflated with Hybrid headline numbers.
+Table~\ref{tab:overall-effectiveness-expanded} reports the primary Hybrid path.
+For each historical run, we replay pre-run context $\mathbf{x}$ and probe telemetry $\mathbf{p}$; models produce $\hat{\mathbf{y}}$ and $\hat{Y}$, with \emph{probe-imputed} scores on the router-selected subset (never measured partial scores from the full-run JSON).
+We compare $\hat{Y}$ against reference $Y$ from the same run to compute error.
+This offline protocol avoids re-executing thousand-second full suites; Section~\ref{subsec:resource-waveforms} corroborates wall-time savings with online traces.
+\emph{Router only} ablations substitute measured partial scores and must not be conflated with Hybrid headline numbers.
 
 % \paragraph{Per-host training protocol.}
 % For every host from H1 to H5, we collect benchmark datasets locally and train all models using only runs whose session tags match that host.
@@ -886,33 +887,7 @@ Execution-free MLP baselines incur the lowest partial cost but exhibit high pred
 
 Table~\ref{tab:overall-effectiveness-expanded} reports aggregate wall-time savings, but not how CPU and memory evolve during execution.
 We therefore capture online resource traces ($0.5$\,s sampling, $t{=}0$ at run start) on three representative hosts---H1 (32U128G), H3 (4U8G), and H4 (4U16G)---under four UnixBench conditions: \emph{Full run} (complete \id{perl Run -c 1}), \emph{router only} (Top-$K$ partial execution), \emph{probe only} (twelve $D{=}4$\,s micro-probes), and \emph{BenchScout} (router, Top-$K$ probes, and reconstruction in the traced window; $\mathbf{x}$ collection precedes the trace).
-Table~\ref{tab:resource-overhead} summarizes traced wall time and time-averaged CPU/memory utilization; Figure~\ref{fig:resource-waveforms} overlays the corresponding waveforms on a shared ${\approx}1680$\,s axis.
-
-\begin{table*}[t]
-\centering
-\caption{UnixBench runtime resource summary on three representative hosts ($0.5$\,s online sampling).
-Wall time is the end-to-end traced duration; CPU and memory columns report time-averaged system utilization over each trace.
-\textbf{Wall saved} is the reduction in traced wall time relative to a full-suite run on the same host.
-Bold highlights BenchScout (\ourmethod).}
-\label{tab:resource-overhead}
-\footnotesize
-\setlength{\tabcolsep}{5pt}
-\begin{tabular}{lcccccccccc}
-\toprule
-& \multicolumn{3}{c}{\textbf{Wall time (s)}} & \multicolumn{3}{c}{\textbf{CPU mean (\%)}} & \multicolumn{3}{c}{\textbf{Memory mean (\%)}} & \multirow{2}{*}{\textbf{Wall saved (\%)}} \\
-\cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10}
-\textbf{Method} & \textbf{H1} & \textbf{H3} & \textbf{H4} & \textbf{H1} & \textbf{H3} & \textbf{H4} & \textbf{H1} & \textbf{H3} & \textbf{H4} & \\
-\midrule
-Full run      & 1702 & 1681 & 1679 & 15.6 & 35.9 & 35.5 & 21.9 & 17.2 &  8.6 & -- \\
-Router only   &  387 &  377 &  377 & 33.5 & 23.4 & 22.5 & 38.0 & 18.6 &  9.0 & 77--78 \\
-Probe only    &   49 &   48 &   48 &  4.4 & 30.1 & 27.5 & 21.0 & 19.7 &  9.2 & 97 \\
-\textbf{BenchScout} & \textbf{12} & \textbf{12} & \textbf{12} & \textbf{4.0} & \textbf{29.7} & \textbf{27.3} & \textbf{21.4} & \textbf{19.8} & \textbf{12.1} & \textbf{99.3} \\
-\bottomrule
-\end{tabular}
-\end{table*}
-
-BenchScout finishes in ${\approx}12$\,s on all three hosts---${\approx}99.3\%$ less wall time than a full run and ${\approx}4\times$ faster than probe only---with the lowest CPU mean on H1 ($4.0\%$) and no sustained memory penalty on H3/H4.
-Together, Table~\ref{tab:resource-overhead} and Figure~\ref{fig:resource-waveforms} confirm that \ourmethod{} incurs negligible runtime overhead: resource usage concentrates in the first minute rather than occupying the machine for the full UnixBench duration.
+Figure~\ref{fig:resource-waveforms} overlays the corresponding CPU and memory waveforms on a shared ${\approx}1680$\,s axis and confirms that \ourmethod{} incurs negligible runtime overhead: resource usage concentrates in the first minute rather than occupying the machine for the full UnixBench duration.
 
 \begin{figure*}[t]
     \centering
@@ -995,7 +970,7 @@ On H1, XGBoost consistently achieves lower suite relative error than LightGBM wh
 \caption{Probe model comparison on H1.}
 \label{tab:probe-models}
 \small
-\setlength{\tabcolsep}{3pt}
+\setlength{\tabcolsep}{2pt}
 \begin{tabular}{lccccc}
 \toprule
 \textbf{Suite} & \textbf{Model} & \textbf{Rel.\ err. (\%)} & $T_{\mathrm{partial}}$ (s) & $T_{\mathrm{full}}$ (s) & \textbf{Saved (\%)} \\
@@ -1018,18 +993,17 @@ On H1, XGBoost consistently achieves lower suite relative error than LightGBM wh
 \subsection{Top-\(K\) Sweep}
 \label{subsec:topk-tradeoff}
 
-Using the best \emph{router only} router--reconstructor pairs on H1 from Section~\ref{subsec:model-combination} (MLP\,+\,LightGBM for UnixBench and \ptscpu; LightGBM\,+\,LightGBM for \ptsgpu), we sweep the subset size \(K\) from 1 to 6, capped by the number of components in each suite.
+Using the best \emph{router only} router--reconstructor pairs on H1 from Section~\ref{subsec:model-combination} (MLP\,+\,LightGBM for UnixBench and \ptscpu; LightGBM\,+\,LightGBM for \ptsgpu), we sweep \(K\) from 1 to 6, capped by each suite's component count.
 For each \(K\), the router selects Top-\(K\) experts, partial results are observed, and the reconstructor predicts the suite score.
-Evaluation uses leave-one-run-out cross-validation on H1's historical runs in the canonical session per suite (random-fold when only one session exists), with router checkpoints and LightGBM reconstructors taken from each session's \id{trained\_models} directory; at each \(K\), the reconstructor is trained with partial subsets of the same size as \(K\).
+Evaluation uses leave-one-run-out CV on canonical H1 sessions (random-fold fallback), with router checkpoints and reconstructors from each session's \id{trained\_models} directory; reconstructors train on partial subsets of size \(K\).
 
 Figure~\ref{fig:topk-pareto} visualizes the resulting error--saving trade-off, where each point corresponds to one candidate \(K\).
-Although the figure does not plot the balanced score directly, the selected \(K\) is determined by minimizing Equation~\ref{eq:balanced-score}, which balances suite relative error against wall-time savings.
-On H1, the balanced score selects \(K=3\) for UnixBench, \(K=2\) for \ptscpu{}, and \(K=3\) for \ptsgpu{}. The minimum balanced scores are 1.03 for UnixBench at \(K=3\), 1.01 for \ptscpu{} at \(K=2\), and 1.01 for \ptsgpu{} at \(K=3\).
-These choices reflect that suite relative error decreases only modestly as \(K\) grows, while executing additional components quickly reduces wall-time savings.
-\ptsgpu{} includes only five GPU-compute profiles in our dataset, so the sweep is capped at \(K=5\).
+Although the figure does not plot the balanced score directly, the selected \(K\) minimizes Equation~\ref{eq:balanced-score}, balancing suite relative error against wall-time savings.
+On H1, this yields \(K{=}3\) for UnixBench (1.03), \(K{=}2\) for \ptscpu{} (1.01), and \(K{=}3\) for \ptsgpu{} (1.01).
+These choices reflect modest error gains as \(K\) grows versus sharply falling savings; \ptsgpu{} is capped at \(K{=}5\) (five GPU-compute profiles).
 \begin{figure}
     \centering
-    \includegraphics[width=1\linewidth]{images/topk_pareto_tradeoff.pdf}
+    \includegraphics[width=1\linewidth]{images/topk_tradeoff.pdf}
     \caption{Top-\(K\) error--saving trade-off using the best router--reconstructor pair for each suite.
     Each point corresponds to a candidate \(K\), with numbers indicating \(K\).
     Stars mark the selected \(K\) according to the balanced score in Equation~\ref{eq:balanced-score}.
@@ -1057,7 +1031,7 @@ On \ptsgpu, \id{no\_gpu} yields the largest shift ($\Delta e_m = -0.10$~pp), ind
 \label{tab:feature-ablation}
 \small
 \setlength{\tabcolsep}{4pt}
-\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}l@{\hspace{4pt}}p{0.26\linewidth}ccc@{}}
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}l@{\hspace{2pt}}p{0.26\linewidth}ccc@{}}
 \toprule
 \textbf{Suite} & \textbf{Ablation mode} & \textbf{Rel.\ err. (\%)} & $\Delta e$ (pp) & \textbf{Imp.\ rank} \\
 \midrule
@@ -1078,6 +1052,62 @@ On \ptsgpu, \id{no\_gpu} yields the largest shift ($\Delta e_m = -0.10$~pp), ind
  & \id{no\_perf\_pmu}     & 0.918 & 0.00  & 3 \\
  & \id{no\_dynamic\_proc} & 0.957 & +0.04 & 2 \\
  & \id{no\_gpu}           & 0.818 & $-$0.10 & 4 \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+\subsection{Probe Telemetry Degradation (eBPF On vs.\ Off)}
+\label{subsec:probe-ebpf-ablation}
+
+Section~\ref{subsec:time-bounded-probing} and Table~\ref{tab:feature_collection} describe optional eBPF-derived scheduling and syscall rates as part of the in-run probe vector~$\mathbf{p}_{i,j}$.
+In restricted environments, \ourmethod{} must not abort when bpftrace is unavailable; instead it sets the \id{ebpf\_available} flag to zero and zero-masks the corresponding probe dimensions.
+We validate this \emph{graceful degradation} on H1 (32U128G) with a controlled \emph{Probe only} experiment on UnixBench.
+
+We fix the trained H1 LightGBM probe regressor (micro mode, 4\,s per component) and run two online conditions back-to-back on the same host:
+\textbf{(i)~eBPF on}---bpftrace enabled (with elevated privileges); and
+\textbf{(ii)~eBPF off}---tracing disabled, with eBPF dimensions zero-masked.
+Each condition probes all 12 UnixBench components, predicts subtest indices, aggregates the suite score, and compares against ground truth from the latest full run in the canonical session ($Y{=}3185.5$).
+The probe model is trained on H1 historical runs using the same micro-probe protocol and eBPF-enabled feature collection.
+Table~\ref{tab:probe-ebpf-ablation} reports sub-percent suite error in both modes (0.27\% eBPF on vs.\ 0.17\% off) with comparable probe wall time (${\approx}62$\,s vs.\ ${\approx}61$\,s), confirming graceful degradation when bpftrace is disabled.
+
+\begin{table}[t]
+\centering
+\caption{eBPF degradation on H1 UnixBench \emph{Probe only} (LightGBM; $D{=}4$\,s; $Y{=}3185.5$). \textbf{sched}: mean context-switch rate ($10^4$/s).}
+\label{tab:probe-ebpf-ablation}
+\small
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lrrrrrr@{}}
+\toprule
+\textbf{Telem.} & \textbf{Err (\%)} & $|\hat{Y}{-}Y|$ & $\hat{Y}$ & $T_{\mathrm{pr}}$ (s) & \textbf{eBPF ok} & \textbf{sched} \\
+\midrule
+On  & 0.27 & 8.48 & 3194.0 & 61.8 & 12/12 & 8.3 \\
+Off & 0.17 & 5.42 & 3190.9 & 60.6 & 0/12 & --- \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+\subsection{Probe Duration Sensitivity}
+\label{subsec:probe-duration-sensitivity}
+
+Section~\ref{subsec:time-bounded-probing} fixes a per-component probe budget as the primary knob for \emph{Probe only} latency versus fidelity.
+We quantify this accuracy--cost frontier on H1 (32U128G) with a controlled UnixBench \emph{Probe only} sweep over $D \in \{2,4,8\}$\,s: for each duration, we collect micro-probes for all 12 components and train a dedicated LightGBM regressor (eBPF off to isolate duration effects) before online evaluation against the latest full run ($Y{=}3185.5$, $T_{\mathrm{full}}{=}319.9$\,s).
+Table~\ref{tab:probe-duration-sensitivity} reports suite relative error and wall-time savings for each~$D$; all 12 probes complete without timeout or pipeline failure.
+Error decreases monotonically with~$D$ while probe cost scales roughly linearly in $D{\times}12$.
+
+At $D{=}4$\,s, suite error is 0.56\% with ${\approx}81\%$ wall-time saved, balancing accuracy against the 0.44\% error at $D{=}8$\,s and the lower probe cost at $D{=}2$\,s (0.80\%, 88.6\% saved).
+This confirms the 4\,s default used in Section~\ref{subsec:probe-evaluation} and the eBPF degradation study (Section~\ref{subsec:probe-ebpf-ablation}).
+
+\begin{table}[t]
+\centering
+\caption{Probe duration sweep on H1 UnixBench \emph{Probe only} (LightGBM; micro; eBPF off; $Y{=}3185.5$, $T_{\mathrm{full}}{=}319.9$\,s).}
+\label{tab:probe-duration-sensitivity}
+\small
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}rrrrrrr@{}}
+\toprule
+$D$ (s) & \textbf{Err(\%)} & $|\hat{Y}{-}Y|$ & $\hat{Y}$ & $T_{\mathrm{pr}}$ (s) & \textbf{Saved(\%)} & \textbf{Probe-ok} \\
+\midrule
+2 & 0.80 & 25.4 & 3210.9 & 36.4 & 88.6 & 12/12 \\
+4 & 0.56 & 17.8 & 3203.3 & 60.4 & 81.1 & 12/12 \\
+8 & 0.44 & 13.9 & 3199.4 & 108.6 & 66.1 & 12/12 \\
 \bottomrule
 \end{tabular*}
 \end{table}
@@ -1113,20 +1143,15 @@ Wang et al.~\cite{wang2019predicting} used deep neural networks to predict bench
 \section{Conclusion}
 
 Full-suite system benchmarking remains the gold standard for comparing platforms, yet its all-or-nothing execution model makes repeated measurement impractical in autotuning, multi-machine regression, and production-adjacent monitoring.
-We presented \ourmethod, a lightweight pipeline that reframes suite evaluation as conditional expert selection followed by sparse reconstruction.
-Motivated by empirical redundancy among UnixBench subtests (Section~\ref{subsec:motivation-redundancy}) and early metric convergence under short runs (Section~\ref{subsec:motivation-convergence}), \ourmethod{} collects a pre-run system context~$\mathbf{x}$, routes to a Top-$K$ subset of informative components, estimates selected scores via time-bounded micro-probes, and reconstructs the full suite profile from partial observations.
-The design tolerates imperfect production telemetry---timeouts, missing PMU counters, and disabled eBPF tracing are encoded as features rather than treated as hard failures.
+We presented \ourmethod{}, which reframes suite evaluation as Top-$K$ routing, time-bounded micro-probes, and sparse reconstruction of full suite profiles from partial observations.
+On five heterogeneous Linux hosts, the Hybrid path recovers UnixBench and PTS scores with near-zero relative error while cutting wall time by 95--100\% versus full-suite execution (Section~\ref{sec:evaluation}), showing that standard benchmark indices can be approximated with seconds of bounded on-host observation rather than tens of minutes of full runs.
 
-Our evaluation on five heterogeneous Linux hosts (Section~\ref{sec:evaluation}) spans UnixBench and \ptscpu{} on all machines and \ptsgpu{} on a GPU-equipped workstation.
-The primary Hybrid path (router $\rightarrow$ probe $\rightarrow$ reconstruct) recovers suite scores with mean relative errors on the order of $10^{-5}$\% while reducing wall time by 95--100\% versus full-suite execution (Table~\ref{tab:overall-effectiveness-expanded}), substantially outperforming execution-free predictors that generalize poorly across hosts.
-Resource waveforms confirm that savings come from shorter CPU-active intervals---probe-based paths finish within ${\approx}12$--$48$\,s versus ${\approx}1680$\,s for a full suite---rather than from a substantially lower memory footprint on the 4U8G and 4U16G hosts (Section~\ref{subsec:resource-waveforms}).
-\emph{Router only} ablations isolate router--reconstructor choices, Top-$K$ trade-offs, and system-feature groups; \emph{probe only} studies show that probe-based prediction remains sub-percent accurate on H1 across regressor choices (Table~\ref{tab:probe-models}).
-Together, these results demonstrate that established suite scores can be approximated with minutes or seconds of observation instead of tens of minutes of full execution, without abandoning the interpretability of standard benchmark indices.
+\section{Limitation and Future Work}
 
-Several directions remain open.
-Our models are trained and evaluated per host to respect hardware heterogeneity; cross-host transfer and cold-start routing with fewer historical runs deserve further study.
-Hybrid accuracy is computed offline by replaying stored $\mathbf{x}$ and probe telemetry, but partial scores are always probe-model predictions before reconstruction; extending fully live hold-out sessions---where collection and inference occur in one shot without reusing stored $\mathbf{p}$---to additional suites and cloud SKUs would further strengthen deployment claims.
-Finally, integrating \ourmethod{} into live autotuning loops---where probe budgets and $K$ must adapt to search progress---is a natural next step toward making comprehensive benchmarking a routine, low-disruption component of systems research and operations.
+Our evaluation trains and validates models per host; cross-host transfer and cold-start routing with limited historical data remain open challenges.
+Results rely on offline replay of stored system context and probe telemetry rather than fully live end-to-end sessions; extending validation to additional suites, cloud SKUs, and one-shot collection-inference pipelines would strengthen deployment claims.
+Live integration into autotuning loops---with adaptive probe budgets and $K$---is a natural next step toward routine, low-disruption benchmarking in systems research and operations.
+Finally, routing and reconstruction models may stale as kernels, tunables, or co-located contention change; certifying Hybrid estimates against verbatim run-to-completion protocols also remains outside the present Linux-only, two-suite evaluation.
 
 \bibliographystyle{acm}
 \bibliography{sample-base}
