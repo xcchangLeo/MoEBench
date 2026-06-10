@@ -35,6 +35,7 @@ from moebench.dataset_machines import (
     resolve_glob_for_machine,
     resolve_training_machine,
 )
+from moebench.ml_venv import ML_VENV_PY, import_ok
 from moebench.phoronix.pipeline import safe_session_tag
 
 ROUTER_TRAIN = REPO_ROOT / "scripts" / "router_train.py"
@@ -42,8 +43,8 @@ RECON_TRAIN = REPO_ROOT / "scripts" / "reconstruct_train_eval.py"
 PROBE_COLLECT = REPO_ROOT / "scripts" / "probe_collect.py"
 PROBE_TRAIN = REPO_ROOT / "scripts" / "probe_train.py"
 HYBRID_EXP = REPO_ROOT / "scripts" / "experiment_router_probe_reconstruct.py"
-ML_VENV_PY = REPO_ROOT / ".venv-moebench-router" / "bin" / "python3"
 INSTALL_ML_DEPS = REPO_ROOT / "scripts" / "install_ml_python_deps.sh"
+ML_MODULES = ("numpy", "lightgbm", "torch", "xgboost")
 
 ROUTER_SPECS: tuple[tuple[str, str], ...] = (
     ("lightgbm", "router_lgbm.pkl"),
@@ -93,29 +94,45 @@ def _experiment_json_ok(path: Path) -> bool:
 
 
 def _python_import_ok(py: str, module: str) -> bool:
-    return subprocess.run([py, "-c", f"import {module}"], capture_output=True).returncode == 0
+    return import_ok(module, py)
+
+
+def _ml_ready(py: str) -> bool:
+    return all(_python_import_ok(py, m) for m in ML_MODULES)
 
 
 def _resolve_python(*, require_ml: bool = False) -> str:
-    if ML_VENV_PY.is_file() and (not require_ml or _python_import_ok(str(ML_VENV_PY), "numpy")):
+    from moebench.ml_venv import _ml_interpreter_candidates
+
+    if require_ml:
+        for candidate in _ml_interpreter_candidates():
+            if candidate.is_file() and _ml_ready(str(candidate)):
+                return str(candidate)
+        if _ml_ready(sys.executable):
+            return sys.executable
+    elif ML_VENV_PY.is_file() and _python_import_ok(str(ML_VENV_PY), "numpy"):
         return str(ML_VENV_PY)
-    if not require_ml or _python_import_ok(sys.executable, "numpy"):
+    elif _python_import_ok(sys.executable, "numpy"):
         return sys.executable
     return sys.executable
 
 
 def _ensure_ml_python(auto_install: bool) -> str:
     py = _resolve_python(require_ml=True)
-    if _python_import_ok(py, "numpy"):
+    if _ml_ready(py):
         return py
     if auto_install and INSTALL_ML_DEPS.is_file():
-        install_args = [str(INSTALL_ML_DEPS)]
-        if not os.environ.get("CONDA_PREFIX"):
-            install_args.append("--use-venv")
-        subprocess.check_call(["bash", *install_args])
+        install_args = [str(INSTALL_ML_DEPS), "--use-venv"]
+        env = os.environ.copy()
+        env.setdefault("VENV_DIR", str(REPO_ROOT / ".venv-moebench-ml"))
+        subprocess.check_call(["bash", *install_args], env=env)
         py = _resolve_python(require_ml=True)
-    if not _python_import_ok(py, "numpy"):
-        raise SystemExit("Missing numpy/sklearn; run scripts/install_ml_python_deps.sh --use-venv")
+    if not _ml_ready(py):
+        raise SystemExit(
+            "Missing ML deps (numpy, lightgbm, torch, xgboost). "
+            "Run: VENV_DIR=$PWD/.venv-moebench-ml bash scripts/install_ml_python_deps.sh --use-venv\n"
+            "Or: export MOEBENCH_ML_PYTHON=$PWD/.venv-moebench-ml/bin/python3"
+        )
     return py
 
 

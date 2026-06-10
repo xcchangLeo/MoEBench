@@ -115,11 +115,6 @@ def main() -> int:
         load_phoronix_dataset_for_router,
         load_unixbench_dataset_for_router,
     )
-    from moebench.router.neural_routers import (
-        train_expert_gnn,
-        train_pointwise_mlp,
-        train_subset_selection_router,
-    )
 
     if args.benchmark == "phoronix" and not args.pts_suite:
         print(

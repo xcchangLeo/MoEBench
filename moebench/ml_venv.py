@@ -8,7 +8,8 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-ML_VENV_PY = REPO_ROOT / ".venv-moebench-router" / "bin" / "python3"
+ML_VENV_NAMES = (".venv-moebench-ml", ".venv-moebench-router")
+ML_VENV_PY = REPO_ROOT / ML_VENV_NAMES[0] / "bin" / "python3"
 INSTALL_ML_DEPS = REPO_ROOT / "scripts" / "install_ml_python_deps.sh"
 
 
@@ -53,7 +54,12 @@ def _ml_interpreter_candidates() -> list[Path]:
         ):
             add(home / rel)
 
-    add(ML_VENV_PY)
+    explicit = os.environ.get("MOEBENCH_ML_PYTHON", "").strip()
+    if explicit:
+        add(Path(explicit))
+
+    for name in ML_VENV_NAMES:
+        add(REPO_ROOT / name / "bin" / "python3")
     return out
 
 

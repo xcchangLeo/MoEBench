@@ -49,7 +49,7 @@ ensure_venv_capable() {
 }
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VENV_DIR="${VENV_DIR:-${ROOT_DIR}/.venv-moebench-router}"
+VENV_DIR="${VENV_DIR:-${ROOT_DIR}/.venv-moebench-ml}"
 
 if [[ "${USE_VENV}" -eq 0 && -n "${CONDA_PREFIX:-}" ]]; then
   echo "Conda detected: ${CONDA_PREFIX}"
