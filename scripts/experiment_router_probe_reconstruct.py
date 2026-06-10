@@ -14,6 +14,14 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from moebench.ml_venv import ensure_ml_interpreter
+
+ensure_ml_interpreter(
+    need_modules=["numpy", "sklearn", "lightgbm", "xgboost", "torch"],
+    auto_install="--auto-install" in sys.argv,
+    label="router_probe_reconstruct",
+)
+
 from moebench.dataset_machines import (
     ensure_machine_output_dir,
     machine_experiments_dir,

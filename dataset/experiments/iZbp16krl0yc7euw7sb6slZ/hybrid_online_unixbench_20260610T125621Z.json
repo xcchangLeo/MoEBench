@@ -1,0 +1,100 @@
+{
+  "schema": "moebench.experiment.router_probe_reconstruct.v1",
+  "mode": "online",
+  "benchmark": "unixbench",
+  "pts_suite": null,
+  "ground_truth_run": "/root/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-05.json",
+  "router": {
+    "top_k": 3,
+    "selected_experts": [
+      "e_001",
+      "e_002",
+      "e_003"
+    ],
+    "selected_test_ids": [
+      "dhry2reg",
+      "whetstone-double",
+      "execl"
+    ],
+    "scores": {
+      "e_001": 1.0009629215297277e-06,
+      "e_002": 1.0009629215297277e-06,
+      "e_003": 1.0009629215297277e-06,
+      "e_004": 1.0009629215297277e-06,
+      "e_005": 1.0009629215297277e-06,
+      "e_006": 1.0009629215297277e-06,
+      "e_007": 1.0009629215297277e-06,
+      "e_008": 1.0009629215297277e-06,
+      "e_009": 1.0009629215297277e-06,
+      "e_010": 1.0009629215297277e-06,
+      "e_011": 1.0009629215297277e-06,
+      "e_012": 1.0009629215297277e-06
+    },
+    "probabilities": {
+      "e_001": 0.08333333333333333,
+      "e_002": 0.08333333333333333,
+      "e_003": 0.08333333333333333,
+      "e_004": 0.08333333333333333,
+      "e_005": 0.08333333333333333,
+      "e_006": 0.08333333333333333,
+      "e_007": 0.08333333333333333,
+      "e_008": 0.08333333333333333,
+      "e_009": 0.08333333333333333,
+      "e_010": 0.08333333333333333,
+      "e_011": 0.08333333333333333,
+      "e_012": 0.08333333333333333
+    }
+  },
+  "probe": {
+    "predicted_subtest": {
+      "dhry2reg": 2947.2649127813925,
+      "whetstone-double": 3111.7215579287763,
+      "execl": 575.140894810872
+    },
+    "probe_duration_s": 4.0,
+    "probe_mode": "micro",
+    "probe_wall_s_selected_sum": 15.055014690000007
+  },
+  "reconstruction": {
+    "predicted_suite": 1763.797607421875,
+    "predicted_subtest": {
+      "dhry2reg": 4806.5927734375,
+      "whetstone-double": 1664.87158203125,
+      "execl": 893.5906982421875,
+      "fstime": 2597.320556640625,
+      "fsbuffer": 1688.196044921875,
+      "fsdisk": 5204.79931640625,
+      "pipe": 2268.017822265625,
+      "context1": 556.7124633789062,
+      "spawn": 647.704833984375,
+      "syscall": 1373.315673828125,
+      "shell1": 1633.673583984375,
+      "shell8": 3027.152587890625
+    }
+  },
+  "ground_truth_suite": 1760.5,
+  "timing_seconds": {
+    "xi_collection": 25.470643441999982,
+    "probe_selected_subtests": 15.055014690000007,
+    "hybrid_wall": 40.52565813199999,
+    "full_suite_from_dataset": 320.1
+  },
+  "comparison": {
+    "suite_absolute_error": 3.297607421875,
+    "suite_relative_error": 0.001873108447529111,
+    "benchmark_time_saved_seconds_vs_full": 305.04498531,
+    "fraction_saved_vs_full": 0.9529677766635426
+  },
+  "scores": {
+    "predicted_full_suite_benchmarks_index": 1763.797607421875,
+    "actual_full_suite_benchmarks_index": 1760.5
+  },
+  "created_at_utc": "2026-06-10T13:04:14.446137+00:00",
+  "machine": "iZbp16krl0yc7euw7sb6slZ",
+  "router_model": "/root/MoEBench/dataset/experiments/hybrid_grid_unixbench_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/trained_models/router_lgbm.pkl",
+  "reconstruct_model": "/root/MoEBench/dataset/experiments/hybrid_grid_unixbench_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/trained_models/recon_xgb.pkl",
+  "probe_model": "/root/MoEBench/dataset/models/iZbp16krl0yc7euw7sb6slZ/probe_unixbench_lgbm.pkl",
+  "probe_backend": "lightgbm",
+  "dataset_root": "/root/MoEBench/dataset",
+  "glob_pattern": "iZbp16krl0yc7euw7sb6slZ_[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]T[0-9][0-9][0-9][0-9][0-9][0-9]Z/run-*.json"
+}

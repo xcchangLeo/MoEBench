@@ -9,6 +9,7 @@ Usage:
 Options:
   --no-torch          Skip torch install
   --no-lightgbm       Skip lightgbm install
+  --no-xgboost        Skip xgboost install
   --use-venv          Force install into local venv (ignores conda detection)
   -h, --help
 EOF
@@ -16,11 +17,13 @@ EOF
 
 WITH_TORCH=1
 WITH_LIGHTGBM=1
+WITH_XGBOOST=1
 USE_VENV=0
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --no-torch) WITH_TORCH=0 ;;
     --no-lightgbm) WITH_LIGHTGBM=0 ;;
+    --no-xgboost) WITH_XGBOOST=0 ;;
     --use-venv) USE_VENV=1 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown option: $1" >&2; usage; exit 2 ;;
@@ -59,6 +62,9 @@ if [[ "${USE_VENV}" -eq 0 && -n "${CONDA_PREFIX:-}" ]]; then
   if [[ "${WITH_LIGHTGBM}" -eq 1 ]]; then
     pkgs+=(lightgbm)
   fi
+  if [[ "${WITH_XGBOOST}" -eq 1 ]]; then
+    pkgs+=(xgboost)
+  fi
   if [[ "${WITH_TORCH}" -eq 1 ]]; then
     pkgs+=(torch)
   fi
@@ -90,6 +96,9 @@ echo "Upgrading pip in venv..."
 pkgs=(numpy)
 if [[ "${WITH_LIGHTGBM}" -eq 1 ]]; then
   pkgs+=(lightgbm)
+fi
+if [[ "${WITH_XGBOOST}" -eq 1 ]]; then
+  pkgs+=(xgboost)
 fi
 if [[ "${WITH_TORCH}" -eq 1 ]]; then
   pkgs+=(torch)
