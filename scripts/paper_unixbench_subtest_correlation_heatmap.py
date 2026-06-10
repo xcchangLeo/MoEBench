@@ -231,7 +231,7 @@ def plot_combined_heatmap(
     elif layout == "horizontal-wide":
         fig, axes = plt.subplots(1, 2, figsize=(11.2, 5.0), dpi=150)
         fig.subplots_adjust(left=0.07, right=0.88, bottom=0.18, top=0.88, wspace=0.22)
-        tick_fs, ann_fs, title_fs = 12.0, 7.5, 20.0
+        tick_fs, ann_fs, title_fs = 15.0, 7.5, 23.0
     else:
         raise ValueError(f"unknown layout: {layout!r}")
 
@@ -259,7 +259,8 @@ def plot_combined_heatmap(
         fraction=0.04 if layout == "horizontal" else 0.035,
         pad=0.02,
     )
-    cbar.set_label("Correlation coefficient", fontsize=7.5 if layout == "horizontal" else 9)
+    cbar_label_fs = {"horizontal": 7.5, "vertical": 9, "horizontal-wide": 19}[layout]
+    cbar.set_label("Correlation coefficient", fontsize=cbar_label_fs)
     cbar.ax.tick_params(labelsize=7 if layout == "horizontal" else 8)
     pdf = out_base.with_suffix(".pdf")
     png = out_base.with_suffix(".png")
