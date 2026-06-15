@@ -90,6 +90,7 @@
 \newcommand{\id}[1]{{\itshape #1}}
 \newcommand{\appname}{BenchScout}
 \usepackage{xurl}
+\newcommand{\sysctl}[1]{\texttt{\nolinkurl{#1}}}
 %%
 %% For managing citations, it is recommended to use bibliography
 %% files in BibTeX format.
@@ -158,7 +159,7 @@ A natural shortcut is to predict suite scores with execution-free machine learni
 Rather than removing execution entirely, we present \ourmethod{}, a suite-acceleration framework that combines learned routing, bounded on-host measurement, and sparse reconstruction.
 For each target suite, \ourmethod{} selects a set of informative components, executes each selected component as a time-bounded probe, and reconstructs the full suite profile from probe-estimated partial observations.
 Instead of aborting or discarding runs when observations are imperfect, \ourmethod{} encodes missing counters, blocked PMU/eBPF signals, probe timeouts, and fallback paths as first-class features.
-Across heterogeneous Linux hosts and benchmark suites, \ourmethod{} reduces wall-clock time from tens of minutes to as much as 7.5 hours down to 15 seconds, using only 0.067--1.06\% of full-suite execution time while achieving mean aggregate-score relative errors around $0.25\%$.
+Across heterogeneous Linux hosts and benchmark suites, \ourmethod{} reduces wall-clock time from tens of minutes to as much as 7.5 hours down to 15 seconds, using only 0.067--1.06\% of full-suite execution time while achieving mean aggregate-score relative errors around $0.2\%$.
 
 \end{abstract}
 
@@ -293,7 +294,7 @@ Third, \ourmethod{} introduces a masked sparse reconstruction stage that recover
 Historical full runs are randomly masked during training so that the reconstructor learns to impute unobserved component scores from sparse tuples containing system context, observed probe-estimated scores, masks, and probe durations.
 
 Finally, we evaluate \ourmethod{} on five heterogeneous Linux hosts across UnixBench and PTS.
-Our evaluation shows that \ourmethod{} recovers suite indices with mean relative errors around \(3\times10^{-5}\%\) while reducing wall-clock time from tens of minutes--up to 7.5 hours--to 18 seconds, using only 0.067--1.06\% of full-suite execution time.
+Our evaluation shows that \ourmethod{} recovers suite indices with mean relative errors around \(0.2\%\) while reducing wall-clock time from tens of minutes--up to 7.5 hours--to 18 seconds, using only 0.067--1.06\% of full-suite execution time.
 These results demonstrate that standard benchmark indices can be approximated through seconds-scale bounded on-host observation rather than repeated full-suite execution.
 
 
@@ -743,7 +744,7 @@ Execution time is in seconds; lower is better for error and time. Bold marks bes
 \multirow{4}{*}{UnixBench} 
 & Full-suite & -- & 1691.0 & -- & 1520.0 & -- & 1580.0 & -- & 1610.0 & -- & 1550.0 \\
 & Wang~\cite{wang2019predicting} & 0.21 & 3.5 & 2.67 & 3.5 & 6.28 & 3.5 & 4.47 & 3.5 & 4.37 & 3.5 \\
-& Tousi~\cite{tousi2022comparative} & 0.17 & 3.5 & 99.56 & 3.5 & 99.63 & 3.5 & 99.60 & 3.5 & 99.59 & 3.5 \\
+& Tousi~\cite{tousi2022comparative} & 1.7 & 3.5 & 99.56 & 3.5 & 99.63 & 3.5 & 99.60 & 3.5 & 99.59 & 3.5 \\
 & \ourmethod & $\mathbf{0.19}$ & $\mathbf{15.1}$ & $\mathbf{0.30}$ & $\mathbf{15.1}$ & $\mathbf{0.66}$ & $\mathbf{15.1}$ & $\mathbf{0.19}$ & $\mathbf{15.1}$ & $\mathbf{0.32}$ & $\mathbf{15.0}$ \\
 
 \midrule
@@ -781,12 +782,22 @@ replace probe predictions with \emph{measured} partial sub-benchmark scores on t
 probe every component without router selection or reconstruction (Section~\ref{subsec:probe-evaluation}), followed by telemetry-degradation and probe-duration sweeps (Sections~\ref{subsec:probe-ebpf-ablation},~\ref{subsec:probe-duration-sensitivity}).
 
 \paragraph{\ourmethod{} evaluation protocol.}
-Table~\ref{tab:overall-effectiveness-expanded} reports the primary \ourmethod{} path.
-For each historical run, we replay pre-run context $\mathbf{x}$ and probe telemetry $\mathbf{p}$; models produce $\hat{\mathbf{y}}$ and $\hat{Y}$, with \emph{probe-imputed} scores on the router-selected subset (never measured partial scores from the full-run JSON).
-We compare $\hat{Y}$ against reference $Y$ from the same run to compute error.
-This offline protocol avoids re-executing thousand-second full suites; the held-out test runs were collected 24 hours after the training corpus, providing a time-separated evaluation rather than contemporaneous replay.
-Section~\ref{subsec:resource-waveforms} corroborates wall-time savings with online traces.
-\emph{Router only} ablations substitute measured partial scores and must not be conflated with \ourmethod{} headline numbers.
+On every host, we collect benchmark runs by sweeping a host-local \texttt{sysctl} parameter space.
+Both the training corpus and the held-out test runs are collected under sampled \texttt{sysctl} configurations on each host.
+The parameter introduction is provided in Appendix~\ref{app:sysctl-space}.
+For the held-out test runs, the \texttt{sysctl} values are randomly sampled independently from the training configurations using the same parameter space, so each test run evaluates \ourmethod{} under a randomly instantiated kernel configuration.
+
+% Table~\ref{tab:overall-effectiveness-expanded} reports the primary \ourmethod{} path.
+% For each held-out test run, we replay the pre-run context $\mathbf{x}$ and probe telemetry $\mathbf{p}$; the router selects a Top-$K$ subset, the probe estimator produces probe-imputed component scores $\hat{\mathbf{y}}$, and the reconstructor outputs the aggregate prediction $\hat{Y}$.
+% The partial scores given to the reconstructor are always \emph{probe-imputed} scores on the router-selected subset, never measured partial scores taken from the full-run JSON.
+% We compare $\hat{Y}$ against the reference aggregate score $Y$ from the same run to compute suite-level relative error.
+
+% This offline protocol avoids re-executing thousand-second full suites.
+% The held-out test runs were collected 24 hours after the training corpus, providing a time-separated evaluation rather than contemporaneous replay.
+% Section~\ref{subsec:resource-waveforms} corroborates wall-time savings with online traces.
+% \emph{Router-only} ablations substitute measured partial scores and must not be conflated with \ourmethod{} headline numbers.
+
+
 
 % \paragraph{Per-host training protocol.}
 % For every host from H1 to H5, we collect benchmark datasets locally and train all models using only runs whose session tags match that host.
@@ -889,7 +900,7 @@ We evaluate our methodology and summarize the results across testbeds using the 
 \subsection{Overall Effectiveness}
 \label{subsec:overall-effectiveness}
 
-This is the primary \ourmethod{} experiment: router Top-$K$, probe-model prediction on the selected subset, and suite reconstruction (protocol above).
+This is the primary \ourmethod{} experiment: router Top-$K$, probe-model prediction on the selected subset, and suite reconstruction.
 For each host--suite pair, we apply this end-to-end pipeline to all collected historical runs and report mean suite relative error.
 Table~\ref{tab:overall-effectiveness-expanded} summarizes suite-level relative error and estimated partial wall time per host.
 UnixBench and \ptscpu{} rows cover five hosts; \ptsgpu{} rows report H1 only.
@@ -1026,8 +1037,7 @@ Evaluation uses leave-one-run-out CV on canonical H1 sessions (random-fold fallb
     \includegraphics[width=1\linewidth]{images/topk_tradeoff.pdf}
     \caption{Top-\(K\) error--saving trade-off using the best router--reconstructor pair for each suite.
     Each point corresponds to a candidate \(K\), with numbers indicating \(K\).
-    Stars mark the selected \(K\) according to the balanced score in Equation~\ref{eq:balanced-score}.
-    Points closer to the lower-right corner achieve lower prediction error and higher time savings.}
+    Stars mark the selected \(K\) according to the balanced score in Equation~\ref{eq:balanced-score}.}
     \label{fig:topk-pareto}
 \end{figure}
 Figure~\ref{fig:topk-pareto} visualizes the resulting error--saving trade-off, where each point corresponds to one candidate \(K\). Although the figure does not plot the balanced score directly, the selected \(K\) minimizes Equation~\ref{eq:balanced-score}, balancing suite relative error against wall-time savings. On H1, the optimum consistently appears at small \(K\): \(K{=}3\) for UnixBench (1.03), \(K{=}2\) for \ptscpu{} (1.01), and \(K{=}3\) for \ptsgpu{} (1.01). This indicates that the useful signal for reconstructing a suite profile is concentrated in only a few informative probes. Increasing \(K\) beyond this knee provides limited error reduction but rapidly erodes the time savings that make acceleration useful. Thus, the selected \(K\) values capture the practical operating point of \ourmethod: sparse enough to preserve large speedups, yet informative enough to maintain accurate full-suite reconstruction.
@@ -1152,12 +1162,10 @@ Silva et al.~\cite{silva2019operating} benchmarked IoT operating systems such as
 \subsection{Performance Prediction}
 \label{subsec:rw-performance-prediction}
 
-
-Simulation-based and statistical modeling methods reduce architectural evaluation cost by simulating only selected configurations and using the results to estimate unexplored design points~\cite{ipek2005approach,ipek2006efficiently,lee2006accurate,sharkawi2009performance}. 
-For example, Ipek et al.~\cite{ipek2006efficiently} learned predictive models from sampled architectural simulations to explore large design spaces, while Lee and Brooks~\cite{lee2006accurate} used regression models to predict performance and power from a tiny fraction of simulated microarchitectural configurations. 
-Analytical and mechanistic models estimate performance by explicitly modeling processor behavior, such as pipeline effects, cache misses, prefetching, MSHR resources, and execution intervals~\cite{hartstein2002optimum,eyerman2009mechanistic,chen2011hybrid,eyerman2011mechanistic,van2015micro}. 
-For instance, Eyerman et al.~\cite{eyerman2009mechanistic} modeled out-of-order execution as intervals separated by disruptive miss events, and Chen and Aamodt~\cite{chen2011hybrid} modeled the performance impact of pending cache hits, prefetching, and limited MSHR resources. 
-
+Simulation-based and statistical modeling methods reduce architectural evaluation cost by simulating only selected configurations and using the results to estimate unexplored design points~\cite{ipek2005approach,ipek2006efficiently,lee2006accurate,sharkawi2009performance}.
+For example, Ipek et al.\cite{ipek2006efficiently} learned predictive models from sampled architectural simulations to explore large design spaces, while Lee and Brooks\cite{lee2006accurate} used regression models to predict performance and power from a tiny fraction of simulated microarchitectural configurations.
+Analytical and mechanistic models estimate performance by explicitly modeling processor behavior, such as pipeline effects, cache misses, prefetching, MSHR resources, and execution intervals~\cite{hartstein2002optimum,eyerman2009mechanistic,chen2011hybrid,eyerman2011mechanistic,van2015micro}.
+For instance, Eyerman et al.\cite{eyerman2009mechanistic} modeled out-of-order execution as intervals separated by disruptive miss events, and Chen and Aamodt\cite{chen2011hybrid} modeled the performance impact of pending cache hits, prefetching, and limited MSHR resources. 
 
 Machine-learning-based methods have also been widely used to learn complex relationships among programs, hardware characteristics, and performance outcomes. 
 Ardalani et al.~\cite{ardalani2015cross} proposed XAPP, which predicts GPU execution time from features of a single-threaded CPU implementation before GPU porting. 
@@ -1167,15 +1175,66 @@ Wang et al.~\cite{wang2019predicting} used deep neural networks to predict bench
 \section{Conclusion}
 
 We presented \ourmethod{}, which reframes suite evaluation as a single-pass pipeline of context profiling, conditional routing, time-bounded probing, and sparse reconstruction of full suite profiles from partial observations.
-On five heterogeneous Linux hosts, \ourmethod{} recovers UnixBench and PTS scores with mean relative errors around \(3\times10^{-5}\%\) while reducing wall-clock time from tens of minutes to 18 seconds.
+On five heterogeneous Linux hosts, \ourmethod{} recovers UnixBench and PTS scores with mean relative errors around \(0.2\%\) while reducing wall-clock time from tens of minutes to 18 seconds.
 Together, these results suggest a practical path toward low-disruption benchmark-driven tuning and diagnosis.
 
 
 \clearpage
 \bibliographystyle{acm}
 \bibliography{sample-base}
+\clearpage
+\appendix
+\section{\texttt{sysctl} Parameter Space}
+\label{app:sysctl-space}
 
+Our host-local kernel-configuration space is derived from the Linux \sysctl{sysctl} tunables supported by Keentune.
+We use Keentune only to define a broad set of safe and commonly tuned Linux parameters; \ourmethod{} does not use Keentune's optimizer or search policy.
+The resulting space includes over 80 parameters across six categories: file-system parameters, kernel scheduling/IPC/miscellaneous parameters, network-core parameters, IPv4/TCP/UDP parameters, Unix-domain socket parameters, and virtual-memory parameters.
+Both training and held-out test configurations are sampled from this same space, and held-out test configurations are sampled independently from the training configurations.
 
+Representative parameters include:
+\begin{itemize}
+    \item \textbf{File system:}
+    \sysctl{fs.aio-max-nr},
+    \sysctl{fs.file-max},
+    \sysctl{fs.inotify.max_user_instances},
+    and \sysctl{fs.inotify.max_user_watches}.
+
+    \item \textbf{Kernel scheduling, IPC, and miscellaneous:}
+    \sysctl{kernel.numa_balancing},
+    \sysctl{kernel.sched_autogroup_enabled},
+    \sysctl{kernel.sched_migration_cost_ns},
+    \sysctl{kernel.sched_rt_runtime_us},
+    \sysctl{kernel.timer_migration},
+    and \sysctl{kernel.threads-max}.
+
+    \item \textbf{Network core:}
+    \sysctl{net.core.netdev_budget},
+    \sysctl{net.core.netdev_max_backlog},
+    \sysctl{net.core.somaxconn},
+    \sysctl{net.core.rmem_max},
+    and \sysctl{net.core.wmem_max}.
+
+    \item \textbf{IPv4, TCP, and UDP:}
+    \sysctl{net.ipv4.tcp_congestion_control},
+    \sysctl{net.ipv4.tcp_fastopen},
+    \sysctl{net.ipv4.tcp_fin_timeout},
+    \sysctl{net.ipv4.tcp_rmem},
+    \sysctl{net.ipv4.tcp_wmem},
+    \sysctl{net.ipv4.tcp_window_scaling},
+    and \sysctl{net.ipv4.udp_mem}.
+
+    \item \textbf{Unix-domain sockets:}
+    \sysctl{net.unix.max_dgram_qlen}.
+
+    \item \textbf{Virtual memory:}
+    \sysctl{vm.swappiness},
+    \sysctl{vm.dirty_ratio},
+    \sysctl{vm.dirty_background_ratio},
+    \sysctl{vm.overcommit_memory},
+    \sysctl{vm.vfs_cache_pressure},
+    and \sysctl{vm.zone_reclaim_mode}.
+\end{itemize}
 \end{document}
 \endinput
 %%
