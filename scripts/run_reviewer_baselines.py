@@ -101,19 +101,6 @@ def build_commands(
                         "--report-json",
                         str(out_dir / f"policy_{suite}_{machine}.json"),
                     ]
-                    if "router" in exec_policies:
-                        model_arg = {
-                            "unixbench": "--router-model-unixbench",
-                            "phoronix_cpu": "--router-model-pts-cpu",
-                            "phoronix_gpu": "--router-model-pts-gpu",
-                        }[suite]
-                        model_path = (router_models or {}).get(suite, "")
-                        if not model_path:
-                            raise ValueError(
-                                f"router baseline requested for {suite}; "
-                                f"provide --router-model-{suite.replace('phoronix_', 'pts-')}"
-                            )
-                        cmd.extend([model_arg, model_path])
                     commands.append({
                         "kind": "execution_based",
                         "suite": suite,
@@ -195,6 +182,14 @@ def main() -> int:
         "k": args.k,
         "seeds": seeds,
         "commands": commands,
+        "protocol": {
+            "end_to_end": True,
+            "router_fit": "training_fold_only",
+            "greedy_order_fit": "training_fold_only",
+            "partial_inputs": "historical_run_replay",
+            "test_run_timing_used_for_selection": False,
+            "reconstructor_fit": "training_fold_only",
+        },
         "full_suite_note": "full_suite is a historical full-run reference; it is not re-executed by this runner.",
         "is_dry_run": not args.run,
     }

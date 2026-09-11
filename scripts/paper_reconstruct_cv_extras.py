@@ -52,6 +52,7 @@ from moebench.phoronix.training_data import (
     time_seconds_for_profile,
 )
 from moebench.reconstruct.data import (
+    _ti_for_test,
     build_partial_feature_row,
     collect_unixbench_run_paths,
     extract_targets_from_dataset,
@@ -71,6 +72,82 @@ SUPPORTED_POLICIES = (
     "correlation",
     "router",
 )
+
+
+def _training_time_order(
+    rows_meta: list[dict[str, Any]],
+    test_ids: list[str],
+    wall_fn: Callable[[dict[str, Any], str], float | None],
+    *,
+    slowest: bool,
+) -> list[str]:
+    """Rank components using training-fold timing only."""
+    means: dict[str, list[float]] = {tid: [] for tid in test_ids}
+    for meta in rows_meta:
+        for tid in test_ids:
+            value = wall_fn(meta["ds"], tid)
+            if value is not None and value > 0:
+                means[tid].append(float(value))
+    scored = [
+        (float(np.mean(values)) if values else float("inf"), tid)
+        for tid, values in means.items()
+    ]
+    scored.sort(key=lambda item: (item[0], item[1]), reverse=slowest)
+    return [tid for _, tid in scored]
+
+
+def _train_fold_router(
+    rows_meta: list[dict[str, Any]],
+    test_ids: list[str],
+    xi_vec: Any,
+    *,
+    seed: int,
+) -> dict[str, Any]:
+    """Train the router strictly from the current training fold."""
+    from moebench.router.dataset_loader import RouterDataset
+    from moebench.router.neural_routers import train_pointwise_mlp
+    import torch
+
+    if not rows_meta:
+        raise RuntimeError("Cannot train fold router without training rows")
+    torch.manual_seed(seed)
+    n_experts = len(test_ids)
+    xi_dim = len(xi_vec.feature_names)
+    x_rows: list[list[float]] = []
+    y_rows: list[float] = []
+    groups: list[int] = []
+    query_ids: list[str] = []
+    for meta in rows_meta:
+        xi = xi_vec.transform(meta["ds"].get("xi") or {})
+        for ei, _tid in enumerate(test_ids):
+            onehot = [0.0] * n_experts
+            onehot[ei] = 1.0
+            x_rows.append(list(xi) + onehot)
+            y_rows.append(float(meta["y"][ei]))
+        groups.append(n_experts)
+        query_ids.append(str(meta["path"]))
+    ds = RouterDataset(
+        feature_names=list(xi_vec.feature_names)
+        + [f"expert_onehot_e_{i + 1:03d}" for i in range(n_experts)],
+        expert_ids=[f"e_{i + 1:03d}" for i in range(n_experts)],
+        expert_test_ids=list(test_ids),
+        X=x_rows,
+        y=y_rows,
+        group=groups,
+        query_ids=query_ids,
+        meta={"xi_dim": xi_dim, "num_queries": len(rows_meta)},
+    )
+    bundle = train_pointwise_mlp(
+        ds,
+        label_transform="log1p",
+        hidden=64,
+        epochs=200,
+        lr=1e-3,
+    )
+    bundle["router_fit_scope"] = "training_fold_only"
+    bundle["router_fit_n_runs"] = len(rows_meta)
+    bundle["router_fit_paths"] = [str(m["path"]) for m in rows_meta]
+    return bundle
 
 
 def _load_router_meta(model_fp: Path, auto_install: bool) -> dict[str, Any]:
@@ -197,6 +274,7 @@ def _build_augmented_train_matrix_policy_unixbench(
     router_meta: dict[str, Any] | None,
     log1p_partial_index: bool,
     seed: int,
+    ranked_test_ids: list[str] | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     x_rows: list[list[float]] = []
     y_rows: list[list[float]] = []
@@ -212,6 +290,7 @@ def _build_augmented_train_matrix_policy_unixbench(
                 rng=rng,
                 seed_parts=seed_parts,
                 router_meta=router_meta,
+                ranked_test_ids=ranked_test_ids,
             )
             row = build_partial_feature_row(
                 ds,
@@ -240,6 +319,7 @@ def _build_augmented_train_matrix_policy_phoronix(
     log1p_partial_value: bool,
     seed: int,
     pts_wall_fn: Callable[[dict[str, Any], str], float | None],
+    ranked_test_ids: list[str] | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     tid_tup = tuple(test_ids)
     x_rows: list[list[float]] = []
@@ -257,6 +337,7 @@ def _build_augmented_train_matrix_policy_phoronix(
                 seed_parts=seed_parts,
                 router_meta=router_meta,
                 profile_wall_seconds=pts_wall_fn,
+                ranked_test_ids=ranked_test_ids,
             )
             row = build_partial_feature_row_pts(
                 ds,
@@ -297,6 +378,7 @@ def run_one_combo_unixbench(
     folds: int,
     seed: int,
     train_with_eval_policy: bool = False,
+    router_fold_training: bool = True,
 ) -> dict[str, Any]:
     fold_indices = _build_folds(rows_meta, cv_mode=cv_mode, folds=folds, seed=seed)
 
@@ -310,9 +392,24 @@ def run_one_combo_unixbench(
         val_idx = [int(i) for i in val_idx]
         train_idx = [i for i in range(len(rows_meta)) if i not in set(val_idx)]
         fold_router_meta = dict(router_meta or {})
+        if policy == "router" and router_fold_training:
+            fold_router_meta = _train_fold_router(
+                [rows_meta[i] for i in train_idx],
+                test_ids,
+                xi_vec,
+                seed=seed + fi,
+            )
         fold_router_meta.update(_correlation_router_meta(
             [rows_meta[i] for i in train_idx], test_ids
         ))
+        greedy_order = None
+        if policy in ("greedy_slowest", "greedy_fastest"):
+            greedy_order = _training_time_order(
+                [rows_meta[i] for i in train_idx],
+                test_ids,
+                lambda ds, tid: _ti_for_test(ds, tid, parallel_key="1"),
+                slowest=policy == "greedy_slowest",
+            )
 
         rng = np.random.RandomState(seed + fi * 997)
         if train_with_eval_policy:
@@ -327,6 +424,7 @@ def run_one_combo_unixbench(
                 fold_router_meta,
                 log1p_partial_index,
                 seed,
+                greedy_order,
             )
         else:
             x_train, y_train = rte.build_augmented_train_matrix(
@@ -353,6 +451,7 @@ def run_one_combo_unixbench(
                 rng=rng,
                 seed_parts=seed_parts,
                 router_meta=fold_router_meta,
+                ranked_test_ids=greedy_order,
                 )
             row = build_partial_feature_row(
                 ds,
@@ -437,6 +536,15 @@ def run_one_combo_unixbench(
             "description": "Eval subset; UnixBench ti.by_test_id parallel key 1 (single-copy).",
         },
         "n_oof": int(np.sum(oof_mask)),
+        "evaluation_protocol": {
+            "end_to_end": True,
+            "router_fit": "training_fold_only" if policy == "router" else "not_used",
+            "greedy_order_fit": "training_fold_only"
+            if policy in ("greedy_slowest", "greedy_fastest")
+            else "not_used",
+            "partial_inputs": "historical_run_replay",
+            "test_run_timing_used_for_selection": False,
+        },
     }
 
 
@@ -464,6 +572,7 @@ def run_one_combo_phoronix(
     seed: int,
     pts_wall_fn: Callable[[dict[str, Any], str], float | None],
     train_with_eval_policy: bool = False,
+    router_fold_training: bool = True,
 ) -> dict[str, Any]:
     fold_indices = _build_folds(rows_meta, cv_mode=cv_mode, folds=folds, seed=seed)
     n_out = len(test_ids) + 1
@@ -478,9 +587,24 @@ def run_one_combo_phoronix(
         val_idx = [int(i) for i in val_idx]
         train_idx = [i for i in range(len(rows_meta)) if i not in set(val_idx)]
         fold_router_meta = dict(router_meta or {})
+        if policy == "router" and router_fold_training:
+            fold_router_meta = _train_fold_router(
+                [rows_meta[i] for i in train_idx],
+                test_ids,
+                xi_vec,
+                seed=seed + fi,
+            )
         fold_router_meta.update(_correlation_router_meta(
             [rows_meta[i] for i in train_idx], test_ids
         ))
+        greedy_order = None
+        if policy in ("greedy_slowest", "greedy_fastest"):
+            greedy_order = _training_time_order(
+                [rows_meta[i] for i in train_idx],
+                test_ids,
+                pts_wall_fn,
+                slowest=policy == "greedy_slowest",
+            )
 
         rng = np.random.RandomState(seed + fi * 997)
         if train_with_eval_policy:
@@ -496,6 +620,7 @@ def run_one_combo_phoronix(
                 log1p_partial_value,
                 seed,
                 pts_wall_fn,
+                greedy_order,
             )
         else:
             x_train, y_train = build_augmented_train_matrix_pts(
@@ -523,6 +648,7 @@ def run_one_combo_phoronix(
                 seed_parts=seed_parts,
                 router_meta=fold_router_meta,
                 profile_wall_seconds=pts_wall_fn,
+                ranked_test_ids=greedy_order,
             )
             row = build_partial_feature_row_pts(
                 ds,
@@ -608,6 +734,15 @@ def run_one_combo_phoronix(
             "description": "Eval subset; PTS ti.by_test_id.time_s_total (or execution_cost).",
         },
         "n_oof": int(np.sum(oof_mask)),
+        "evaluation_protocol": {
+            "end_to_end": True,
+            "router_fit": "training_fold_only" if policy == "router" else "not_used",
+            "greedy_order_fit": "training_fold_only"
+            if policy in ("greedy_slowest", "greedy_fastest")
+            else "not_used",
+            "partial_inputs": "historical_run_replay",
+            "test_run_timing_used_for_selection": False,
+        },
     }
 
 
@@ -948,21 +1083,9 @@ def main() -> int:
         )
         return 2
 
-    if "router" in pol_list:
-        missing: list[str] = []
-        if "unixbench" in suite_keys and not args.router_model_unixbench:
-            missing.append("unixbench: --router-model-unixbench")
-        if "phoronix_cpu" in suite_keys and not args.router_model_pts_cpu:
-            missing.append("phoronix_cpu: --router-model-pts-cpu")
-        if "phoronix_gpu" in suite_keys and not args.router_model_pts_gpu:
-            missing.append("phoronix_gpu: --router-model-pts-gpu")
-        if missing:
-            print(
-                "Policies include 'router' but router checkpoints are missing:\n  "
-                + "\n  ".join(missing),
-                file=sys.stderr,
-            )
-            return 2
+    # Router evaluation is fold-local: the checkpoint supplied on the command
+    # line is retained only for backward compatibility and is not used to
+    # select validation samples.
 
     def _meta_for(sk: str) -> dict[str, Any] | None:
         if "router" not in pol_list:

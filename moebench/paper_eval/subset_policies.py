@@ -38,6 +38,7 @@ def select_eval_subset(
     seed_parts: tuple[Any, ...],
     router_meta: dict[str, Any] | None = None,
     profile_wall_seconds: Callable[[dict[str, Any], str], float | None] | None = None,
+    ranked_test_ids: list[str] | None = None,
 ) -> set[str]:
     """
     Choose exactly ``k`` distinct subtests from ``test_ids``.
@@ -83,6 +84,10 @@ def select_eval_subset(
         return set(pool[:k])
 
     if policy in ("greedy_slowest", "greedy_fastest"):
+        if ranked_test_ids is not None:
+            ordered = [tid for tid in ranked_test_ids if tid in tid_set]
+            if len(ordered) >= k:
+                return set(ordered[:k])
         scored: list[tuple[float, str]] = []
         for tid in tid_set:
             t = wall_fn(ds, tid)

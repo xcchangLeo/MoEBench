@@ -1,0 +1,111 @@
+{
+  "schema": "moebench.experiment.exec_free_baselines.v2",
+  "created_at_utc": "2026-09-11T13:32:21.314389+00:00",
+  "suite": "unixbench",
+  "suite_label": "UnixBench",
+  "machine": "aces-System-Product-Name",
+  "xi_mode": "static_hw_only",
+  "cv_mode": "leave_one_run_out",
+  "n_runs": 5,
+  "n_sessions": 1,
+  "test_ids": [
+    "dhry2reg",
+    "whetstone-double",
+    "execl",
+    "fstime",
+    "fsbuffer",
+    "fsdisk",
+    "pipe",
+    "context1",
+    "spawn",
+    "syscall",
+    "shell1",
+    "shell8"
+  ],
+  "methods_run": [
+    "tousi_mlp"
+  ],
+  "methods": [
+    {
+      "method": "tousi_mlp",
+      "model_family": "mlp",
+      "paper": "tousi2022",
+      "paper_label": "Tousi et al. (2022)",
+      "table_label": "Tousi-style (MLP)",
+      "train_config": {
+        "hidden": 64,
+        "hidden_layers": 1,
+        "epochs": 150,
+        "lr": 0.001
+      },
+      "mean_suite_rel_err": 0.0021942002039900444,
+      "mean_suite_rel_err_pct": 0.21942002039900443,
+      "median_xi_wall_s": 3.5,
+      "n_runs": 5,
+      "n_folds": 5,
+      "cv_mode": "leave_one_run_out",
+      "per_run": [
+        {
+          "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-01.json",
+          "session": "aces-System-Product-Name_20260524T102558Z",
+          "y_true": 3189.6,
+          "y_pred": 3187.9638671875,
+          "suite_rel_err": 0.0005129586194193344,
+          "xi_wall_s": 3.5,
+          "fold": 0
+        },
+        {
+          "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-02.json",
+          "session": "aces-System-Product-Name_20260524T102558Z",
+          "y_true": 3178.3,
+          "y_pred": 3191.138916015625,
+          "suite_rel_err": 0.004039554483725519,
+          "xi_wall_s": 3.5,
+          "fold": 1
+        },
+        {
+          "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-03.json",
+          "session": "aces-System-Product-Name_20260524T102558Z",
+          "y_true": 3199.1,
+          "y_pred": 3183.994140625,
+          "suite_rel_err": 0.00472190909161949,
+          "xi_wall_s": 3.5,
+          "fold": 2
+        },
+        {
+          "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-04.json",
+          "session": "aces-System-Product-Name_20260524T102558Z",
+          "y_true": 3190.3,
+          "y_pred": 3187.5146484375,
+          "suite_rel_err": 0.0008730688532426987,
+          "xi_wall_s": 3.5,
+          "fold": 3
+        },
+        {
+          "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-05.json",
+          "session": "aces-System-Product-Name_20260524T102558Z",
+          "y_true": 3185.5,
+          "y_pred": 3188.123291015625,
+          "suite_rel_err": 0.0008235099719431801,
+          "xi_wall_s": 3.5,
+          "fold": 4
+        }
+      ]
+    }
+  ],
+  "ranked_by_err_pct_desc": [
+    {
+      "method": "tousi_mlp",
+      "table_label": "Tousi-style (MLP)",
+      "paper": "tousi2022",
+      "err_pct": 0.21942002039900443,
+      "time_s": 3.5
+    }
+  ],
+  "table3_cells": {
+    "tousi_mlp": {
+      "err_pct": 0.21942002039900443,
+      "time_s": 3.5
+    }
+  }
+}

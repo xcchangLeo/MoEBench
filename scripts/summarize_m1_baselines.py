@@ -182,7 +182,16 @@ def summarize(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "schema": "moebench.m1_baseline_report.v1",
         "host": "M1",
         "hostname_slug": M1,
-        "note": "Subset policies use run-level five-fold CV within one session; no session holdout.",
+        "note": "Strict end-to-end offline replay: fold-local router/reconstructor; "
+        "run-level five-fold CV within one session; no session holdout.",
+        "protocol": {
+            "end_to_end": True,
+            "router_fit": "training_fold_only",
+            "reconstructor_fit": "training_fold_only",
+            "greedy_order_fit": "training_fold_only",
+            "test_run_timing_used_for_selection": False,
+            "partial_inputs": "historical_run_replay",
+        },
         "rows": rows,
         "summaries": summaries,
     }
@@ -193,7 +202,8 @@ def markdown(report: dict[str, Any]) -> str:
         "# M1 Baseline Report",
         "",
         "Host: M1 (`aces-System-Product-Name`, 32U128G).",
-        "Subset policies use run-level five-fold CV within the canonical single session.",
+        "Subset policies use strict end-to-end offline replay with run-level five-fold CV "
+        "within the canonical single session.",
         "No row is a session-level temporal holdout.",
         "",
         "| Suite | Method | Kind | Reports | Mean error (%) | Std (%) | Saved (%) |",
