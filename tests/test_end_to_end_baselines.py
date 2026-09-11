@@ -61,3 +61,35 @@ def test_fold_split_covers_each_run_once():
     folds = baselines._folds(5)
     held_out = [i for _train, test in folds for i in test]
     assert sorted(held_out) == list(range(5))
+
+
+def test_kfold_split_matches_main_method_convention():
+    got = baselines._build_splits(5, split_mode="kfold", split_seed=42, folds=5)
+    rng = np.random.RandomState(42)
+    indices = np.arange(5)
+    rng.shuffle(indices)
+    expected = []
+    for part in np.array_split(indices, 5):
+        test = [int(x) for x in part]
+        expected.append(
+            (
+                [i for i in range(5) if i not in set(test)],
+                test,
+            )
+        )
+    assert [(train, test) for _sid, train, test in got] == expected
+
+
+def test_train_test_split_is_disjoint_and_holds_out_expected_count():
+    splits = baselines._build_splits(
+        5,
+        split_mode="train_test",
+        split_seed=42,
+        test_size=0.2,
+    )
+    assert len(splits) == 1
+    _split_id, train, test = splits[0]
+    assert len(train) == 4
+    assert len(test) == 1
+    assert set(train).isdisjoint(test)
+    assert sorted(train + test) == list(range(5))

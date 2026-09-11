@@ -1,7 +1,7 @@
 # M1 Alternative End-to-End Baselines
 
 Offline replay on M1 (`aces-System-Product-Name`), UnixBench, `K=3`.
-All statistics are fit on the training fold only; no validation-driven tuning.
+Split: `kfold`; all statistics are fit on the training split only; no test-driven tuning.
 
 | Method | Mean error (%) | Median (%) | P95 (%) | Max (%) | MAE | RMSE | Saved (%) |
 |---|---:|---:|---:|---:|---:|---:|---:|

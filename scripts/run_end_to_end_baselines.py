@@ -75,19 +75,51 @@ def _load_rows(dataset_root: Path, machine: str) -> list[dict[str, Any]]:
     return rows
 
 
-def _folds(n: int) -> list[tuple[list[int], list[int]]]:
-    rng = np.random.RandomState(FOLD_SEED)
+def _build_splits(
+    n: int,
+    *,
+    split_mode: str = "kfold",
+    split_seed: int = FOLD_SEED,
+    folds: int = 5,
+    test_size: float = 0.2,
+) -> list[tuple[int, list[int], list[int]]]:
+    """Build deterministic run-level splits.
+
+    The ``kfold`` branch mirrors reconstruct_train_eval.py: shuffle the
+    sample indices with the split seed and use np.array_split.  The
+    ``train_test`` branch is a single held-out test split using the same
+    shuffled-index convention.  No values are inspected here.
+    """
+    if n < 2:
+        raise ValueError("need at least two runs for a train/test split")
+    if split_mode not in {"kfold", "train_test"}:
+        raise ValueError(f"unknown split mode: {split_mode}")
+    rng = np.random.RandomState(split_seed)
     indices = np.arange(n)
     rng.shuffle(indices)
-    parts = np.array_split(indices, min(5, n))
-    out = []
-    for part in parts:
+    if split_mode == "train_test":
+        if not 0.0 < test_size < 1.0:
+            raise ValueError("test_size must be between 0 and 1")
+        n_test = max(1, int(math.ceil(n * test_size)))
+        n_test = min(n - 1, n_test)
+        parts = [indices[:n_test]]
+    else:
+        if folds < 2 or folds > n:
+            raise ValueError(f"folds must be between 2 and n={n}")
+        parts = np.array_split(indices, folds)
+    out: list[tuple[int, list[int], list[int]]] = []
+    for split_id, part in enumerate(parts):
         test = [int(x) for x in part]
         train_set = set(test)
         train = [i for i in range(n) if i not in train_set]
         if train:
-            out.append((train, test))
+            out.append((split_id, train, test))
     return out
+
+
+def _folds(n: int) -> list[tuple[list[int], list[int]]]:
+    """Backward-compatible alias for the main method's five-fold split."""
+    return [(train, test) for _sid, train, test in _build_splits(n)]
 
 
 def _stats(train: list[dict[str, Any]]) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -248,9 +280,25 @@ def _suite_from_values(values: np.ndarray) -> float:
     return float(math.exp(float(np.mean(np.log(clipped)))))
 
 
-def _evaluate_method(method: str, rows: list[dict[str, Any]], k: int) -> dict[str, Any]:
+def _evaluate_method(
+    method: str,
+    rows: list[dict[str, Any]],
+    k: int,
+    *,
+    split_mode: str = "kfold",
+    split_seed: int = FOLD_SEED,
+    folds: int = 5,
+    test_size: float = 0.2,
+) -> dict[str, Any]:
     per_run: list[dict[str, Any]] = []
-    for fold, (train_idx, test_idx) in enumerate(_folds(len(rows))):
+    splits = _build_splits(
+        len(rows),
+        split_mode=split_mode,
+        split_seed=split_seed,
+        folds=folds,
+        test_size=test_size,
+    )
+    for split_id, train_idx, test_idx in splits:
         train = [rows[i] for i in train_idx]
         train_paths = [r["path"] for r in train]
         for test_i in test_idx:
@@ -266,7 +314,10 @@ def _evaluate_method(method: str, rows: list[dict[str, Any]], k: int) -> dict[st
                 {
                     "run_id": Path(row["path"]).name,
                     "run_path": row["path"],
-                    "fold": fold,
+                    "split_id": split_id,
+                    "split_mode": split_mode,
+                    "training_run_indices": train_idx,
+                    "test_run_indices": test_idx,
                     "training_run_paths": train_paths,
                     "selected_test_ids": selected_ids,
                     "selection_trace": selection_trace,
@@ -292,7 +343,7 @@ def _evaluate_method(method: str, rows: list[dict[str, Any]], k: int) -> dict[st
         "method": method,
         "kind": "independent_end_to_end_alternative",
         "k": k,
-        "n_oof": len(per_run),
+        "n_test_predictions": len(per_run),
         "mean_relative_error": float(np.mean(errors)),
         "mean_relative_error_pct": float(np.mean(errors) * 100.0),
         "median_relative_error_pct": float(np.median(errors) * 100.0),
@@ -305,8 +356,12 @@ def _evaluate_method(method: str, rows: list[dict[str, Any]], k: int) -> dict[st
             np.mean([r["estimated_time_saved_fraction"] for r in per_run])
         ),
         "protocol": {
-            "selection_fit": "training_fold_only",
-            "reconstruction_fit": "training_fold_only",
+            "split_mode": split_mode,
+            "split_seed": split_seed,
+            "folds": folds if split_mode == "kfold" else None,
+            "test_size": test_size if split_mode == "train_test" else None,
+            "selection_fit": "training_split_only",
+            "reconstruction_fit": "training_split_only",
             "partial_input": "historical_run_replay",
             "validation_unobserved_values_used": False,
             "test_timing_used_for_selection": False,
@@ -321,8 +376,9 @@ def _markdown(report: dict[str, Any]) -> str:
     lines = [
         "# M1 Alternative End-to-End Baselines",
         "",
-        "Offline replay on M1 (`aces-System-Product-Name`), UnixBench, `K=3`.",
-        "All statistics are fit on the training fold only; no validation-driven tuning.",
+        f"Offline replay on M1 (`aces-System-Product-Name`), UnixBench, `K={report['k']}`.",
+        f"Split: `{report['protocol']['split_mode']}`; "
+        f"all statistics are fit on the training split only; no test-driven tuning.",
         "",
         "| Method | Mean error (%) | Median (%) | P95 (%) | Max (%) | MAE | RMSE | Saved (%) |",
         "|---|---:|---:|---:|---:|---:|---:|---:|",
@@ -352,6 +408,20 @@ def main() -> int:
     ap.add_argument("--k", type=int, default=K_DEFAULT)
     ap.add_argument("--methods", default=",".join(METHODS))
     ap.add_argument("--seeds", default="42,7,21", help="Accepted for matrix compatibility; deterministic methods use fixed fold seed.")
+    ap.add_argument(
+        "--split-mode",
+        choices=("kfold", "train_test"),
+        default="kfold",
+        help="kfold mirrors the main method; train_test evaluates one held-out test split.",
+    )
+    ap.add_argument("--folds", type=int, default=5)
+    ap.add_argument("--split-seed", type=int, default=FOLD_SEED)
+    ap.add_argument(
+        "--test-size",
+        type=float,
+        default=0.2,
+        help="Held-out fraction for --split-mode train_test.",
+    )
     ap.add_argument("--out-dir", type=Path, required=True)
     args = ap.parse_args()
     methods = [x.strip() for x in args.methods.split(",") if x.strip()]
@@ -361,7 +431,28 @@ def main() -> int:
     if args.k < 1 or args.k > len(INDEX_SUITE_TEST_IDS):
         ap.error(f"--k must be in [1, {len(INDEX_SUITE_TEST_IDS)}]")
     rows = _load_rows(args.dataset_root.resolve(), args.machine)
-    reports = [_evaluate_method(method, rows, args.k) for method in methods]
+    try:
+        splits = _build_splits(
+            len(rows),
+            split_mode=args.split_mode,
+            split_seed=args.split_seed,
+            folds=args.folds,
+            test_size=args.test_size,
+        )
+    except ValueError as exc:
+        ap.error(str(exc))
+    reports = [
+        _evaluate_method(
+            method,
+            rows,
+            args.k,
+            split_mode=args.split_mode,
+            split_seed=args.split_seed,
+            folds=args.folds,
+            test_size=args.test_size,
+        )
+        for method in methods
+    ]
     report = {
         "schema": "moebench.end_to_end_alternative_baselines.v1",
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -370,14 +461,30 @@ def main() -> int:
         "dataset_root": str(args.dataset_root.resolve()),
         "n_runs": len(rows),
         "n_sessions": len({r["session"] for r in rows}),
-        "fold_seed": FOLD_SEED,
+        "k": args.k,
+        "split_mode": args.split_mode,
+        "split_seed": args.split_seed,
+        "folds": args.folds if args.split_mode == "kfold" else None,
+        "test_size": args.test_size if args.split_mode == "train_test" else None,
+        "splits": [
+            {
+                "split_id": split_id,
+                "training_run_indices": train_idx,
+                "test_run_indices": test_idx,
+                "training_run_paths": [rows[i]["path"] for i in train_idx],
+                "test_run_paths": [rows[i]["path"] for i in test_idx],
+            }
+            for split_id, train_idx, test_idx in splits
+        ],
         "requested_seeds": [int(x) for x in args.seeds.split(",") if x.strip()],
         "methods": reports,
         "protocol": {
             "evaluation": "offline_end_to_end_replay",
             "full_suite_ground_truth": "historical UnixBench system_benchmarks_index_score",
             "partial_budget": f"K={args.k} observed subtests",
-            "training_statistics": "training_fold_only",
+            "split_mode": args.split_mode,
+            "split_seed": args.split_seed,
+            "training_statistics": "training_split_only",
             "validation_unobserved_values_used": False,
             "online_probe_duration_s": None,
         },
@@ -392,6 +499,11 @@ def main() -> int:
                 "methods": methods,
                 "k": args.k,
                 "machine": args.machine,
+                "split_mode": args.split_mode,
+                "split_seed": args.split_seed,
+                "folds": args.folds if args.split_mode == "kfold" else None,
+                "test_size": args.test_size if args.split_mode == "train_test" else None,
+                "splits": report["splits"],
                 "run_paths": [r["path"] for r in rows],
             },
             indent=2,
