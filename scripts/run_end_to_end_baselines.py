@@ -34,6 +34,11 @@ from moebench.reconstruct.data import (
 from moebench.unixbench.experts import INDEX_SUITE_TEST_IDS
 
 METHODS = (
+    "mean_profile",
+    "global_scale",
+    "nearest_neighbor",
+    "knn_reconstruction",
+    "linear_regression",
     "correlation_reconstruction",
     "matrix_completion",
     "adaptive_probing",
@@ -42,6 +47,8 @@ K_DEFAULT = 3
 FOLD_SEED = 42
 MATRIX_RANK = 2
 MATRIX_RIDGE = 1e-2
+LINEAR_RIDGE = 1.0
+KNN_NEIGHBORS = 3
 
 
 def _load_rows(dataset_root: Path, machine: str) -> list[dict[str, Any]]:
@@ -180,6 +187,92 @@ def _correlation_reconstruction(
     return selected, pred
 
 
+def _fixed_selection(values: np.ndarray, k: int) -> list[int]:
+    return list(range(min(k, len(values))))
+
+
+def _mean_profile(
+    values: np.ndarray,
+    train: list[dict[str, Any]],
+    k: int,
+) -> tuple[list[int], np.ndarray]:
+    mean, _std, _corr = _stats(train)
+    selected = _fixed_selection(values, k)
+    pred = mean.copy()
+    pred[selected] = values[selected]
+    return selected, pred
+
+
+def _global_scale(
+    values: np.ndarray,
+    train: list[dict[str, Any]],
+    k: int,
+) -> tuple[list[int], np.ndarray]:
+    mean, _std, _corr = _stats(train)
+    selected = _fixed_selection(values, k)
+    observed_mean = np.maximum(mean[selected], 1e-9)
+    ratios = np.maximum(values[selected], 1e-9) / observed_mean
+    scale = float(math.exp(float(np.mean(np.log(ratios)))))
+    pred = mean * scale
+    pred[selected] = values[selected]
+    return selected, pred
+
+
+def _standardized_partial_distance(
+    values: np.ndarray,
+    candidate: np.ndarray,
+    selected: list[int],
+    mean: np.ndarray,
+    std: np.ndarray,
+) -> float:
+    obs = np.asarray(selected, dtype=int)
+    query_z = (values[obs] - mean[obs]) / std[obs]
+    candidate_z = (candidate[obs] - mean[obs]) / std[obs]
+    return float(np.sqrt(np.mean((query_z - candidate_z) ** 2)))
+
+
+def _nearest_neighbor(
+    values: np.ndarray,
+    train: list[dict[str, Any]],
+    k: int,
+    *,
+    neighbors: int = 1,
+) -> tuple[list[int], np.ndarray]:
+    mean, std, _corr = _stats(train)
+    selected = _fixed_selection(values, k)
+    ranked = sorted(
+        (
+            _standardized_partial_distance(values, row["values"], selected, mean, std),
+            i,
+        )
+        for i, row in enumerate(train)
+    )
+    chosen = [i for _distance, i in ranked[: min(neighbors, len(ranked))]]
+    pred = np.mean(np.stack([train[i]["values"] for i in chosen]), axis=0)
+    pred[selected] = values[selected]
+    return selected, pred
+
+
+def _linear_regression(
+    values: np.ndarray,
+    train: list[dict[str, Any]],
+    k: int,
+) -> tuple[list[int], np.ndarray]:
+    """Fixed-feature, fixed-ridge multi-output linear reconstruction."""
+    selected = _fixed_selection(values, k)
+    x_train = np.stack([row["values"][selected] for row in train])
+    y_train = np.stack([row["values"] for row in train])
+    x_mean = np.mean(x_train, axis=0)
+    y_mean = np.mean(y_train, axis=0)
+    x_centered = x_train - x_mean
+    y_centered = y_train - y_mean
+    lhs = x_centered.T @ x_centered + LINEAR_RIDGE * np.eye(len(selected))
+    coef = np.linalg.solve(lhs, x_centered.T @ y_centered)
+    pred = y_mean + (values[selected] - x_mean) @ coef
+    pred[selected] = values[selected]
+    return selected, pred
+
+
 def _matrix_completion(
     values: np.ndarray,
     train: list[dict[str, Any]],
@@ -261,6 +354,26 @@ def _predict(
     train: list[dict[str, Any]],
     k: int,
 ) -> tuple[list[int], np.ndarray, list[dict[str, Any]]]:
+    if method == "mean_profile":
+        selected, pred = _mean_profile(values, train, k)
+        return selected, pred, []
+    if method == "global_scale":
+        selected, pred = _global_scale(values, train, k)
+        return selected, pred, []
+    if method == "nearest_neighbor":
+        selected, pred = _nearest_neighbor(values, train, k)
+        return selected, pred, []
+    if method == "knn_reconstruction":
+        selected, pred = _nearest_neighbor(
+            values,
+            train,
+            k,
+            neighbors=KNN_NEIGHBORS,
+        )
+        return selected, pred, []
+    if method == "linear_regression":
+        selected, pred = _linear_regression(values, train, k)
+        return selected, pred, []
     if method == "correlation_reconstruction":
         selected, pred = _correlation_reconstruction(values, train, k)
         return selected, pred, []
@@ -367,6 +480,12 @@ def _evaluate_method(
             "test_timing_used_for_selection": False,
             "matrix_rank": MATRIX_RANK if method == "matrix_completion" else None,
             "matrix_ridge": MATRIX_RIDGE if method in ("matrix_completion", "adaptive_probing", "correlation_reconstruction") else None,
+            "linear_ridge": LINEAR_RIDGE if method == "linear_regression" else None,
+            "knn_neighbors": (
+                1 if method == "nearest_neighbor"
+                else KNN_NEIGHBORS if method == "knn_reconstruction"
+                else None
+            ),
         },
         "per_run": per_run,
     }

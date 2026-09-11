@@ -47,6 +47,31 @@ def test_correlation_and_matrix_completion_keep_only_observed_values_exact():
     np.testing.assert_array_equal(predicted_m[:3], rows[0]["values"][:3])
 
 
+def test_simple_end_to_end_baselines_keep_observed_values_exact():
+    rows = _rows()
+    for method in (
+        baselines._mean_profile,
+        baselines._global_scale,
+        baselines._nearest_neighbor,
+        baselines._linear_regression,
+    ):
+        selected, predicted = method(rows[0]["values"], rows[1:], 3)
+        assert selected == [0, 1, 2]
+        np.testing.assert_array_equal(predicted[:3], rows[0]["values"][:3])
+
+
+def test_knn_reconstruction_uses_fixed_neighbor_count():
+    rows = _rows()
+    selected, predicted = baselines._nearest_neighbor(
+        rows[0]["values"],
+        rows[1:],
+        3,
+        neighbors=baselines.KNN_NEIGHBORS,
+    )
+    assert selected == [0, 1, 2]
+    assert predicted.shape == (12,)
+
+
 def test_adaptive_trace_has_fixed_budget_and_no_duplicate_indices():
     rows = _rows()
     selected, trace = baselines._adaptive_selection_trace(rows[0]["values"], rows[1:], 3)
