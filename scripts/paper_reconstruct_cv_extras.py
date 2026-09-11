@@ -15,6 +15,7 @@ import importlib.util
 import json
 import pickle
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
@@ -59,6 +60,17 @@ from moebench.reconstruct.data import (
 )
 from moebench.router.feature_vectorizer import XiVectorizer
 from moebench.unixbench.experts import INDEX_SUITE_TEST_IDS
+
+SUPPORTED_POLICIES = (
+    "random",
+    "fixed_first_k",
+    "fixed_cpu_mix",
+    "fixed_io_mix",
+    "greedy_slowest",
+    "greedy_fastest",
+    "correlation",
+    "router",
+)
 
 
 def _load_router_meta(model_fp: Path, auto_install: bool) -> dict[str, Any]:
@@ -925,6 +937,16 @@ def main() -> int:
 
     pol_list = [p.strip() for p in args.policies.split(",") if p.strip()]
     xi_modes = [x.strip() for x in args.xi_ablations.split(",") if x.strip()]
+    unknown_policies = sorted(set(pol_list) - set(SUPPORTED_POLICIES))
+    if unknown_policies:
+        print(
+            "Unknown policy/ies: "
+            + ", ".join(unknown_policies)
+            + ". Choose from "
+            + ", ".join(SUPPORTED_POLICIES),
+            file=sys.stderr,
+        )
+        return 2
 
     if "router" in pol_list:
         missing: list[str] = []
@@ -989,7 +1011,9 @@ def main() -> int:
 
     out: dict[str, Any] = {
         "schema": "moebench.paper_reconstruct_cv_extras.v2",
+        "created_at_utc": datetime.now(timezone.utc).isoformat(),
         "dataset_root": str(dataset_root),
+        "seed": int(args.seed),
         "suites_requested": suite_keys,
         "eval_partial_k_list": k_list,
         "train_k_range_requested": [args.train_k_min, args.train_k_max],
@@ -997,6 +1021,15 @@ def main() -> int:
         "model_type": args.model_type,
         "policies": pol_list,
         "xi_ablations": xi_modes,
+        "protocol": {
+            "partial_execution": True,
+            "full_run_reference": "historical run JSONs selected by the input glob",
+            "router_and_correlation_fit_scope": "training folds only",
+            "reconstructor_fit_scope": "training folds only",
+            "top_k_selection_scope": "fixed by --eval-partial-k or --k-sweep; no test-fold tuning",
+            "random_seed": int(args.seed),
+            "session_holdout_requested": args.cv_mode == "leave_one_session_out",
+        },
         "suite_results": suite_results,
     }
     if errors:

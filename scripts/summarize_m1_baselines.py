@@ -98,7 +98,34 @@ def _full_time(suite: str) -> dict[str, Any]:
     }
 
 
-def _execution_free() -> list[dict[str, Any]]:
+def _execution_free(
+    report_root: Path | None = None,
+    suites: set[str] | None = None,
+) -> list[dict[str, Any]]:
+    if report_root is not None:
+        report_root = report_root.resolve()
+    if report_root is not None and report_root.is_dir():
+        out: list[dict[str, Any]] = []
+        for path in sorted(report_root.glob("execution_free_seed*/unixbench/*/*/summary.json")):
+            if suites is not None and "unixbench" not in suites:
+                return []
+            data = json.loads(path.read_text(encoding="utf-8"))
+            for method in data.get("methods") or []:
+                out.append(
+                    {
+                        "suite": "unixbench",
+                        "method": method.get("method"),
+                        "kind": "execution_free",
+                        "seed": int(path.parts[-5].removeprefix("execution_free_seed")),
+                        "n_runs": data.get("n_runs"),
+                        "mean_error_pct": method.get("mean_suite_rel_err_pct"),
+                        "saved_pct": None,
+                        "time_s": method.get("median_xi_wall_s"),
+                        "source": str(path.resolve().relative_to(REPO)),
+                    }
+                )
+        if out:
+            return out
     path = REPO / "dataset/experiments/exec_free_table3_wang_tousi_mlp_summary.json"
     data = json.loads(path.read_text(encoding="utf-8"))
     out = []
@@ -117,7 +144,7 @@ def _execution_free() -> list[dict[str, Any]]:
                     "mean_error_pct": row[method]["err_pct"],
                     "saved_pct": None,
                     "time_s": row[method]["time_s"],
-                    "source": str(path.relative_to(REPO)),
+                "source": str(path.relative_to(REPO)),
                 }
             )
     return out
@@ -202,11 +229,26 @@ def main() -> int:
     parser.add_argument("--policy-dirs", nargs="+", type=Path, required=True)
     parser.add_argument("--json", type=Path, required=True)
     parser.add_argument("--markdown", type=Path, required=True)
+    parser.add_argument(
+        "--suites",
+        default="unixbench,phoronix_cpu,phoronix_gpu",
+        help="Comma-separated suites to include.",
+    )
+    parser.add_argument(
+        "--execution-free-root",
+        type=Path,
+        default=None,
+        help="Root containing execution_free_seed*/.../summary.json outputs.",
+    )
     args = parser.parse_args()
+    selected_suites = {x.strip() for x in args.suites.split(",") if x.strip()}
+    unknown_suites = selected_suites - set(SUITES)
+    if unknown_suites:
+        parser.error(f"unknown suite(s): {', '.join(sorted(unknown_suites))}")
     rows: list[dict[str, Any]] = []
     missing_reports: list[dict[str, str]] = []
     for directory in args.policy_dirs:
-        for suite in SUITES:
+        for suite in sorted(selected_suites):
             suite_rows = _policy_rows(directory, suite)
             expected = directory / f"policy_{suite}_{M1}.json"
             if not expected.is_file():
@@ -229,9 +271,9 @@ def main() -> int:
             for row in suite_rows:
                 row["seed"] = row["seed"] or seed_from_name
             rows.extend(suite_rows)
-    for suite in SUITES:
+    for suite in sorted(selected_suites):
         rows.append(_full_time(suite))
-    rows.extend(_execution_free())
+    rows.extend(_execution_free(args.execution_free_root, selected_suites))
     report = summarize(rows)
     report["missing_reports"] = missing_reports
     args.json.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
