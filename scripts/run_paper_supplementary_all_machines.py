@@ -38,6 +38,26 @@ MACHINES_UB_CPU = [
     "iZbp1acaw5wdllhz47922rZ",
 ]
 
+# Additional machines are picked up from the generated registry.  In
+# particular, this keeps the newly collected H6/T4 host in the pipeline once
+# its raw session directory is restored, without hard-coding its hostname.
+try:
+    _registry = json.loads((REPO / "dataset" / "machines_registry.json").read_text())
+    _registry_hosts = _registry.get("machines", [])
+    MACHINES_UB_CPU.extend(
+        m["hostname_slug"]
+        for m in _registry_hosts
+        if m.get("paper_host_id") == "H6"
+        and m.get("hostname_slug") not in MACHINES_UB_CPU
+    )
+    GPU_MACHINES = [
+        m["hostname_slug"]
+        for m in _registry_hosts
+        if m.get("gpu") and m.get("hostname_slug")
+    ]
+except (OSError, json.JSONDecodeError):
+    GPU_MACHINES = ["aces-System-Product-Name"]
+
 # Canonical H1 session dirs (one per suite) used for supplementary offline CV.
 H1_SESSION_BY_SUITE: dict[str, str] = {
     "unixbench": "aces-System-Product-Name_20260524T102558Z",
@@ -80,7 +100,7 @@ SUITE_CFG = {
         "log_flag": "--log1p-partial-value",
         "train_k_max": 12,
         "k_sweep": "1,2,3,4,5",
-        "hosts": ["aces-System-Product-Name"],
+        "hosts": GPU_MACHINES,
     },
 }
 
@@ -171,6 +191,7 @@ def _run_cv(
     out_json: Path,
     auto_install: bool,
     skip_existing: bool,
+    seed: int,
 ) -> None:
     if skip_existing and out_json.is_file():
         print(f"skip existing {out_json}", flush=True)
@@ -191,7 +212,7 @@ def _run_cv(
         "--cv-mode",
         "leave_one_session_out",
         "--seed",
-        "42",
+        str(seed),
         "--model-type",
         cfg["model_type"],
         cfg["log_flag"],
@@ -259,10 +280,19 @@ def _combo_key(c: dict[str, Any]) -> tuple[Any, ...]:
 def _metrics_from_combo(c: dict[str, Any]) -> dict[str, float | None]:
     oof = c.get("oof_metrics") or {}
     ts = c.get("time_savings") or {}
+    dist = oof.get("suite_relative_error_distribution") or {}
+    ci = oof.get("suite_relative_error_bootstrap95") or {}
     return {
         "mae_suite_index": oof.get("mae_suite_index"),
         "rmse_suite_index": oof.get("rmse_suite_index"),
         "spearman_suite": oof.get("spearman_suite"),
+        "mean_suite_relative_error": oof.get("mean_suite_relative_error"),
+        "median_suite_relative_error": dist.get("median"),
+        "p90_suite_relative_error": dist.get("p90"),
+        "p95_suite_relative_error": dist.get("p95"),
+        "max_suite_relative_error": dist.get("max"),
+        "ci_low": ci.get("low"),
+        "ci_high": ci.get("high"),
         "mean_wall_time_saved_fraction": ts.get("mean_fraction_wall_time_saved_vs_full_suite"),
     }
 
@@ -291,6 +321,13 @@ def merge_reports(paths: list[Path]) -> dict[str, Any]:
         rmse = _mean_or_none([r["rmse_suite_index"] for r in rows])
         sp = _mean_or_none([r["spearman_suite"] for r in rows])
         saved = _mean_or_none([r["mean_wall_time_saved_fraction"] for r in rows])
+        mean_rel = _mean_or_none([r["mean_suite_relative_error"] for r in rows])
+        median_rel = _mean_or_none([r["median_suite_relative_error"] for r in rows])
+        p90_rel = _mean_or_none([r["p90_suite_relative_error"] for r in rows])
+        p95_rel = _mean_or_none([r["p95_suite_relative_error"] for r in rows])
+        max_rel = _mean_or_none([r["max_suite_relative_error"] for r in rows])
+        ci_low = _mean_or_none([r["ci_low"] for r in rows])
+        ci_high = _mean_or_none([r["ci_high"] for r in rows])
         merged_combos.append(
             {
                 "suite_key": sk,
@@ -301,6 +338,18 @@ def merge_reports(paths: list[Path]) -> dict[str, Any]:
                     "mae_suite_index": mae,
                     "rmse_suite_index": rmse,
                     "spearman_suite": sp,
+                    "mean_suite_relative_error": mean_rel,
+                    "suite_relative_error_distribution": {
+                        "mean": mean_rel,
+                        "median": median_rel,
+                        "p90": p90_rel,
+                        "p95": p95_rel,
+                        "max": max_rel,
+                    },
+                    "suite_relative_error_bootstrap95": {
+                        "low": ci_low,
+                        "high": ci_high,
+                    },
                 },
                 "time_savings": {"mean_fraction_wall_time_saved_vs_full_suite": saved},
                 "n_machines": len(rows),
@@ -324,7 +373,14 @@ def merge_reports(paths: list[Path]) -> dict[str, Any]:
     return {"schema": "moebench.paper_supplementary.merged.v1", "suite_results": suite_results}
 
 
-def run_mode(mode: str, *, eval_k: int, auto_install: bool, skip_existing: bool = True) -> tuple[Path, Path]:
+def run_mode(
+    mode: str,
+    *,
+    eval_k: int,
+    auto_install: bool,
+    skip_existing: bool = True,
+    seed: int = 42,
+) -> tuple[Path, Path]:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     per_machine: list[Path] = []
 
@@ -333,7 +389,8 @@ def run_mode(mode: str, *, eval_k: int, auto_install: bool, skip_existing: bool 
             k_sweep, policies, xi = cfg["k_sweep"], "router", "full"
         elif mode == "policy":
             k_sweep, policies, xi = "", (
-                "random,fixed_first_k,fixed_cpu_mix,fixed_io_mix,greedy_slowest,greedy_fastest,router"
+            "random,fixed_first_k,fixed_cpu_mix,fixed_io_mix,greedy_slowest,greedy_fastest,router"
+            ",correlation"
             ), "full"
         else:
             k_sweep, policies, xi = "", "router", "full,static_hw_only,no_perf_pmu,no_dynamic_proc,no_gpu"
@@ -351,6 +408,7 @@ def run_mode(mode: str, *, eval_k: int, auto_install: bool, skip_existing: bool 
                 out_json=out,
                 auto_install=auto_install,
                 skip_existing=skip_existing,
+                seed=seed,
             )
             per_machine.append(out)
 
@@ -371,6 +429,7 @@ def run_mode(mode: str, *, eval_k: int, auto_install: bool, skip_existing: bool 
 
 
 def main() -> int:
+    global OUT_DIR
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
         "--mode",
@@ -380,14 +439,26 @@ def main() -> int:
     ap.add_argument("--eval-k", type=int, default=3, help="Fixed K for policy/xi (updated after topk if needed)")
     ap.add_argument("--auto-install", action="store_true")
     ap.add_argument("--no-skip-existing", action="store_true")
+    ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument(
+        "--out-dir",
+        type=Path,
+        default=OUT_DIR,
+        help="Output directory; defaults to dataset/paper_supplementary.",
+    )
     args = ap.parse_args()
+    OUT_DIR = args.out_dir.resolve()
 
     modes = ["topk", "policy", "xi_ablation"] if args.mode == "all" else [args.mode]
     eval_k = args.eval_k
     skip_existing = not args.no_skip_existing
     for mode in modes:
         _, summary_path = run_mode(
-            mode, eval_k=eval_k, auto_install=args.auto_install, skip_existing=skip_existing
+            mode,
+            eval_k=eval_k,
+            auto_install=args.auto_install,
+            skip_existing=skip_existing,
+            seed=args.seed,
         )
         if mode == "topk":
             topk = json.loads(summary_path.read_text(encoding="utf-8"))

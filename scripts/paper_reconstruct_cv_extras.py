@@ -102,6 +102,55 @@ def _median_bucket_accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return float(np.mean(t_side == p_side))
 
 
+def _correlation_router_meta(rows_meta: list[dict[str, Any]], test_ids: list[str]) -> dict[str, Any]:
+    """Build correlation policy metadata from training rows only."""
+    if len(rows_meta) < 2:
+        matrix = np.eye(len(test_ids), dtype=float)
+    else:
+        scores = np.asarray([m["y"][:-1] for m in rows_meta], dtype=float)
+        with np.errstate(invalid="ignore", divide="ignore"):
+            matrix = np.corrcoef(scores, rowvar=False)
+        matrix = np.nan_to_num(matrix, nan=0.0, posinf=0.0, neginf=0.0)
+        np.fill_diagonal(matrix, 1.0)
+    return {
+        "correlation_test_ids": list(test_ids),
+        "correlation_matrix": matrix.tolist(),
+    }
+
+
+def _add_suite_distribution(
+    metrics: dict[str, Any],
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    *,
+    seed: int,
+) -> None:
+    """Add distributional errors and a deterministic bootstrap 95% CI."""
+    if y_true.size == 0:
+        return
+    truth = np.asarray(y_true[:, -1], dtype=float)
+    pred = np.asarray(y_pred[:, -1], dtype=float)
+    rel = np.abs(pred - truth) / np.maximum(np.abs(truth), 1e-9)
+    metrics["suite_relative_error_distribution"] = {
+        "mean": float(np.mean(rel)),
+        "median": float(np.median(rel)),
+        "p90": float(np.percentile(rel, 90)),
+        "p95": float(np.percentile(rel, 95)),
+        "max": float(np.max(rel)),
+        "n": int(rel.size),
+    }
+    rng = np.random.RandomState(seed)
+    means = []
+    for _ in range(2000):
+        sample = rng.choice(rel, size=rel.size, replace=True)
+        means.append(float(np.mean(sample)))
+    metrics["suite_relative_error_bootstrap95"] = {
+        "low": float(np.percentile(means, 2.5)),
+        "high": float(np.percentile(means, 97.5)),
+        "resamples": 2000,
+    }
+
+
 def _build_folds(
     rows_meta: list[dict[str, Any]],
     *,
@@ -248,6 +297,10 @@ def run_one_combo_unixbench(
     for fi, val_idx in enumerate(fold_indices):
         val_idx = [int(i) for i in val_idx]
         train_idx = [i for i in range(len(rows_meta)) if i not in set(val_idx)]
+        fold_router_meta = dict(router_meta or {})
+        fold_router_meta.update(_correlation_router_meta(
+            [rows_meta[i] for i in train_idx], test_ids
+        ))
 
         rng = np.random.RandomState(seed + fi * 997)
         if train_with_eval_policy:
@@ -259,7 +312,7 @@ def run_one_combo_unixbench(
                 train_aug,
                 train_k_min,
                 policy,
-                router_meta,
+                fold_router_meta,
                 log1p_partial_index,
                 seed,
             )
@@ -287,8 +340,8 @@ def run_one_combo_unixbench(
                 ds=ds,
                 rng=rng,
                 seed_parts=seed_parts,
-                router_meta=router_meta,
-            )
+                router_meta=fold_router_meta,
+                )
             row = build_partial_feature_row(
                 ds,
                 ex,
@@ -336,6 +389,7 @@ def run_one_combo_unixbench(
 
         y_val_true = np.stack([rows_meta[t_i]["y"] for t_i, _, _ in val_blocks], axis=0)
         fr = rte.aggregate_err(y_val_true, pred_val)
+        _add_suite_distribution(fr, y_val_true, pred_val, seed=seed + fi)
         suite_t = y_val_true[:, -1]
         suite_p = pred_val[:, -1]
         fr["fold"] = fi
@@ -351,6 +405,9 @@ def run_one_combo_unixbench(
         fold_reports.append(fr)
 
     overall = rte.aggregate_err(oof_true[oof_mask], oof_pred[oof_mask])
+    _add_suite_distribution(
+        overall, oof_true[oof_mask], oof_pred[oof_mask], seed=seed + 100003
+    )
     suite_t_all = oof_true[oof_mask, -1]
     suite_p_all = oof_pred[oof_mask, -1]
     overall["median_bucket_accuracy_suite"] = _median_bucket_accuracy(suite_t_all, suite_p_all)
@@ -408,6 +465,10 @@ def run_one_combo_phoronix(
     for fi, val_idx in enumerate(fold_indices):
         val_idx = [int(i) for i in val_idx]
         train_idx = [i for i in range(len(rows_meta)) if i not in set(val_idx)]
+        fold_router_meta = dict(router_meta or {})
+        fold_router_meta.update(_correlation_router_meta(
+            [rows_meta[i] for i in train_idx], test_ids
+        ))
 
         rng = np.random.RandomState(seed + fi * 997)
         if train_with_eval_policy:
@@ -419,7 +480,7 @@ def run_one_combo_phoronix(
                 train_aug,
                 train_k_min,
                 policy,
-                router_meta,
+                fold_router_meta,
                 log1p_partial_value,
                 seed,
                 pts_wall_fn,
@@ -448,7 +509,7 @@ def run_one_combo_phoronix(
                 ds=ds,
                 rng=rng,
                 seed_parts=seed_parts,
-                router_meta=router_meta,
+                router_meta=fold_router_meta,
                 profile_wall_seconds=pts_wall_fn,
             )
             row = build_partial_feature_row_pts(
@@ -499,6 +560,7 @@ def run_one_combo_phoronix(
 
         y_val_true = np.stack([rows_meta[t_i]["y"] for t_i, _, _ in val_blocks], axis=0)
         fr = rte.aggregate_err(y_val_true, pred_val)
+        _add_suite_distribution(fr, y_val_true, pred_val, seed=seed + fi)
         suite_t = y_val_true[:, -1]
         suite_p = pred_val[:, -1]
         fr["fold"] = fi
@@ -514,6 +576,9 @@ def run_one_combo_phoronix(
         fold_reports.append(fr)
 
     overall = rte.aggregate_err(oof_true[oof_mask], oof_pred[oof_mask])
+    _add_suite_distribution(
+        overall, oof_true[oof_mask], oof_pred[oof_mask], seed=seed + 100003
+    )
     suite_t_all = oof_true[oof_mask, -1]
     suite_p_all = oof_pred[oof_mask, -1]
     overall["median_bucket_accuracy_suite"] = _median_bucket_accuracy(suite_t_all, suite_p_all)
@@ -598,11 +663,17 @@ def _prepare_cv_mode(
     cv_mode: str,
     folds: int,
     label: str,
+    strict: bool = False,
 ) -> tuple[str, int]:
     sessions = sorted({Path(m["path"]).parent.name for m in rows_meta})
     eff_folds = folds
     eff_cv = cv_mode
     if cv_mode == "leave_one_session_out" and len(sessions) < 2:
+        if strict:
+            raise RuntimeError(
+                f"[{label}] strict leave_one_session_out unavailable: "
+                f"only {len(sessions)} session dir(s)"
+            )
         print(
             f"[{label}] leave_one_session_out needs >= 2 session dirs; "
             f"got {len(sessions)}. Falling back to random_fold.",
@@ -640,7 +711,10 @@ def run_suite_block(
     if len(rows_meta) < 2:
         raise RuntimeError(f"[{suite_key}] need >= 2 valid samples (glob={glob_pattern!r})")
 
-    eff_cv, eff_folds = _prepare_cv_mode(rows_meta, args.cv_mode, args.folds, suite_key)
+    eff_cv, eff_folds = _prepare_cv_mode(
+        rows_meta, args.cv_mode, args.folds, suite_key,
+        strict=bool(getattr(args, "strict_session_holdout", False)),
+    )
     sessions = sorted({Path(m["path"]).parent.name for m in rows_meta})
 
     eff_train_k_max = min(int(args.train_k_max), len(test_ids))
@@ -725,6 +799,13 @@ def run_suite_block(
         "pts_suite_filter": pts_suite,
         "glob_pattern": glob_pattern,
         "cv_mode_effective": eff_cv,
+        "cv_mode_requested": args.cv_mode,
+        "session_holdout_available": len(sessions) >= 2,
+        "train_test_split_note": (
+            "validation folds are run-level random folds within one session"
+            if eff_cv == "random_fold" and len(sessions) < 2
+            else "validation folds are held-out sessions"
+        ),
         "folds_effective": eff_folds,
         "sessions": sessions,
         "n_samples": len(rows_meta),
@@ -814,6 +895,11 @@ def main() -> int:
     ap.add_argument("--xgb-estimators", type=int, default=200)
     ap.add_argument("--report-json", type=str, default="")
     ap.add_argument("--auto-install", action="store_true")
+    ap.add_argument(
+        "--strict-session-holdout",
+        action="store_true",
+        help="Fail instead of falling back when leave-one-session-out is unavailable.",
+    )
     args = ap.parse_args()
 
     if args.router_model and not args.router_model_unixbench:

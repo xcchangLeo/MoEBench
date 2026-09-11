@@ -60,6 +60,8 @@ def nominal_mem_gib(measured: float) -> int:
         return 8
     if measured < 24:
         return 16
+    if measured < 96:
+        return 64
     return 128
 
 
@@ -70,6 +72,7 @@ def paper_host_id(vcpus: int, mem_nominal_gib: int) -> str:
         (4, 8): "H3",
         (4, 16): "H4",
         (8, 8): "H5",
+        (16, 64): "H6",
     }
     return mapping.get((vcpus, mem_nominal_gib), "?")
 

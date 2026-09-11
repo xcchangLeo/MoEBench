@@ -13,15 +13,23 @@ from typing import Any
 REPO = Path(__file__).resolve().parents[1]
 EXP_ROOT = REPO / "dataset" / "experiments"
 
+_registry_path = REPO / "dataset" / "machines_registry.json"
+_registry = json.loads(_registry_path.read_text(encoding="utf-8")) if _registry_path.is_file() else {}
 MACHINES = {
-    "aces-System-Product-Name": "32U128G",
-    "iZbp1glgt48i9a8d49embxZ": "2U8G",
-    "iZbp15n87643uk1sqjrdvdZ": "4U8G",
-    "iZbp16krl0yc7euw7sb6slZ": "4U16G",
-    "iZbp1acaw5wdllhz47922rZ": "8U8G",
+    str(m["hostname_slug"]): str(m["config_label"])
+    for m in _registry.get("machines", [])
+    if m.get("hostname_slug") and m.get("config_label")
 }
+if not MACHINES:
+    MACHINES = {
+        "aces-System-Product-Name": "32U128G",
+        "iZbp1glgt48i9a8d49embxZ": "2U8G",
+        "iZbp15n87643uk1sqjrdvdZ": "4U8G",
+        "iZbp16krl0yc7euw7sb6slZ": "4U16G",
+        "iZbp1acaw5wdllhz47922rZ": "8U8G",
+    }
 
-HOST_ORDER = ["32U128G", "2U8G", "4U8G", "4U16G", "8U8G"]
+HOST_ORDER = [MACHINES[k] for k in MACHINES]
 
 SUITE_SPECS = {
     "unixbench": {
@@ -40,7 +48,12 @@ SUITE_SPECS = {
         "hybrid_prefix": "hybrid_grid_pts_nvidia-gpu-compute_",
         "route_a_prefix": "router_recon_grid_pts_nvidia-gpu-compute_",
         "probe_stem": "probe_pts_gpu",
-        "hosts": ["aces-System-Product-Name"],
+        "hosts": [
+            str(m["hostname_slug"])
+            for m in _registry.get("machines", [])
+            if m.get("gpu") and m.get("hostname_slug")
+        ]
+        or ["aces-System-Product-Name"],
     },
 }
 

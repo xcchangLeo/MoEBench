@@ -250,8 +250,8 @@ During training, historical full-run results are randomly masked to simulate par
 
 
 \paragraph{Overview of results.}
-We evaluate \textsc{BenchScout} on five heterogeneous Linux hosts, ranging from small CPU-only cloud instances to a 32-vCPU server with 128~GB memory and an NVIDIA RTX 3090 Ti GPU.
-UnixBench and \ptscpu{} are evaluated on all five hosts, while \ptsgpu{} is evaluated on the GPU-equipped host.
+We evaluate \textsc{BenchScout} on six heterogeneous Linux hosts, ranging from small CPU-only cloud instances to a 32-vCPU server with 128~GB memory and an NVIDIA RTX 3090 Ti GPU, plus a 16-vCPU host with an NVIDIA Tesla T4.
+UnixBench and \ptscpu{} are evaluated on the CPU-capable hosts, while \ptsgpu{} is evaluated on the GPU-equipped hosts when the corresponding raw runs are available.
 Our primary experiment measures the full end-to-end \textsc{BenchScout} pipeline: the router selects a Top-$K$ subset, the probe estimator predicts the selected components' full-run scores from bounded probe telemetry, and the reconstructor recovers the complete suite profile from these sparse probe-imputed observations.
 For each host--suite pair, we apply this pipeline to all collected historical runs and report the mean suite-level relative error together with the estimated partial wall-clock time.
 
@@ -270,7 +270,7 @@ These results show that sparse target-host measurements are essential for robust
 
 \paragraph{Conclusion}
 
-\textsc{BenchScout} reframes benchmark-suite evaluation as conditional routing, time-bounded probing, and sparse reconstruction. Instead of replacing benchmark execution with execution-free prediction, it keeps bounded target-host measurements in the loop and uses them to reconstruct official suite profiles. Across five heterogeneous Linux hosts and multiple suites, \textsc{BenchScout} reduces wall-clock time from tens of minutes or hours to seconds while maintaining highly accurate aggregate-score estimates. By explicitly encoding missing telemetry, probe failures, and fallback paths, it remains deployable in restricted production-like environments.
+\textsc{BenchScout} reframes benchmark-suite evaluation as conditional routing, time-bounded probing, and sparse reconstruction. Instead of replacing benchmark execution with execution-free prediction, it keeps bounded target-host measurements in the loop and uses them to reconstruct official suite profiles. Across six heterogeneous Linux hosts and multiple suites, \textsc{BenchScout} reduces wall-clock time from tens of minutes or hours to seconds while maintaining highly accurate aggregate-score estimates. By explicitly encoding missing telemetry, probe failures, and fallback paths, it remains deployable in restricted production-like environments.
 
 
 

@@ -50,6 +50,9 @@ def select_eval_subset(
     - ``greedy_slowest``: ``k`` largest wall-clock seconds on this sample (UnixBench: ``ti`` key 1;
       PTS: pass ``profile_wall_seconds``, e.g. ``time_seconds_for_profile``).
     - ``greedy_fastest``: ``k`` smallest positive wall times.
+    - ``correlation``: greedily selects representative components using a
+      correlation matrix computed from training-fold scores and passed in
+      ``router_meta``.
     - ``router``: Top-K from a trained router checkpoint (requires ``router_meta``).
 
     ``profile_wall_seconds(ds, test_id)`` overrides UnixBench timing for greedy policies.
@@ -97,6 +100,37 @@ def select_eval_subset(
         scored.sort(key=lambda x: x[0], reverse=(policy == "greedy_slowest"))
         return {tid for _, tid in scored[:k]}
 
+    if policy == "correlation":
+        if router_meta is None:
+            raise ValueError("policy=correlation requires training-fold correlation metadata")
+        corr_ids = [str(x) for x in router_meta.get("correlation_test_ids", [])]
+        corr = np.asarray(router_meta.get("correlation_matrix", []), dtype=float)
+        if corr.ndim != 2 or corr.shape[0] != corr.shape[1] or len(corr_ids) != corr.shape[0]:
+            raise ValueError("invalid training-fold correlation metadata")
+        positions = {tid: i for i, tid in enumerate(corr_ids)}
+        available = [tid for tid in tid_set if tid in positions]
+        if not available:
+            raise ValueError("correlation metadata has no overlap with evaluation test IDs")
+        # Pick a representative first, then maximize coverage of the already
+        # selected score dimensions.  The matrix is built from training rows.
+        mean_abs = {
+            tid: float(np.nanmean(np.abs(corr[positions[tid], :])))
+            for tid in available
+        }
+        chosen = [max(available, key=lambda tid: (mean_abs[tid], tid))]
+        while len(chosen) < min(k, len(available)):
+            remaining = [tid for tid in available if tid not in chosen]
+            next_tid = max(
+                remaining,
+                key=lambda tid: (
+                    float(np.mean([abs(corr[positions[tid], positions[x]]) for x in chosen])),
+                    mean_abs[tid],
+                    tid,
+                ),
+            )
+            chosen.append(next_tid)
+        return set(chosen)
+
     if policy == "router":
         if router_meta is None:
             raise ValueError("policy=router requires router_meta")
@@ -116,5 +150,5 @@ def select_eval_subset(
 
     raise ValueError(
         f"Unknown policy {policy!r}; try: random, fixed_first_k, fixed_cpu_mix, fixed_io_mix, "
-        "greedy_slowest, greedy_fastest, router"
+        "greedy_slowest, greedy_fastest, correlation, router"
     )

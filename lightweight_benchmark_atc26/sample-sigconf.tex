@@ -293,7 +293,7 @@ This mechanism keeps real execution in the loop, captures transient target-host 
 Third, \ourmethod{} introduces a masked sparse reconstruction stage that recovers the full benchmark profile from partial observations.
 Historical full runs are randomly masked during training so that the reconstructor learns to impute unobserved component scores from sparse tuples containing system context, observed probe-estimated scores, masks, and probe durations.
 
-Finally, we evaluate \ourmethod{} on five heterogeneous Linux hosts across UnixBench and PTS.
+Finally, we evaluate \ourmethod{} on six heterogeneous Linux hosts across UnixBench and PTS.
 Our evaluation shows that \ourmethod{} recovers suite indices with mean relative errors around \(0.2\%\) while reducing wall-clock time from tens of minutes--up to 7.5 hours--to 18 seconds, using only 0.067--1.06\% of full-suite execution time.
 These results demonstrate that standard benchmark indices can be approximated through seconds-scale bounded on-host observation rather than repeated full-suite execution.
 
@@ -333,7 +333,7 @@ The cost of full-suite benchmarking comes from two sources: the number of compon
 C_{\mathrm{full}}=\sum_{i=1}^{N}C_i(T_i).
 \end{equation}
 This cost can be substantial for suites with many components or long measurement intervals.
-Practitioners invoke suites for two reasons with different credibility needs (Section~\ref{subsec:problem-scope}): repeated \emph{accelerated formal} evaluation that must approximate the same $Y$, and \emph{fast portraits} when a full run is infeasible.
+Practitioners invoke suites for two reasons with different credibility needs: repeated \emph{accelerated formal} evaluation that must approximate the same $Y$, and \emph{fast portraits} when a full run is infeasible.
 However, not all observations are equally informative: components stress overlapping subsystems (Section~\ref{subsec:motivation-redundancy}), and prefix executions often expose the same rate trend as run-to-completion.
 Our goal is therefore to estimate $(\mathbf{y},Y)$ from sparse, time-bounded probes while keeping real measurements in the loop: every reported score is either directly probed on the target host or reconstructed from probe-imputed partial observations under the official aggregator $A(\cdot)$.
 
@@ -669,17 +669,14 @@ Section~\ref{sec:evaluation} validates each stage independently (\emph{router on
 \paragraph{Hardware environment.}
 
 We deploy \appname{} on six heterogeneous Linux hosts (Table~\ref{tab:testbeds}).
-H1 (32 vCPUs, Intel Core i9-14900K, 128\,GiB RAM, NVIDIA RTX 3090 Ti GPU) is the development server and sole \ptsgpu{} host; H2--H5 are smaller CPU-only cloud instances (Intel Xeon 6982P-C or Xeon Platinum) for UnixBench and \ptscpu{}. H6 GPU 16vcpu64g memory，NVIDIA GA107 \* 1
-OPERATING SYSTEM:         Alibaba Cloud Linux 4.0.3
-    Kernel:               6.6.102-5.3.1.alnx4.x86\_64 (x86\_64)                                                                             
-    Compiler:             GCC 12.3.0 20230508 + CUDA 12.8               
+H1 (32 vCPUs, Intel Core i9-14900K, 128\,GiB RAM, NVIDIA RTX 3090 Ti GPU) and H6 (16 vCPUs, 64\,GiB RAM, NVIDIA Tesla T4 GPU) are the GPU-capable hosts; H2--H5 are smaller CPU-only cloud instances (Intel Xeon 6982P-C or Xeon Platinum) for UnixBench and \ptscpu{}.
 All machines share Ubuntu 22.04.5 LTS and GCC 11.5.0; H1 additionally uses NVIDIA driver 580.159.03, PyTorch 2.12.0+cu130, and TensorFlow 2.21.0.
 We label hosts by a compact CPU$\times$RAM shorthand used throughout this section.
 
 
 \begin{table}[t]
 \centering
-\caption{Evaluation testbeds. Five Linux hosts with heterogeneous CPU and memory capacity. CPU models are taken from \texttt{/proc/cpuinfo} at collection time. \ptsgpu{} runs only on H1.}
+\caption{Evaluation testbeds. Six Linux hosts with heterogeneous CPU, memory, and GPU capacity. CPU models are taken from \texttt{/proc/cpuinfo} at collection time. \ptsgpu{} runs on H1 and H6.}
 \label{tab:testbeds}
 \small
 \setlength{\tabcolsep}{2pt}
@@ -687,12 +684,12 @@ We label hosts by a compact CPU$\times$RAM shorthand used throughout this sectio
 \toprule
 \textbf{Host} & \textbf{vCPU (CPU model)} & \textbf{RAM} & \textbf{GPU} \\
 \midrule
-H1 & 32(Intel Core i9-14900K) & 128GB & NVIDIA RTX 3090 Ti GPU \\
-H6 & 16(Intel Core i9-14900K) & 64GB & NVIDIA Tesla T4 \\
+H1 & 32 (Intel Core i9-14900K) & 128GB & NVIDIA RTX 3090 Ti GPU \\
+H6 & 16 (Intel Core i9-14900K) & 64GB & NVIDIA Tesla T4 GPU \\
 H2 & 2(Intel Xeon 6982P-C) & 8GB & --- \\
-H3 & 4(Intel Xeon 6982P-C) & 8GB & --- \\
-H4 & 4(Intel Xeon 6982P-C) & 16GB & --- \\
-H5 & 8(Intel Xeon Platinum) & 8GB & --- \\
+H3 & 4 (Intel Xeon 6982P-C) & 8GB & --- \\
+H4 & 4 (Intel Xeon 6982P-C) & 16GB & --- \\
+H5 & 8 (Intel Xeon Platinum) & 8GB & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -710,7 +707,7 @@ On H1, NVIDIA driver and OpenCL inventory are collected when available; on CPU-o
 \label{subsubsec:benchmark-suites}
 
 We evaluate on three benchmark suites that stress complementary subsystems.
-UnixBench and \ptscpu{} are run on all five hosts; \ptsgpu{} is restricted to H1 because the other four machines lack discrete GPUs.
+UnixBench and \ptscpu{} are run on the CPU-capable hosts; \ptsgpu{} is run on H1 and H6, while H2--H5 lack discrete GPUs.
 
 \begin{itemize}
     \item \textbf{UnixBench (UB).} A classic system-level suite with 12 single-copy subtests (\(N=12\)): \id{dhry2reg}, \id{whetstone-double}, \id{execl}, \id{fstime}, \id{fsbuffer}, \id{fsdisk}, \id{pipe}, \id{context1}, \id{spawn}, \id{syscall}, \id{shell1}, and \id{shell8}.
@@ -725,10 +722,12 @@ UnixBench and \ptscpu{} are run on all five hosts; \ptsgpu{} is restricted to H1
     This suite complements CPU-centric evaluation with OpenCL/GPU compute workloads and is omitted on H2--H5.
 \end{itemize}
 
-On each host, we collect multiple complete benchmark sessions (typically 3--5 rounds per session) for every suite applicable to that host.
+The auditable corpus contains five runs per observed host--suite pair, with one collection session per pair.  The H6/T4 records are included whenever the corresponding raw session directory is present in the repository.  Because no observed pair currently has two independent sessions, this corpus does not support a strict session-level holdout.
 
 \paragraph{Baselines.}
-We compare \ourmethod against three baselines. The \emph{full-run} baseline executes the entire suite and serves as the reference with no runtime reduction. Wang et al.~\cite{wang2019predicting} train a deep neural network to predict processor benchmark scores from public CPU specifications and historical benchmark tables. Tousi et al.~\cite{tousi2022comparative} study supervised regression for predicting SPEC CPU2017 scores from hardware and software configurations, representing industrial-grade execution-free SPEC prediction pipelines. We include Tousi et al.~\cite{tousi2022comparative} to test whether SPEC-trained models transfer to UnixBench and PTS on the same hosts. While SPEC CPU2017 is an industrial processor reference, our target workflows---cloud auto-tuning, regression testing, and operator monitoring---require open, scriptable suites that exercise CPU, I/O, OS, and GPU subsystems without license-managed publication. We therefore evaluate on UnixBench and PTS; certified SPEC submission is outside our scope. Both execution-free baselines use leave-one-run-out cross-validation, and their wall time includes feature collection only, taking approximately 3.5\,s. Unlike these prediction-only baselines, \ourmethod selectively runs a small subset of experts and reconstructs the full-suite result from bounded on-host probes. All methods use the same train/test splits whenever the required input features are available.
+We compare \ourmethod against a full-suite reference, static and randomized subset policies, a training-fold correlation policy, and execution-free prediction baselines.  The \emph{full-suite} reference executes every component and has no runtime reduction.  Static policies select the first \(K\), a fixed CPU mix, or a fixed I/O mix; \emph{random} uses fixed seeds (42, 7, and 21); \emph{greedy-fastest} and \emph{greedy-slowest} select components by recorded training-fold duration.  The \emph{correlation} policy computes component correlations from training-fold scores only.  The BenchScout router is the state-conditioned learned policy.  All subset policies use the same fold-specific reconstruction model, probe budget, and partial-cost accounting.
+
+Wang et al.~\cite{wang2019predicting} predict processor benchmark scores from public CPU specifications and historical benchmark tables. Tousi et al.~\cite{tousi2022comparative} study supervised prediction of SPEC CPU2017 scores from hardware and software configurations.  We include these execution-free baselines as transfer tests rather than as direct substitutes for on-host measurement; their wall time includes feature collection only.  Unlike prediction-only methods, \ourmethod{} executes bounded probes on the target host and reconstructs the official suite score.  All reported comparisons use the same run-level folds when the required inputs are available.
 \begin{table*}[t]
 \centering
 \caption{Overall effectiveness on CPU benchmark suites across six heterogeneous hosts.
@@ -776,7 +775,7 @@ Execution time is in seconds; lower is better for error and time. Bold marks bes
 \setlength{\tabcolsep}{4.5pt}
 \begin{tabular}{llcccc}
 \toprule
-\multirow{2}{*}{\textbf{Suite}} & \multirow{2}{*}{\textbf{Method}} & \multicolumn{2}{c}{\textbf{M1 (Nvidia 3090Ti)}} & \multicolumn{2}{c}{\textbf{M6 (Nvdia T4)}} \\
+\multirow{2}{*}{\textbf{Suite}} & \multirow{2}{*}{\textbf{Method}} & \multicolumn{2}{c}{\textbf{H1 (RTX 3090 Ti)}} & \multicolumn{2}{c}{\textbf{H6 (Tesla T4)}} \\
 \cmidrule(lr){3-4} \cmidrule(lr){5-6}
 & & \textbf{Err. (\%)} & \textbf{Time (s)} & \textbf{Err. (\%)} & \textbf{Time (s)} \\
 \midrule
@@ -801,7 +800,7 @@ Execution time is in seconds; lower is better for error and time. Bold marks bes
 The remainder of Section~\ref{sec:evaluation} is organized around three execution paths.
 \textbf{(1)~\ourmethod{} pipeline (main method):}
 collect $\mathbf{x}$, router Top-$K$, micro-probe selected components, reconstruct the suite score (router $\rightarrow$ probe $\rightarrow$ reconstruct).
-We first report five-host end-to-end effectiveness (Section~\ref{subsec:overall-effectiveness}), followed by a runtime overhead analysis using UnixBench resource waveforms (Section~\ref{subsec:resource-waveforms}).
+We first report end-to-end effectiveness across the applicable hosts (Section~\ref{subsec:overall-effectiveness}), followed by a runtime overhead analysis using UnixBench resource waveforms (Section~\ref{subsec:resource-waveforms}).
 \textbf{(2)~\emph{Router only} ablation:}
 replace probe predictions with \emph{measured} partial sub-benchmark scores on the router-selected subset, then reconstruct (Section~\ref{subsec:model-combination}), with supplementary offline studies on Top-$K$ and system-feature ablation (Sections~\ref{subsec:topk-tradeoff},~\ref{subsec:feature-ablation}).
 \textbf{(3)~\emph{Probe only} ablation:}
@@ -809,9 +808,22 @@ probe every component without router selection or reconstruction (Section~\ref{s
 
 \paragraph{\ourmethod{} evaluation protocol.}
 On every host, we collect benchmark runs by sweeping a host-local \texttt{sysctl} parameter space.
-Both the training corpus and the held-out test runs are collected under sampled \texttt{sysctl} configurations on each host.
 The parameter introduction is provided in Appendix~\ref{app:sysctl-space}.
-For the held-out test runs, the \texttt{sysctl} values are randomly sampled independently from the training configurations using the same parameter space, so each test run evaluates \ourmethod{} under a randomly instantiated kernel configuration.
+The audit found 55 valid run records across 11 host--suite pairs: five runs per pair
+and one collection session per pair.  Consequently, the results below use run-level
+five-fold cross-validation within each canonical session; they are not evidence of
+session-level temporal generalization.  A strict session holdout is available in the
+evaluation entry point, but cannot be instantiated from this corpus because no
+host--suite pair has two independent sessions.
+
+Training and inference are separated as follows.  Offline replay uses historical
+full-run records only as labels and cost references.  For each validation run, the
+context vector is collected or replayed, the router selects \(K\) components, and
+the probe estimator supplies the selected partial observations; the reconstructor
+then predicts the official full-suite score.  Fold-specific router metadata,
+correlation matrices, and reconstructors are fitted on the training fold only.
+The probe duration is fixed before evaluation at 4\,s per selected component, and
+the reported test fold is not used to choose \(K\), model type, or policy.
 
 % Table~\ref{tab:overall-effectiveness-expanded} reports the primary \ourmethod{} path.
 % For each held-out test run, we replay the pre-run context $\mathbf{x}$ and probe telemetry $\mathbf{p}$; the router selects a Top-$K$ subset, the probe estimator produces probe-imputed component scores $\hat{\mathbf{y}}$, and the reconstructor outputs the aggregate prediction $\hat{Y}$.
@@ -928,8 +940,8 @@ We evaluate our methodology and summarize the results across testbeds using the 
 
 This is the primary \ourmethod{} experiment: router Top-$K$, probe-model prediction on the selected subset, and suite reconstruction.
 For each host--suite pair, we apply this end-to-end pipeline to all collected historical runs and report mean suite relative error.
-Table~\ref{tab:overall-effectiveness-expanded} summarizes suite-level relative error and estimated partial wall time per host.
-UnixBench and \ptscpu{} rows cover five hosts; \ptsgpu{} rows report H1 only.
+Table~\ref{tab:overall-effectiveness-cpu} summarizes suite-level relative error and estimated partial wall time per host.
+UnixBench and \ptscpu{} rows cover the applicable hosts; \ptsgpu{} rows report H1 and H6 when the corresponding raw runs are available.
 Every partial observation fed to the reconstructor is a probe-estimator output $\hat{y}_j$, not a measured subtest score from the reference full run.
 \ourmethod achieves mean relative errors of $0.33\%$ (UnixBench), $0.25\%$ (\ptscpu), and $0.18\%$ (\ptsgpu) while reducing wall time by 95--100\% versus full-suite execution.
 These values reflect the full router--probe--reconstruct stack under probe-imputed partial observations; they are not \emph{router only} results that substitute ground-truth partial scores.
@@ -938,7 +950,7 @@ Execution-free MLP baselines incur the lowest partial cost but exhibit high pred
 \subsection{Runtime Overhead Analysis}
 \label{subsec:resource-waveforms}
 
-Table~\ref{tab:overall-effectiveness-expanded} reports aggregate wall-time savings, but not how CPU and memory evolve during execution.
+Table~\ref{tab:overall-effectiveness-cpu} reports aggregate wall-time savings, but not how CPU and memory evolve during execution.
 We therefore capture online resource traces ($0.5$\,s sampling, $t{=}0$ at run start) on three representative hosts---H1 (32U128G), H3 (4U8G), and H4 (4U16G)---under four UnixBench conditions: \emph{Full run} (complete \id{perl Run -c 1}), \emph{router only} (Top-$K$ partial execution), \emph{probe only} (twelve $D{=}4$\,s micro-probes), and \emph{BenchScout} (router, Top-$K$ probes, and reconstruction in the traced window; $\mathbf{x}$ collection precedes the trace).
 Figure~\ref{fig:resource-waveforms} overlays the corresponding CPU and memory waveforms on a shared ${\approx}1680$\,s axis and confirms that \ourmethod{} incurs negligible runtime overhead: resource usage concentrates in the first minute rather than occupying the machine for the full UnixBench duration.
 
@@ -1021,7 +1033,7 @@ Unlike the \ourmethod{} execution pipeline, this experiment does not perform rou
 
 We train two probe regressors, LightGBM and XGBoost, using probe features collected from each host's historical full runs, and evaluate online prediction against the latest full run on the same host.
 For PTS suites, labels use \(\log(1+x)\) scaling with per-profile estimators to handle heterogeneous metric magnitudes.
-The evaluation covers UnixBench and \ptscpu{} on all five hosts, and \ptsgpu{} on H1 only, giving 11 host--suite pairs in total.
+The evaluation covers UnixBench and \ptscpu{} on the CPU-capable hosts, and \ptsgpu{} on H1 and H6 when the corresponding raw sessions are available.
 
 Table~\ref{tab:probe-models} compares LightGBM and XGBoost on H1 across all three suites.
 It reports suite relative error, probe wall time \(T_{\mathrm{partial}}\), full-suite wall time \(T_{\mathrm{full}}\) from the ground-truth run JSON, and the resulting wall-time savings.
@@ -1057,7 +1069,7 @@ On H1, XGBoost consistently achieves lower suite relative error than LightGBM wh
 
 Using the best \emph{router only} router--reconstructor pairs on H1 from Section~\ref{subsec:model-combination} (MLP\,+\,LightGBM for UnixBench and \ptscpu; LightGBM\,+\,LightGBM for \ptsgpu), we sweep \(K\) from 1 to 6, capped by each suite's component count.
 For each \(K\), the router selects Top-\(K\) experts, partial results are observed, and the reconstructor predicts the suite score.
-Evaluation uses leave-one-run-out CV on canonical H1 sessions (random-fold fallback), with router checkpoints and reconstructors from each session's \id{trained\_models} directory; reconstructors train on partial subsets of size \(K\).
+Evaluation uses run-level five-fold CV within H1's single canonical session; strict session holdout is unavailable because only one session exists.  The router and reconstructor are fitted inside each training fold, and the validation fold is used only for scoring.  Reconstructors train on partial subsets of size \(K\).
 \begin{figure}[t]
     \centering
     \includegraphics[width=1\linewidth]{images/topk_tradeoff.pdf}
@@ -1101,7 +1113,7 @@ Figure~\ref{fig:topk-pareto} visualizes the resulting error--saving trade-off, w
 
 \subsection{System Context Feature Ablation}
 \label{subsec:feature-ablation}
-To quantify which parts of the system context \(\mathbf{x}\) drive reconstruction accuracy, we ablate feature groups while holding router Top-$K$ selection at $K{=}3$ on H1 (leave-one-run-out CV on each suite's canonical session, random-fold fallback), using the same LightGBM reconstructor and \id{trained\_models} checkpoints as in Section~\ref{subsec:topk-tradeoff}.
+To quantify which parts of the system context \(\mathbf{x}\) drive reconstruction accuracy, we ablate feature groups while holding router Top-$K$ selection at $K{=}3$ on H1 (run-level five-fold CV within each suite's single canonical session), using the same LightGBM reconstructor and fold-specific training procedure as in Section~\ref{subsec:topk-tradeoff}.
 We compare four ablated modes against a complete-\(\mathbf{x}\) baseline (not shown):
 \id{static\_hw\\\_only} (hardware topology, memory, cache, and GPU inventory; zero dynamic/PMU),
 \id{no\_perf\_pmu} (remove PMU-derived rates except \id{perf\_event\_paranoid}),
@@ -1139,7 +1151,7 @@ Off & 0.27 & 8.48&  3194.0 & 60.6 & 0/12 & --- \\
 To evaluate robustness under realistic telemetry restrictions, we conduct a controlled \emph{Probe only} experiment on H1 (32U128G) with UnixBench in which eBPF tracing is unavailable after training. We fix the trained H1 LightGBM probe regressor under the micro-probe setting (4\,s per component) and run two back-to-back online conditions on the same host:
 \textbf{(i)~eBPF on}, where bpftrace is enabled with elevated privileges; and
 \textbf{(ii)~eBPF off}, where tracing is disabled and all eBPF dimensions are zero-masked.
-Each condition probes all 12 UnixBench components, predicts subtest indices, aggregates the suite score, and compares against the latest full-run ground truth in the canonical session (\(Y=3185.5\)).
+Each condition probes all 12 UnixBench components, predicts subtest indices, aggregates the suite score, and compares against the historical full-run reference in the canonical session (\(Y=3185.5\)).
 The probe regressor is trained on H1 historical runs using the same micro-probe protocol and eBPF-enabled feature collection.
 
 Table~\ref{tab:probe-ebpf-ablation} shows that disabling eBPF introduces a small accuracy degradation but does not create a failure mode.
@@ -1185,6 +1197,15 @@ Garre et al.~\cite{garre2014performance} compared RTOS and GPOS platforms for co
 Watfa et al.~\cite{watfa2014benchmarking} proposed a benchmarking and performance evaluation approach for embedded operating systems in wireless sensor networks, highlighting the tradeoff between event-driven and thread-driven designs. 
 Silva et al.~\cite{silva2019operating} benchmarked IoT operating systems such as Contiki-NG, RIOT, and Zephyr using criteria including low-power consumption, real-time capability, security, interoperability, and connectivity. 
 
+\subsection{Benchmark Subset Selection and Adaptive Measurement}
+Benchmark reduction and adaptive measurement methods select a small number of tests or observations to reduce evaluation cost.  Unlike methods that select a fixed representative subset, \ourmethod{} conditions the subset on the current host context and short probe telemetry, while retaining the official suite aggregation target.  Our static, random, greedy, and training-fold correlation policies make this distinction explicit in the evaluation.
+
+\subsection{Short-Run Estimation and Sparse Reconstruction}
+Early-termination and short-run benchmark estimators trade measurement duration for prediction error, while matrix-completion and low-rank methods infer missing entries from observed performance measurements.  \ourmethod{} shares the missing-data objective but uses expert-aware, host-local reconstruction with bounded probes rather than assuming a stationary low-rank matrix.  This makes probe failures, unavailable PMU/eBPF signals, and fallback encodings part of the input contract.
+
+\subsection{Cloud Variability and Interference}
+Cloud performance variability, virtualization effects, and noisy-neighbor interference can change benchmark rankings over time.  These issues motivate our context features and telemetry-restriction experiments, but the present corpus contains only one session per host--suite pair and no controlled contention campaign.  We therefore treat the current results as host-local calibration evidence and leave multi-session and interference stress testing for future work.
+
 \subsection{Performance Prediction}
 \label{subsec:rw-performance-prediction}
 
@@ -1201,8 +1222,8 @@ Wang et al.~\cite{wang2019predicting} used deep neural networks to predict bench
 \section{Conclusion}
 
 We presented \ourmethod{}, which reframes suite evaluation as a single-pass pipeline of context profiling, conditional routing, time-bounded probing, and sparse reconstruction of full suite profiles from partial observations.
-On five heterogeneous Linux hosts, \ourmethod{} recovers UnixBench and PTS scores with mean relative errors around \(0.2\%\) while reducing wall-clock time from tens of minutes to 18 seconds.
-Together, these results suggest a practical path toward low-disruption benchmark-driven tuning and diagnosis.
+Validated across the heterogeneous host configurations in our study with host-local calibration, \ourmethod{} recovers UnixBench and PTS scores with sub-percent mean relative error in the revised run-level evaluation while reducing wall-clock time from tens of minutes to seconds.
+These results support low-disruption benchmark-driven tuning and diagnosis, but do not claim replacement of certified benchmarks or long-term/session-level generalization.  The current study also does not include controlled contention or a zero-shot cross-host deployment experiment.
 
 
 \clearpage
@@ -1216,7 +1237,7 @@ Together, these results suggest a practical path toward low-disruption benchmark
 Our host-local kernel-configuration space is derived from the Linux \sysctl{sysctl} tunables supported by Keentune.
 We use Keentune only to define a broad set of safe and commonly tuned Linux parameters; \ourmethod{} does not use Keentune's optimizer or search policy.
 The resulting space includes over 80 parameters across six categories: file-system parameters, kernel scheduling/IPC/miscellaneous parameters, network-core parameters, IPv4/TCP/UDP parameters, Unix-domain socket parameters, and virtual-memory parameters.
-Both training and held-out test configurations are sampled from this same space, and held-out test configurations are sampled independently from the training configurations.
+Configurations are sampled from this space for the historical corpus.  Because each host--suite pair currently has only one collection session, the revised evaluation does not claim an independent temporal or session-level test set.
 
 Representative parameters include:
 \begin{itemize}
