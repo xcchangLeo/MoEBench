@@ -1,0 +1,230 @@
+{
+  "schema": "moebench.paper_reconstruct_cv_extras.v2",
+  "dataset_root": "/home/zyf/code/MoEBench/dataset",
+  "suites_requested": [
+    "unixbench"
+  ],
+  "eval_partial_k_list": [
+    3
+  ],
+  "train_k_range_requested": [
+    2,
+    6
+  ],
+  "pts_suite_target": "logmean",
+  "model_type": "lightgbm",
+  "policies": [
+    "random"
+  ],
+  "xi_ablations": [
+    "full"
+  ],
+  "suite_results": [
+    {
+      "suite_key": "unixbench",
+      "pts_suite_filter": null,
+      "glob_pattern": "aces-System-Product-Name_20260524T102558Z/run-*.json",
+      "cv_mode_effective": "random_fold",
+      "cv_mode_requested": "leave_one_session_out",
+      "session_holdout_available": false,
+      "train_test_split_note": "validation folds are run-level random folds within one session",
+      "folds_effective": 5,
+      "sessions": [
+        "aces-System-Product-Name_20260524T102558Z"
+      ],
+      "n_samples": 5,
+      "num_profiles_or_subtests": 12,
+      "profile_ids_head": [
+        "dhry2reg",
+        "whetstone-double",
+        "execl",
+        "fstime",
+        "fsbuffer",
+        "fsdisk",
+        "pipe",
+        "context1"
+      ],
+      "combinations": [
+        {
+          "suite_key": "unixbench",
+          "xi_ablation": "full",
+          "benchmark": "unixbench",
+          "eval_partial_k": 3,
+          "policy": "random",
+          "oof_metrics": {
+            "mae_all_targets": 29.396644824368042,
+            "rmse_all_targets": 56.990631975486764,
+            "mae_subtest_index_only": 31.227375080043444,
+            "rmse_subtest_index_only": 59.26089440316099,
+            "mae_suite_index": 7.427881756263195,
+            "rmse_suite_index": 8.993023017800224,
+            "mean_suite_relative_error": 0.0023302181251910925,
+            "spearman_suite": -0.3,
+            "kendall_tau_suite": -0.2,
+            "suite_relative_error_distribution": {
+              "mean": 0.0023302181251910925,
+              "median": 0.0017833578471943379,
+              "p90": 0.004187467239541134,
+              "p95": 0.004367534821475553,
+              "max": 0.004547602403409972,
+              "n": 5
+            },
+            "suite_relative_error_bootstrap95": {
+              "low": 0.0010258179220841777,
+              "high": 0.003783952172209106,
+              "resamples": 2000
+            },
+            "median_bucket_accuracy_suite": 0.4
+          },
+          "per_fold_metrics": [
+            {
+              "mae_all_targets": 32.22627923534469,
+              "rmse_all_targets": 58.32683152130548,
+              "mae_subtest_index_only": 34.43839530310362,
+              "rmse_subtest_index_only": 60.68633708707247,
+              "mae_suite_index": 5.680886422237563,
+              "rmse_suite_index": 5.680886422237563,
+              "mean_suite_relative_error": 0.0017833578471943379,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "suite_relative_error_distribution": {
+                "mean": 0.0017833578471943379,
+                "median": 0.0017833578471943379,
+                "p90": 0.0017833578471943379,
+                "p95": 0.0017833578471943379,
+                "max": 0.0017833578471943379,
+                "n": 1
+              },
+              "suite_relative_error_bootstrap95": {
+                "low": 0.0017833578471943379,
+                "high": 0.0017833578471943379,
+                "resamples": 2000
+              },
+              "fold": 0,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.6251953735542356
+            },
+            {
+              "mae_all_targets": 20.925347184080877,
+              "rmse_all_targets": 50.539889502943815,
+              "mae_subtest_index_only": 21.69679579592788,
+              "rmse_subtest_index_only": 52.49563809053626,
+              "mae_suite_index": 11.667963841916844,
+              "rmse_suite_index": 11.667963841916844,
+              "mean_suite_relative_error": 0.0036472644937378777,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "suite_relative_error_distribution": {
+                "mean": 0.0036472644937378777,
+                "median": 0.0036472644937378777,
+                "p90": 0.0036472644937378777,
+                "p95": 0.0036472644937378777,
+                "max": 0.0036472644937378777,
+                "n": 1
+              },
+              "suite_relative_error_bootstrap95": {
+                "low": 0.0036472644937378777,
+                "high": 0.0036472644937378777,
+                "resamples": 2000
+              },
+              "fold": 1,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.75
+            },
+            {
+              "mae_all_targets": 23.185458136366606,
+              "rmse_all_targets": 49.583141424834096,
+              "mae_subtest_index_only": 25.106103274348943,
+              "rmse_subtest_index_only": 51.60775451291797,
+              "mae_suite_index": 0.1377164805785469,
+              "rmse_suite_index": 0.1377164805785469,
+              "mean_suite_relative_error": 4.31767245355364e-05,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "suite_relative_error_distribution": {
+                "mean": 4.31767245355364e-05,
+                "median": 4.31767245355364e-05,
+                "p90": 4.31767245355364e-05,
+                "p95": 4.31767245355364e-05,
+                "max": 4.31767245355364e-05,
+                "n": 1
+              },
+              "suite_relative_error_bootstrap95": {
+                "low": 4.31767245355364e-05,
+                "high": 4.31767245355364e-05,
+                "resamples": 2000
+              },
+              "fold": 2,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.6875
+            },
+            {
+              "mae_all_targets": 31.806497930526305,
+              "rmse_all_targets": 53.02980235321626,
+              "mae_subtest_index_only": 34.023772981584735,
+              "rmse_subtest_index_only": 55.17475837156401,
+              "mae_suite_index": 5.19919731782511,
+              "rmse_suite_index": 5.19919731782511,
+              "mean_suite_relative_error": 0.0016296891570777388,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "suite_relative_error_distribution": {
+                "mean": 0.0016296891570777388,
+                "median": 0.0016296891570777388,
+                "p90": 0.0016296891570777388,
+                "p95": 0.0016296891570777388,
+                "max": 0.0016296891570777388,
+                "n": 1
+              },
+              "suite_relative_error_bootstrap95": {
+                "low": 0.0016296891570777388,
+                "high": 0.0016296891570777388,
+                "resamples": 2000
+              },
+              "fold": 3,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.7811816192560175
+            },
+            {
+              "mae_all_targets": 38.83964163552173,
+              "rmse_all_targets": 70.80051629307562,
+              "mae_subtest_index_only": 40.871808045252045,
+              "rmse_subtest_index_only": 73.57329823046241,
+              "mae_suite_index": 14.453644718757914,
+              "rmse_suite_index": 14.453644718757914,
+              "mean_suite_relative_error": 0.004547602403409972,
+              "spearman_suite": NaN,
+              "kendall_tau_suite": NaN,
+              "suite_relative_error_distribution": {
+                "mean": 0.004547602403409972,
+                "median": 0.004547602403409972,
+                "p90": 0.004547602403409972,
+                "p95": 0.004547602403409972,
+                "max": 0.004547602403409972,
+                "n": 1
+              },
+              "suite_relative_error_bootstrap95": {
+                "low": 0.004547602403409972,
+                "high": 0.004547602403409972,
+                "resamples": 2000
+              },
+              "fold": 4,
+              "n_val": 1,
+              "median_bucket_accuracy_suite": NaN,
+              "mean_eval_wall_saved_fraction": 0.7814942169427946
+            }
+          ],
+          "time_savings": {
+            "mean_fraction_wall_time_saved_vs_full_suite": 0.7250742419506097,
+            "description": "Eval subset; UnixBench ti.by_test_id parallel key 1 (single-copy)."
+          },
+          "n_oof": 5
+        }
+      ]
+    }
+  ]
+}

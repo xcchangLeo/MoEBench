@@ -380,6 +380,8 @@ def run_mode(
     auto_install: bool,
     skip_existing: bool = True,
     seed: int = 42,
+    machines: list[str] | None = None,
+    policy_override: str = "",
 ) -> tuple[Path, Path]:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     per_machine: list[Path] = []
@@ -392,10 +394,15 @@ def run_mode(
             "random,fixed_first_k,fixed_cpu_mix,fixed_io_mix,greedy_slowest,greedy_fastest,router"
             ",correlation"
             ), "full"
+            if policy_override:
+                policies = policy_override
         else:
             k_sweep, policies, xi = "", "router", "full,static_hw_only,no_perf_pmu,no_dynamic_proc,no_gpu"
 
-        for machine in cfg["hosts"]:
+        host_list = cfg["hosts"]
+        if machines:
+            host_list = [h for h in host_list if h in machines]
+        for machine in host_list:
             out = OUT_DIR / f"{mode}_{suite_name}_{machine}.json"
             _run_cv(
                 machine=machine,
@@ -441,6 +448,18 @@ def main() -> int:
     ap.add_argument("--no-skip-existing", action="store_true")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument(
+        "--policies",
+        type=str,
+        default="",
+        help="Policy override for --mode policy, e.g. random.",
+    )
+    ap.add_argument(
+        "--machines",
+        type=str,
+        default="",
+        help="Comma-separated hostname slugs to run; defaults to all registered hosts.",
+    )
+    ap.add_argument(
         "--out-dir",
         type=Path,
         default=OUT_DIR,
@@ -452,6 +471,7 @@ def main() -> int:
     modes = ["topk", "policy", "xi_ablation"] if args.mode == "all" else [args.mode]
     eval_k = args.eval_k
     skip_existing = not args.no_skip_existing
+    machines = [x.strip() for x in args.machines.split(",") if x.strip()]
     for mode in modes:
         _, summary_path = run_mode(
             mode,
@@ -459,6 +479,8 @@ def main() -> int:
             auto_install=args.auto_install,
             skip_existing=skip_existing,
             seed=args.seed,
+            machines=machines or None,
+            policy_override=args.policies,
         )
         if mode == "topk":
             topk = json.loads(summary_path.read_text(encoding="utf-8"))
