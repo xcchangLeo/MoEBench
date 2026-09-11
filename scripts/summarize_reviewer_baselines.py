@@ -74,7 +74,9 @@ def summarize(rows: dict[tuple[str, str], list[dict[str, Any]]]) -> dict[str, An
             "n_reports": len(values),
             "n_hosts": len({Path(v["source"]).stem.rsplit("_", 1)[-1] for v in values}),
             "cv_modes": sorted({v["cv_mode_effective"] for v in values}),
-            "session_holdout_available": all(not v["session_holdout_available"] for v in values),
+            "session_holdout_available": any(
+                bool(v["session_holdout_available"]) for v in values
+            ),
         }
         for name in ("mean_error", "median_error", "p95_error", "max_error", "saved_fraction"):
             xs = [v[name] for v in values if v[name] is not None]
