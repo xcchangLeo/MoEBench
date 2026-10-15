@@ -1,0 +1,3220 @@
+{
+  "schema": "moebench.hybrid.whole_host_holdout_offline.v1",
+  "protocol": "Outer whole-host holdout. Router/probe/reconstructor trained only on four source hosts. Reconstructor source inputs are probe predictions from inner whole-host probe fits. Test probe telemetry was archived during full-run collection; no fresh online workload or paired timing is claimed.",
+  "k": 3,
+  "suite_output_mode": "probe_plus_imputed_geomean",
+  "probe_prediction_calibration_factors_by_training_fold": [
+    {
+      "heldout_host": "aces-System-Product-Name",
+      "factors": {
+        "dhry2reg": 0.9915944606074033,
+        "whetstone-double": 0.992963899488322,
+        "execl": 0.921103728982707,
+        "fstime": 0.9921150734504883,
+        "fsbuffer": 0.990056443881192,
+        "fsdisk": 1.0112435544246294,
+        "pipe": 1.0802600897488601,
+        "context1": 0.7261839236259253,
+        "spawn": 0.8235462016464421,
+        "syscall": 1.017665082598559,
+        "shell1": 0.9411752161785191,
+        "shell8": 0.7440987975061278
+      }
+    },
+    {
+      "heldout_host": "iZbp15n87643uk1sqjrdvdZ",
+      "factors": {
+        "dhry2reg": 1.0436329484639089,
+        "whetstone-double": 1.1163533901306366,
+        "execl": 0.9753953290716327,
+        "fstime": 1.0798058156227275,
+        "fsbuffer": 1.034771767478395,
+        "fsdisk": 1.01229662534236,
+        "pipe": 1.1035739032953957,
+        "context1": 0.9477071111820237,
+        "spawn": 0.9182510947276207,
+        "syscall": 1.2219437133239224,
+        "shell1": 1.0433076659927156,
+        "shell8": 0.9510785643645219
+      }
+    },
+    {
+      "heldout_host": "iZbp16krl0yc7euw7sb6slZ",
+      "factors": {
+        "dhry2reg": 1.0503511381620445,
+        "whetstone-double": 1.1043375644021478,
+        "execl": 0.9201268702250701,
+        "fstime": 1.135239926407298,
+        "fsbuffer": 1.0318825861351915,
+        "fsdisk": 1.0554963816111438,
+        "pipe": 1.1627086703032388,
+        "context1": 0.8045783695425942,
+        "spawn": 0.7166468298767131,
+        "syscall": 1.0804700326460848,
+        "shell1": 1.071008938330861,
+        "shell8": 0.9530256503752386
+      }
+    },
+    {
+      "heldout_host": "iZbp1acaw5wdllhz47922rZ",
+      "factors": {
+        "dhry2reg": 1.004007507860009,
+        "whetstone-double": 1.088811430496238,
+        "execl": 1.024522696405047,
+        "fstime": 1.1707238398338229,
+        "fsbuffer": 0.9575164668086564,
+        "fsdisk": 1.0774464028745636,
+        "pipe": 1.0521604088561054,
+        "context1": 0.9656707665900447,
+        "spawn": 0.7712382033190844,
+        "syscall": 1.0249021031791645,
+        "shell1": 1.0999895054824267,
+        "shell8": 0.9154073822554909
+      }
+    },
+    {
+      "heldout_host": "iZbp1glgt48i9a8d49embxZ",
+      "factors": {
+        "dhry2reg": 1.0495108207003212,
+        "whetstone-double": 1.109360562575888,
+        "execl": 0.9688167427570654,
+        "fstime": 1.1367671781135584,
+        "fsbuffer": 1.1680203336753325,
+        "fsdisk": 1.04524399702597,
+        "pipe": 1.0649206849682595,
+        "context1": 0.6107016787437181,
+        "spawn": 0.7738146621813898,
+        "syscall": 1.1167499377401737,
+        "shell1": 1.0005361014185639,
+        "shell8": 0.9056254698370815
+      }
+    }
+  ],
+  "input_probe_datasets": [
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/models/aces-System-Product-Name/probe_dataset_unixbench.json",
+      "sha256": "67c20c33e8772a0f0d5777aa0a9e4e50cf6decbe64a55b3bed041833b55c468e"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/models/iZbp15n87643uk1sqjrdvdZ/probe_dataset_unixbench.json",
+      "sha256": "02fc6ebcff17e35c01447119f027fc20f7cd6f091656d219e85e767ac2e8e692"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/models/iZbp16krl0yc7euw7sb6slZ/probe_dataset_unixbench.json",
+      "sha256": "183f4378a19f970a2284a25ecae3cb3fdf0ffb2a1c55e051c13758cfab2a2038"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/models/iZbp1acaw5wdllhz47922rZ/probe_dataset_unixbench.json",
+      "sha256": "acbce099a485c8fa6c42104859e68b65e45c7388d48cd77427ca06d3620a27a4"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/models/iZbp1glgt48i9a8d49embxZ/probe_dataset_unixbench.json",
+      "sha256": "3a1f23380ffc2cb8dcf3a5d2bf71ce6841e59b8d111a15748e271e0097f2194b"
+    }
+  ],
+  "input_runs": [
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-01.json",
+      "sha256": "330b63bfdc2f41d7ae6e31cb7d576013003ebc9cd4a31c0551553d67c5d64e12"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-02.json",
+      "sha256": "a1e881918422b9ab877132964859febb0f0614971566c604e1be0594e0817ecf"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-03.json",
+      "sha256": "705e87c02fc8ac50599100c6eba4e74c8dc25e754436ed42683bed2205e6e7c3"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-04.json",
+      "sha256": "17589632d6422d3158ffa32a6a88cca8e980571188d71db1980298af573991fa"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-05.json",
+      "sha256": "b5d938b0ab50e247a26096172884a6e9c62910b33ab37d327f11b945f869c875"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-01.json",
+      "sha256": "c9506d08b05642e18e7889dd579de7198fc2b6348cbf2d590641dbbd1b4f58a3"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-02.json",
+      "sha256": "b242033e9c7bb0fc4347317f3cb91dfc341fd3088847d3c9e896479cbaaf420b"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-03.json",
+      "sha256": "d55b8ea554c34c5114bb6b788f0afec171d774d86febb86fbb34bf32ec92572e"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-04.json",
+      "sha256": "0984f6447505e964a9b8603a1f2f6e7ef2a35a7f0a4b3ada17a3a711b8d72413"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-05.json",
+      "sha256": "02ddffd834cdcb42de503d504071abd3f13ea79527e773638590740fbab38e76"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-01.json",
+      "sha256": "26c2975e4087e73e48f3a18f6872627b04061a32b75e5c86446e6b65c15af0af"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-02.json",
+      "sha256": "cdd62ab569038b6099d2e69ac91e166e67468361600ebb711e92b6857b3ef68e"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-03.json",
+      "sha256": "1c5ed1f821614d12b5aec0ffc50e8cdc855d636447d309d110c8844eb7b78b2a"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-04.json",
+      "sha256": "b35353fe998450807a21e327a259ec0023e93f1ad6691aaa8484ee7dd1279175"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-05.json",
+      "sha256": "577da0c31ec5b9fc46f38c3edaff42cbd1e1fed308c4290b9ac20f87adaed50c"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-01.json",
+      "sha256": "313f8a5cece5e46df93fa3c89c9731be3ca0d7cea9f07f7a767a6a27bd368026"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-02.json",
+      "sha256": "05687c657e5697368a3364155c6acdd25eb8803c1e9200de1a6c69962b9a1d6c"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-03.json",
+      "sha256": "7247131141033079f5e6ed383c8c90b703bac85b6d52151d2fc8e7250c7a8f99"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-04.json",
+      "sha256": "8c2fa8d0e905aad7820e86693b87330bc3386a6d10b1fdcf6cdee89c8e5bcd51"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-05.json",
+      "sha256": "190a9d0d4174fce433586f9d2f081c83d77d0eabc445d863ad01f9a374cdfe05"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-01.json",
+      "sha256": "e2f64512d8efc1df0f22dea8d50a40635a22ed87c7f23bd9788f1b47b7a0703f"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-02.json",
+      "sha256": "e806cb758ce3bffe4fc7565699673f196f98302fbb01aab85505bcb56cb34fc1"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-03.json",
+      "sha256": "5861c17c310a5b1a6128d7713c57215d2d4a652604016bc73296731c8e1ccde6"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-04.json",
+      "sha256": "10cbdf72c1cef38e1c30a01d9b3eb261935173ac2d8c39ec6728e37baa286037"
+    },
+    {
+      "path": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-05.json",
+      "sha256": "d4bdfde99db1338da91fe06d40f21ecdff23e8c29a80d55a56241ce886c854de"
+    }
+  ],
+  "folds": [
+    {
+      "heldout_host": "aces-System-Product-Name",
+      "training_hosts": [
+        "iZbp15n87643uk1sqjrdvdZ",
+        "iZbp16krl0yc7euw7sb6slZ",
+        "iZbp1acaw5wdllhz47922rZ",
+        "iZbp1glgt48i9a8d49embxZ"
+      ],
+      "training_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-05.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-05.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-05.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-05.json"
+      ],
+      "test_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-05.json"
+      ],
+      "inner_probe_folds": [
+        {
+          "heldout_source_host": "iZbp15n87643uk1sqjrdvdZ",
+          "probe_fit_hosts": [
+            "iZbp16krl0yc7euw7sb6slZ",
+            "iZbp1acaw5wdllhz47922rZ",
+            "iZbp1glgt48i9a8d49embxZ"
+          ]
+        },
+        {
+          "heldout_source_host": "iZbp16krl0yc7euw7sb6slZ",
+          "probe_fit_hosts": [
+            "iZbp15n87643uk1sqjrdvdZ",
+            "iZbp1acaw5wdllhz47922rZ",
+            "iZbp1glgt48i9a8d49embxZ"
+          ]
+        },
+        {
+          "heldout_source_host": "iZbp1acaw5wdllhz47922rZ",
+          "probe_fit_hosts": [
+            "iZbp15n87643uk1sqjrdvdZ",
+            "iZbp16krl0yc7euw7sb6slZ",
+            "iZbp1glgt48i9a8d49embxZ"
+          ]
+        },
+        {
+          "heldout_source_host": "iZbp1glgt48i9a8d49embxZ",
+          "probe_fit_hosts": [
+            "iZbp15n87643uk1sqjrdvdZ",
+            "iZbp16krl0yc7euw7sb6slZ",
+            "iZbp1acaw5wdllhz47922rZ"
+          ]
+        }
+      ],
+      "reconstructor_train_rows": 400,
+      "probe_calibration_factors": {
+        "dhry2reg": 0.9915944606074033,
+        "whetstone-double": 0.992963899488322,
+        "execl": 0.921103728982707,
+        "fstime": 0.9921150734504883,
+        "fsbuffer": 0.990056443881192,
+        "fsdisk": 1.0112435544246294,
+        "pipe": 1.0802600897488601,
+        "context1": 0.7261839236259253,
+        "spawn": 0.8235462016464421,
+        "syscall": 1.017665082598559,
+        "shell1": 0.9411752161785191,
+        "shell8": 0.7440987975061278
+      },
+      "policies": {
+        "learned_router": {
+          "summary": {
+            "n_runs": 5,
+            "mean_error_percent": 41.934993912829114,
+            "median_error_percent": 41.60728578172332,
+            "max_error_percent": 42.996939270337855,
+            "mean_selected_probe_mape_percent": 59.8888300429717
+          },
+          "per_run": [
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-01.json",
+              "selected_test_ids": [
+                "shell8",
+                "fsdisk",
+                "spawn"
+              ],
+              "predicted_selected_scores": {
+                "shell8": 2259.392443782632,
+                "fsdisk": 5044.286537604159,
+                "spawn": 1670.091648446824
+              },
+              "predicted_suite": 1872.9889489767802,
+              "actual_suite": 3189.6,
+              "relative_error_percent": 41.27824965585715,
+              "selected_probe_mape_percent": 59.684346516900206,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.062575387011748,
+              "router_scores": {
+                "e_001": 46383.7265625,
+                "e_002": 46383.59765625,
+                "e_003": 46383.9296875,
+                "e_004": 46383.46875,
+                "e_005": 46382.9453125,
+                "e_006": 46384.34375,
+                "e_007": 46383.8046875,
+                "e_008": 46382.828125,
+                "e_009": 46384.25390625,
+                "e_010": 46383.88671875,
+                "e_011": 46383.4921875,
+                "e_012": 46384.765625
+              }
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-02.json",
+              "selected_test_ids": [
+                "shell8",
+                "fsdisk",
+                "spawn"
+              ],
+              "predicted_selected_scores": {
+                "shell8": 2643.8090798938015,
+                "fsdisk": 5134.472752765729,
+                "spawn": 1579.5455321811182
+              },
+              "predicted_suite": 1869.879566599149,
+              "actual_suite": 3178.3,
+              "relative_error_percent": 41.1673043262389,
+              "selected_probe_mape_percent": 55.28678335412767,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.060261787002673,
+              "router_scores": {
+                "e_001": 46384.83203125,
+                "e_002": 46384.69921875,
+                "e_003": 46385.03125,
+                "e_004": 46384.5625,
+                "e_005": 46384.046875,
+                "e_006": 46385.4453125,
+                "e_007": 46384.90234375,
+                "e_008": 46383.93359375,
+                "e_009": 46385.35546875,
+                "e_010": 46384.9921875,
+                "e_011": 46384.59375,
+                "e_012": 46385.86328125
+              }
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-03.json",
+              "selected_test_ids": [
+                "shell8",
+                "spawn",
+                "fsdisk"
+              ],
+              "predicted_selected_scores": {
+                "shell8": 2523.507123965888,
+                "spawn": 1585.4121111048962,
+                "fsdisk": 4190.871054923149
+              },
+              "predicted_suite": 1835.477529755144,
+              "actual_suite": 3199.1,
+              "relative_error_percent": 42.62519052998831,
+              "selected_probe_mape_percent": 60.56767628469418,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.096471208991716,
+              "router_scores": {
+                "e_001": 46718.453125,
+                "e_002": 46718.265625,
+                "e_003": 46718.40625,
+                "e_004": 46718.2734375,
+                "e_005": 46717.6171875,
+                "e_006": 46718.49609375,
+                "e_007": 46718.00390625,
+                "e_008": 46717.4453125,
+                "e_009": 46718.6484375,
+                "e_010": 46718.359375,
+                "e_011": 46717.9140625,
+                "e_012": 46719.1796875
+              }
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-04.json",
+              "selected_test_ids": [
+                "shell8",
+                "fsdisk",
+                "spawn"
+              ],
+              "predicted_selected_scores": {
+                "shell8": 2263.4485916025224,
+                "fsdisk": 5118.369248232345,
+                "spawn": 1675.2441061313455
+              },
+              "predicted_suite": 1862.902761705681,
+              "actual_suite": 3190.3,
+              "relative_error_percent": 41.60728578172332,
+              "selected_probe_mape_percent": 59.724512531730376,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.061628208990442,
+              "router_scores": {
+                "e_001": 46385.390625,
+                "e_002": 46385.26171875,
+                "e_003": 46385.5859375,
+                "e_004": 46385.12890625,
+                "e_005": 46384.609375,
+                "e_006": 46386.00390625,
+                "e_007": 46385.46875,
+                "e_008": 46384.4921875,
+                "e_009": 46385.9140625,
+                "e_010": 46385.55078125,
+                "e_011": 46385.15625,
+                "e_012": 46386.421875
+              }
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-05.json",
+              "selected_test_ids": [
+                "shell8",
+                "fsdisk",
+                "spawn"
+              ],
+              "predicted_selected_scores": {
+                "shell8": 2020.9249906986165,
+                "fsdisk": 4190.871054923149,
+                "spawn": 1685.579068373602
+              },
+              "predicted_suite": 1815.8324995433877,
+              "actual_suite": 3185.5,
+              "relative_error_percent": 42.996939270337855,
+              "selected_probe_mape_percent": 64.18083152740608,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.320661697012838,
+              "router_scores": {
+                "e_001": 46385.41015625,
+                "e_002": 46385.2734375,
+                "e_003": 46385.609375,
+                "e_004": 46385.14453125,
+                "e_005": 46384.625,
+                "e_006": 46386.0234375,
+                "e_007": 46385.484375,
+                "e_008": 46384.5078125,
+                "e_009": 46385.93359375,
+                "e_010": 46385.5703125,
+                "e_011": 46385.171875,
+                "e_012": 46386.44140625
+              }
+            }
+          ]
+        },
+        "score_ranked_fixed": {
+          "summary": {
+            "n_runs": 5,
+            "mean_error_percent": 44.57946879074801,
+            "median_error_percent": 44.29441560239516,
+            "max_error_percent": 45.64807581239631,
+            "mean_selected_probe_mape_percent": 55.52569805849614
+          },
+          "per_run": [
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-01.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4475.765521791747,
+                "fsdisk": 5044.286537604159,
+                "shell8": 2259.392443782632
+              },
+              "predicted_suite": 1782.4788961665429,
+              "actual_suite": 3189.6,
+              "relative_error_percent": 44.115911206215735,
+              "selected_probe_mape_percent": 55.157887387742186,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.05575471901102,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-02.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4472.969906154445,
+                "fsdisk": 5134.472752765729,
+                "shell8": 2643.8090798938015
+              },
+              "predicted_suite": 1784.2414146413648,
+              "actual_suite": 3178.3,
+              "relative_error_percent": 43.861768409484164,
+              "selected_probe_mape_percent": 53.57370438137392,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.055571421980858,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-03.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4725.434971385749,
+                "fsdisk": 4190.871054923149,
+                "shell8": 2523.507123965888
+              },
+              "predicted_suite": 1760.2352610123519,
+              "actual_suite": 3199.1,
+              "relative_error_percent": 44.977172923248666,
+              "selected_probe_mape_percent": 57.50474920089502,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.090926674980437,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-04.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4725.434971385749,
+                "fsdisk": 5118.369248232345,
+                "shell8": 2263.4485916025224
+              },
+              "predicted_suite": 1777.1752590367873,
+              "actual_suite": 3190.3,
+              "relative_error_percent": 44.29441560239516,
+              "selected_probe_mape_percent": 53.876483696021715,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.052609929989558,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-05.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4725.434971385749,
+                "fsdisk": 4190.871054923149,
+                "shell8": 2020.9249906986165
+              },
+              "predicted_suite": 1731.3805449961158,
+              "actual_suite": 3185.5,
+              "relative_error_percent": 45.64807581239631,
+              "selected_probe_mape_percent": 57.515665626447856,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.309388472989667,
+              "router_scores": null
+            }
+          ]
+        },
+        "fixed_first_three": {
+          "summary": {
+            "n_runs": 5,
+            "mean_error_percent": 41.43058232653216,
+            "median_error_percent": 41.82902424955247,
+            "max_error_percent": 42.2776353686612,
+            "mean_selected_probe_mape_percent": 46.53648035859094
+          },
+          "per_run": [
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-01.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "whetstone-double",
+                "execl"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4475.765521791747,
+                "whetstone-double": 1663.5459790464436,
+                "execl": 1669.4234252310662
+              },
+              "predicted_suite": 1944.5015536977999,
+              "actual_suite": 3189.6,
+              "relative_error_percent": 39.036194077696265,
+              "selected_probe_mape_percent": 48.80411437304906,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.047508251998806,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-02.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "whetstone-double",
+                "execl"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4472.969906154445,
+                "whetstone-double": 1670.049498775356,
+                "execl": 1732.2740693339897
+              },
+              "predicted_suite": 1849.741422999369,
+              "actual_suite": 3178.3,
+              "relative_error_percent": 41.800918006501306,
+              "selected_probe_mape_percent": 51.09044134727436,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.04575854295399,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-03.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "whetstone-double",
+                "execl"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4725.434971385749,
+                "whetstone-double": 1670.049498775356,
+                "execl": 1579.8492773639725
+              },
+              "predicted_suite": 1848.7874044913872,
+              "actual_suite": 3199.1,
+              "relative_error_percent": 42.209139930249535,
+              "selected_probe_mape_percent": 44.797588948901925,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.043028691987274,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-04.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "whetstone-double",
+                "execl"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4725.434971385749,
+                "whetstone-double": 1596.8285681198201,
+                "execl": 1675.9592845674551
+              },
+              "predicted_suite": 1855.8286393665278,
+              "actual_suite": 3190.3,
+              "relative_error_percent": 41.82902424955247,
+              "selected_probe_mape_percent": 48.909600100603676,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.047440193971852,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-05.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "whetstone-double",
+                "execl"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4725.434971385749,
+                "whetstone-double": 1670.049498775356,
+                "execl": 1434.1812508147304
+              },
+              "predicted_suite": 1838.7459253312975,
+              "actual_suite": 3185.5,
+              "relative_error_percent": 42.2776353686612,
+              "selected_probe_mape_percent": 39.0806570231257,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.04924610501621,
+              "router_scores": null
+            }
+          ]
+        },
+        "random_fixed": {
+          "summary": {
+            "n_runs": 5,
+            "mean_error_percent": 37.756795420256104,
+            "median_error_percent": 37.88162294477151,
+            "max_error_percent": 38.839788696835036,
+            "mean_selected_probe_mape_percent": 49.36940516738805
+          },
+          "per_run": [
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-01.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "context1",
+                "spawn"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4475.765521791747,
+                "context1": 1524.6366863818369,
+                "spawn": 1670.091648446824
+              },
+              "predicted_suite": 2057.195896093749,
+              "actual_suite": 3189.6,
+              "relative_error_percent": 35.50301303944855,
+              "selected_probe_mape_percent": 49.71685314194249,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.052633838029578,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-02.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "context1",
+                "spawn"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4472.969906154445,
+                "context1": 1538.0180511063984,
+                "spawn": 1579.5455321811182
+              },
+              "predicted_suite": 1943.854995848492,
+              "actual_suite": 3178.3,
+              "relative_error_percent": 38.839788696835036,
+              "selected_probe_mape_percent": 47.26066684161831,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.050415703997714,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-03.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "context1",
+                "spawn"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4725.434971385749,
+                "context1": 1523.4343996945556,
+                "spawn": 1585.4121111048962
+              },
+              "predicted_suite": 1958.3951835517842,
+              "actual_suite": 3199.1,
+              "relative_error_percent": 38.78293321397317,
+              "selected_probe_mape_percent": 45.97320824291239,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.047103010030696,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-04.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "context1",
+                "spawn"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4725.434971385749,
+                "context1": 1623.0387085171205,
+                "spawn": 1675.2441061313455
+              },
+              "predicted_suite": 1981.7625831929547,
+              "actual_suite": 3190.3,
+              "relative_error_percent": 37.88162294477151,
+              "selected_probe_mape_percent": 52.35691071531994,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.056365466996795,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-05.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "context1",
+                "spawn"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4725.434971385749,
+                "context1": 1616.6381235558329,
+                "spawn": 1685.579068373602
+              },
+              "predicted_suite": 1982.125795184833,
+              "actual_suite": 3185.5,
+              "relative_error_percent": 37.776619206252306,
+              "selected_probe_mape_percent": 51.53938689514715,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.057685456005856,
+              "router_scores": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "heldout_host": "iZbp15n87643uk1sqjrdvdZ",
+      "training_hosts": [
+        "aces-System-Product-Name",
+        "iZbp16krl0yc7euw7sb6slZ",
+        "iZbp1acaw5wdllhz47922rZ",
+        "iZbp1glgt48i9a8d49embxZ"
+      ],
+      "training_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-05.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-05.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-05.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-05.json"
+      ],
+      "test_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-05.json"
+      ],
+      "inner_probe_folds": [
+        {
+          "heldout_source_host": "aces-System-Product-Name",
+          "probe_fit_hosts": [
+            "iZbp16krl0yc7euw7sb6slZ",
+            "iZbp1acaw5wdllhz47922rZ",
+            "iZbp1glgt48i9a8d49embxZ"
+          ]
+        },
+        {
+          "heldout_source_host": "iZbp16krl0yc7euw7sb6slZ",
+          "probe_fit_hosts": [
+            "aces-System-Product-Name",
+            "iZbp1acaw5wdllhz47922rZ",
+            "iZbp1glgt48i9a8d49embxZ"
+          ]
+        },
+        {
+          "heldout_source_host": "iZbp1acaw5wdllhz47922rZ",
+          "probe_fit_hosts": [
+            "aces-System-Product-Name",
+            "iZbp16krl0yc7euw7sb6slZ",
+            "iZbp1glgt48i9a8d49embxZ"
+          ]
+        },
+        {
+          "heldout_source_host": "iZbp1glgt48i9a8d49embxZ",
+          "probe_fit_hosts": [
+            "aces-System-Product-Name",
+            "iZbp16krl0yc7euw7sb6slZ",
+            "iZbp1acaw5wdllhz47922rZ"
+          ]
+        }
+      ],
+      "reconstructor_train_rows": 400,
+      "probe_calibration_factors": {
+        "dhry2reg": 1.0436329484639089,
+        "whetstone-double": 1.1163533901306366,
+        "execl": 0.9753953290716327,
+        "fstime": 1.0798058156227275,
+        "fsbuffer": 1.034771767478395,
+        "fsdisk": 1.01229662534236,
+        "pipe": 1.1035739032953957,
+        "context1": 0.9477071111820237,
+        "spawn": 0.9182510947276207,
+        "syscall": 1.2219437133239224,
+        "shell1": 1.0433076659927156,
+        "shell8": 0.9510785643645219
+      },
+      "policies": {
+        "learned_router": {
+          "summary": {
+            "n_runs": 5,
+            "mean_error_percent": 7.898541533567186,
+            "median_error_percent": 8.690475992932782,
+            "max_error_percent": 10.577067283947311,
+            "mean_selected_probe_mape_percent": 29.184823322425
+          },
+          "per_run": [
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-01.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4187.780001891275,
+                "fsdisk": 4226.369892035822,
+                "shell8": 3549.3815105299605
+              },
+              "predicted_suite": 1709.8558964636434,
+              "actual_suite": 1912.1,
+              "relative_error_percent": 10.577067283947311,
+              "selected_probe_mape_percent": 19.340535738435022,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.055891389027238,
+              "router_scores": {
+                "e_001": 8.67380142211914,
+                "e_002": 7.508729457855225,
+                "e_003": 6.9443254470825195,
+                "e_004": 7.719450950622559,
+                "e_005": 7.502071380615234,
+                "e_006": 8.533071517944336,
+                "e_007": 7.694344997406006,
+                "e_008": 6.556960582733154,
+                "e_009": 6.908331394195557,
+                "e_010": 7.2004313468933105,
+                "e_011": 7.382431507110596,
+                "e_012": 7.949070930480957
+              }
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-02.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4393.950536398236,
+                "fsdisk": 4252.598801266293,
+                "shell8": 6829.252447955072
+              },
+              "predicted_suite": 1808.6517877937615,
+              "actual_suite": 1909.2,
+              "relative_error_percent": 5.266510172126468,
+              "selected_probe_mape_percent": 53.06063738554727,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.050542757147923,
+              "router_scores": {
+                "e_001": 8.203973770141602,
+                "e_002": 7.143497943878174,
+                "e_003": 6.511879920959473,
+                "e_004": 7.419029712677002,
+                "e_005": 7.011025905609131,
+                "e_006": 8.165656089782715,
+                "e_007": 7.430465221405029,
+                "e_008": 6.065064430236816,
+                "e_009": 6.339935779571533,
+                "e_010": 6.914321422576904,
+                "e_011": 7.093547344207764,
+                "e_012": 7.709898948669434
+              }
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-03.json",
+              "selected_test_ids": [
+                "fsdisk",
+                "dhry2reg",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "fsdisk": 4481.883408884833,
+                "dhry2reg": 4231.80184251882,
+                "shell8": 6337.028886485478
+              },
+              "predicted_suite": 1803.34651321085,
+              "actual_suite": 1899.0,
+              "relative_error_percent": 5.037045117912062,
+              "selected_probe_mape_percent": 46.774785859704934,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.050210251938552,
+              "router_scores": {
+                "e_001": 8.1730375289917,
+                "e_002": 7.337871074676514,
+                "e_003": 6.6363348960876465,
+                "e_004": 7.639159202575684,
+                "e_005": 7.115318298339844,
+                "e_006": 8.3659086227417,
+                "e_007": 7.441141128540039,
+                "e_008": 6.111342906951904,
+                "e_009": 6.482814788818359,
+                "e_010": 7.002085208892822,
+                "e_011": 7.195415019989014,
+                "e_012": 7.950709342956543
+              }
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-04.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4920.355839237754,
+                "fsdisk": 4401.27774297036,
+                "shell8": 3458.954835289729
+              },
+              "predicted_suite": 1711.9398190370666,
+              "actual_suite": 1900.5,
+              "relative_error_percent": 9.921609100917305,
+              "selected_probe_mape_percent": 11.941836293610152,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.050014076987281,
+              "router_scores": {
+                "e_001": 8.40946102142334,
+                "e_002": 7.458183765411377,
+                "e_003": 6.729588031768799,
+                "e_004": 7.655449390411377,
+                "e_005": 7.292949676513672,
+                "e_006": 8.403935432434082,
+                "e_007": 7.732240200042725,
+                "e_008": 6.275514602661133,
+                "e_009": 6.5039753913879395,
+                "e_010": 7.167236804962158,
+                "e_011": 7.335783958435059,
+                "e_012": 8.070357322692871
+              }
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-05.json",
+              "selected_test_ids": [
+                "fsdisk",
+                "dhry2reg",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "fsdisk": 4090.0061261896967,
+                "dhry2reg": 5011.64798417228,
+                "shell8": 3671.5357680591023
+              },
+              "predicted_suite": 1734.4244085142418,
+              "actual_suite": 1899.5,
+              "relative_error_percent": 8.690475992932782,
+              "selected_probe_mape_percent": 14.806321334827622,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.050184877007268,
+              "router_scores": {
+                "e_001": 8.261588096618652,
+                "e_002": 7.4087300300598145,
+                "e_003": 6.700486660003662,
+                "e_004": 7.64935302734375,
+                "e_005": 7.185482501983643,
+                "e_006": 8.379609107971191,
+                "e_007": 7.554131031036377,
+                "e_008": 6.170072078704834,
+                "e_009": 6.50304651260376,
+                "e_010": 7.086888790130615,
+                "e_011": 7.2674946784973145,
+                "e_012": 8.01846694946289
+              }
+            }
+          ]
+        },
+        "score_ranked_fixed": {
+          "summary": {
+            "n_runs": 5,
+            "mean_error_percent": 7.898541533567186,
+            "median_error_percent": 8.690475992932782,
+            "max_error_percent": 10.577067283947311,
+            "mean_selected_probe_mape_percent": 29.184823322425
+          },
+          "per_run": [
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-01.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4187.780001891275,
+                "fsdisk": 4226.369892035822,
+                "shell8": 3549.3815105299605
+              },
+              "predicted_suite": 1709.8558964636434,
+              "actual_suite": 1912.1,
+              "relative_error_percent": 10.577067283947311,
+              "selected_probe_mape_percent": 19.340535738435022,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.055891389027238,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-02.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4393.950536398236,
+                "fsdisk": 4252.598801266293,
+                "shell8": 6829.252447955072
+              },
+              "predicted_suite": 1808.6517877937615,
+              "actual_suite": 1909.2,
+              "relative_error_percent": 5.266510172126468,
+              "selected_probe_mape_percent": 53.06063738554727,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.050542757147923,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-03.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4231.80184251882,
+                "fsdisk": 4481.883408884833,
+                "shell8": 6337.028886485478
+              },
+              "predicted_suite": 1803.34651321085,
+              "actual_suite": 1899.0,
+              "relative_error_percent": 5.037045117912062,
+              "selected_probe_mape_percent": 46.774785859704934,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.050210251938552,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-04.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4920.355839237754,
+                "fsdisk": 4401.27774297036,
+                "shell8": 3458.954835289729
+              },
+              "predicted_suite": 1711.9398190370666,
+              "actual_suite": 1900.5,
+              "relative_error_percent": 9.921609100917305,
+              "selected_probe_mape_percent": 11.941836293610152,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.050014076987281,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-05.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 5011.64798417228,
+                "fsdisk": 4090.0061261896967,
+                "shell8": 3671.5357680591023
+              },
+              "predicted_suite": 1734.4244085142418,
+              "actual_suite": 1899.5,
+              "relative_error_percent": 8.690475992932782,
+              "selected_probe_mape_percent": 14.806321334827622,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.050184877007268,
+              "router_scores": null
+            }
+          ]
+        },
+        "fixed_first_three": {
+          "summary": {
+            "n_runs": 5,
+            "mean_error_percent": 13.345038929733954,
+            "median_error_percent": 14.080416371639298,
+            "max_error_percent": 14.531385609652814,
+            "mean_selected_probe_mape_percent": 8.133357582212726
+          },
+          "per_run": [
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-01.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "whetstone-double",
+                "execl"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4187.780001891275,
+                "whetstone-double": 1536.420560598933,
+                "execl": 877.477261150546
+              },
+              "predicted_suite": 1634.2453757578285,
+              "actual_suite": 1912.1,
+              "relative_error_percent": 14.531385609652814,
+              "selected_probe_mape_percent": 14.271857391720872,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.04259341408033,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-02.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "whetstone-double",
+                "execl"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4393.950536398236,
+                "whetstone-double": 1860.3921098694918,
+                "execl": 882.616973696182
+              },
+              "predicted_suite": 1640.3766906326625,
+              "actual_suite": 1909.2,
+              "relative_error_percent": 14.080416371639298,
+              "selected_probe_mape_percent": 7.634323563811814,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.039757271064445,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-03.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "whetstone-double",
+                "execl"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4231.80184251882,
+                "whetstone-double": 1709.3228646564962,
+                "execl": 1003.7056447270238
+              },
+              "predicted_suite": 1668.457853137522,
+              "actual_suite": 1899.0,
+              "relative_error_percent": 12.140186775275298,
+              "selected_probe_mape_percent": 10.85534129787522,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.039833382004872,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-04.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "whetstone-double",
+                "execl"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4920.355839237754,
+                "whetstone-double": 1693.423754803629,
+                "execl": 906.394351565827
+              },
+              "predicted_suite": 1629.225068027807,
+              "actual_suite": 1900.5,
+              "relative_error_percent": 14.273871716505809,
+              "selected_probe_mape_percent": 4.535331201472467,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.039427061914466,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-05.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "whetstone-double",
+                "execl"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 5011.64798417228,
+                "whetstone-double": 1823.9327365396025,
+                "execl": 844.5605809026657
+              },
+              "predicted_suite": 1677.2711473345435,
+              "actual_suite": 1899.5,
+              "relative_error_percent": 11.699334175596555,
+              "selected_probe_mape_percent": 3.3699344561832607,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.039142005960457,
+              "router_scores": null
+            }
+          ]
+        },
+        "random_fixed": {
+          "summary": {
+            "n_runs": 5,
+            "mean_error_percent": 32.321316798897904,
+            "median_error_percent": 15.97922153622711,
+            "max_error_percent": 100.0,
+            "mean_selected_probe_mape_percent": 23.225490190104026
+          },
+          "per_run": [
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-01.json",
+              "selected_test_ids": [
+                "fsbuffer",
+                "fsdisk",
+                "context1"
+              ],
+              "predicted_selected_scores": {
+                "fsbuffer": 1444.9124818153955,
+                "fsdisk": 4226.369892035822,
+                "context1": 0.0
+              },
+              "predicted_suite": 0.0,
+              "actual_suite": 1912.1,
+              "relative_error_percent": 100.0,
+              "selected_probe_mape_percent": 47.54858841240513,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.061024668975733,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-02.json",
+              "selected_test_ids": [
+                "fsbuffer",
+                "fsdisk",
+                "context1"
+              ],
+              "predicted_selected_scores": {
+                "fsbuffer": 1442.58937176382,
+                "fsdisk": 4252.598801266293,
+                "context1": 362.0543945738779
+              },
+              "predicted_suite": 1550.4558524188405,
+              "actual_suite": 1909.2,
+              "relative_error_percent": 18.79028638074374,
+              "selected_probe_mape_percent": 26.27605177904938,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.061625158996321,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-03.json",
+              "selected_test_ids": [
+                "fsbuffer",
+                "fsdisk",
+                "context1"
+              ],
+              "predicted_selected_scores": {
+                "fsbuffer": 1587.1133542387827,
+                "fsdisk": 4481.883408884833,
+                "context1": 520.0222158001021
+              },
+              "predicted_suite": 1641.251138067387,
+              "actual_suite": 1899.0,
+              "relative_error_percent": 13.572873192870613,
+              "selected_probe_mape_percent": 12.629578776417551,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.061203091987409,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-04.json",
+              "selected_test_ids": [
+                "fsbuffer",
+                "fsdisk",
+                "context1"
+              ],
+              "predicted_selected_scores": {
+                "fsbuffer": 1259.6419781931238,
+                "fsdisk": 4401.27774297036,
+                "context1": 637.2607119947897
+              },
+              "predicted_suite": 1596.8148947040038,
+              "actual_suite": 1900.5,
+              "relative_error_percent": 15.97922153622711,
+              "selected_probe_mape_percent": 18.831005408872368,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.06013845501002,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-05.json",
+              "selected_test_ids": [
+                "fsbuffer",
+                "fsdisk",
+                "context1"
+              ],
+              "predicted_selected_scores": {
+                "fsbuffer": 1718.9709780206629,
+                "fsdisk": 4090.0061261896967,
+                "context1": 558.4660308789802
+              },
+              "predicted_suite": 1647.5464662061102,
+              "actual_suite": 1899.5,
+              "relative_error_percent": 13.264202884648057,
+              "selected_probe_mape_percent": 10.842226573775699,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.059728279942647,
+              "router_scores": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "heldout_host": "iZbp16krl0yc7euw7sb6slZ",
+      "training_hosts": [
+        "aces-System-Product-Name",
+        "iZbp15n87643uk1sqjrdvdZ",
+        "iZbp1acaw5wdllhz47922rZ",
+        "iZbp1glgt48i9a8d49embxZ"
+      ],
+      "training_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-05.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-05.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-05.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-05.json"
+      ],
+      "test_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-05.json"
+      ],
+      "inner_probe_folds": [
+        {
+          "heldout_source_host": "aces-System-Product-Name",
+          "probe_fit_hosts": [
+            "iZbp15n87643uk1sqjrdvdZ",
+            "iZbp1acaw5wdllhz47922rZ",
+            "iZbp1glgt48i9a8d49embxZ"
+          ]
+        },
+        {
+          "heldout_source_host": "iZbp15n87643uk1sqjrdvdZ",
+          "probe_fit_hosts": [
+            "aces-System-Product-Name",
+            "iZbp1acaw5wdllhz47922rZ",
+            "iZbp1glgt48i9a8d49embxZ"
+          ]
+        },
+        {
+          "heldout_source_host": "iZbp1acaw5wdllhz47922rZ",
+          "probe_fit_hosts": [
+            "aces-System-Product-Name",
+            "iZbp15n87643uk1sqjrdvdZ",
+            "iZbp1glgt48i9a8d49embxZ"
+          ]
+        },
+        {
+          "heldout_source_host": "iZbp1glgt48i9a8d49embxZ",
+          "probe_fit_hosts": [
+            "aces-System-Product-Name",
+            "iZbp15n87643uk1sqjrdvdZ",
+            "iZbp1acaw5wdllhz47922rZ"
+          ]
+        }
+      ],
+      "reconstructor_train_rows": 400,
+      "probe_calibration_factors": {
+        "dhry2reg": 1.0503511381620445,
+        "whetstone-double": 1.1043375644021478,
+        "execl": 0.9201268702250701,
+        "fstime": 1.135239926407298,
+        "fsbuffer": 1.0318825861351915,
+        "fsdisk": 1.0554963816111438,
+        "pipe": 1.1627086703032388,
+        "context1": 0.8045783695425942,
+        "spawn": 0.7166468298767131,
+        "syscall": 1.0804700326460848,
+        "shell1": 1.071008938330861,
+        "shell8": 0.9530256503752386
+      },
+      "policies": {
+        "learned_router": {
+          "summary": {
+            "n_runs": 5,
+            "mean_error_percent": 2.3088657778934962,
+            "median_error_percent": 0.8137844069817185,
+            "max_error_percent": 7.853148229423828,
+            "mean_selected_probe_mape_percent": 17.123326574170417
+          },
+          "per_run": [
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-01.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4398.546397252697,
+                "fsdisk": 6057.193817937404,
+                "shell8": 7155.04515161504
+              },
+              "predicted_suite": 1901.0195906918243,
+              "actual_suite": 1762.6,
+              "relative_error_percent": 7.853148229423828,
+              "selected_probe_mape_percent": 52.96467655913208,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.057832235004753,
+              "router_scores": {
+                "e_001": 8.748637199401855,
+                "e_002": 7.421782493591309,
+                "e_003": 6.785141944885254,
+                "e_004": 7.835015296936035,
+                "e_005": 7.390848636627197,
+                "e_006": 8.66589069366455,
+                "e_007": 7.54734468460083,
+                "e_008": 6.261507511138916,
+                "e_009": 6.859957695007324,
+                "e_010": 7.209903240203857,
+                "e_011": 7.526308536529541,
+                "e_012": 8.283854484558105
+              }
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-02.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4777.2780780506255,
+                "fsdisk": 5681.395075084873,
+                "shell8": 3714.457445413903
+              },
+              "predicted_suite": 1806.7758198892682,
+              "actual_suite": 1765.9,
+              "relative_error_percent": 2.3147301596504946,
+              "selected_probe_mape_percent": 10.899256204439082,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.055645846994594,
+              "router_scores": {
+                "e_001": 8.327478408813477,
+                "e_002": 7.121590614318848,
+                "e_003": 6.5014801025390625,
+                "e_004": 7.446432590484619,
+                "e_005": 6.936457633972168,
+                "e_006": 8.303923606872559,
+                "e_007": 7.509624481201172,
+                "e_008": 6.0583271980285645,
+                "e_009": 6.500574111938477,
+                "e_010": 6.900658130645752,
+                "e_011": 7.076712608337402,
+                "e_012": 7.826551914215088
+              }
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-03.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4840.023920499914,
+                "fsdisk": 6048.9159610738725,
+                "shell8": 3411.3447849600184
+              },
+              "predicted_suite": 1770.3593876762461,
+              "actual_suite": 1764.2,
+              "relative_error_percent": 0.34913205284242543,
+              "selected_probe_mape_percent": 10.25841734183345,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.055101021076553,
+              "router_scores": {
+                "e_001": 8.392029762268066,
+                "e_002": 7.393708229064941,
+                "e_003": 6.756363391876221,
+                "e_004": 7.6879987716674805,
+                "e_005": 7.350047588348389,
+                "e_006": 8.384455680847168,
+                "e_007": 7.629426002502441,
+                "e_008": 6.410784721374512,
+                "e_009": 6.779732704162598,
+                "e_010": 7.184344291687012,
+                "e_011": 7.251262664794922,
+                "e_012": 7.885317325592041
+              }
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-04.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4833.983863588393,
+                "fsdisk": 5854.00536060767,
+                "shell8": 3195.5731538918876
+              },
+              "predicted_suite": 1756.7407332157825,
+              "actual_suite": 1760.5,
+              "relative_error_percent": 0.2135340405690154,
+              "selected_probe_mape_percent": 6.594414989168983,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.055561749031767,
+              "router_scores": {
+                "e_001": 8.076663970947266,
+                "e_002": 6.844035625457764,
+                "e_003": 6.358964920043945,
+                "e_004": 7.329432487487793,
+                "e_005": 6.816637992858887,
+                "e_006": 7.842491626739502,
+                "e_007": 7.401777267456055,
+                "e_008": 5.845115661621094,
+                "e_009": 6.277777671813965,
+                "e_010": 6.686367511749268,
+                "e_011": 6.8378496170043945,
+                "e_012": 7.643763065338135
+              }
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-05.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4753.586441331345,
+                "fsdisk": 5577.232353020862,
+                "shell8": 3195.5731538918876
+              },
+              "predicted_suite": 1746.1733255150868,
+              "actual_suite": 1760.5,
+              "relative_error_percent": 0.8137844069817185,
+              "selected_probe_mape_percent": 4.8998677762784775,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.054330444079824,
+              "router_scores": {
+                "e_001": 8.402027130126953,
+                "e_002": 7.230232238769531,
+                "e_003": 6.631771564483643,
+                "e_004": 7.561162948608398,
+                "e_005": 7.073437690734863,
+                "e_006": 8.356521606445312,
+                "e_007": 7.624789714813232,
+                "e_008": 6.187356472015381,
+                "e_009": 6.6226019859313965,
+                "e_010": 7.01352071762085,
+                "e_011": 7.168578624725342,
+                "e_012": 7.884289741516113
+              }
+            }
+          ]
+        },
+        "score_ranked_fixed": {
+          "summary": {
+            "n_runs": 5,
+            "mean_error_percent": 2.3088657778934962,
+            "median_error_percent": 0.8137844069817185,
+            "max_error_percent": 7.853148229423828,
+            "mean_selected_probe_mape_percent": 17.123326574170417
+          },
+          "per_run": [
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-01.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4398.546397252697,
+                "fsdisk": 6057.193817937404,
+                "shell8": 7155.04515161504
+              },
+              "predicted_suite": 1901.0195906918243,
+              "actual_suite": 1762.6,
+              "relative_error_percent": 7.853148229423828,
+              "selected_probe_mape_percent": 52.96467655913208,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.057832235004753,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-02.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4777.2780780506255,
+                "fsdisk": 5681.395075084873,
+                "shell8": 3714.457445413903
+              },
+              "predicted_suite": 1806.7758198892682,
+              "actual_suite": 1765.9,
+              "relative_error_percent": 2.3147301596504946,
+              "selected_probe_mape_percent": 10.899256204439082,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.055645846994594,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-03.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4840.023920499914,
+                "fsdisk": 6048.9159610738725,
+                "shell8": 3411.3447849600184
+              },
+              "predicted_suite": 1770.3593876762461,
+              "actual_suite": 1764.2,
+              "relative_error_percent": 0.34913205284242543,
+              "selected_probe_mape_percent": 10.25841734183345,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.055101021076553,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-04.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4833.983863588393,
+                "fsdisk": 5854.00536060767,
+                "shell8": 3195.5731538918876
+              },
+              "predicted_suite": 1756.7407332157825,
+              "actual_suite": 1760.5,
+              "relative_error_percent": 0.2135340405690154,
+              "selected_probe_mape_percent": 6.594414989168983,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.055561749031767,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-05.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4753.586441331345,
+                "fsdisk": 5577.232353020862,
+                "shell8": 3195.5731538918876
+              },
+              "predicted_suite": 1746.1733255150868,
+              "actual_suite": 1760.5,
+              "relative_error_percent": 0.8137844069817185,
+              "selected_probe_mape_percent": 4.8998677762784775,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.054330444079824,
+              "router_scores": null
+            }
+          ]
+        },
+        "fixed_first_three": {
+          "summary": {
+            "n_runs": 5,
+            "mean_error_percent": 5.933921432569585,
+            "median_error_percent": 6.634058333513727,
+            "max_error_percent": 8.115475143129434,
+            "mean_selected_probe_mape_percent": 9.840426585169915
+          },
+          "per_run": [
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-01.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "whetstone-double",
+                "execl"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4398.546397252697,
+                "whetstone-double": 1795.7237412449722,
+                "execl": 760.4768553222128
+              },
+              "predicted_suite": 1648.2242507595097,
+              "actual_suite": 1762.6,
+              "relative_error_percent": 6.489036039968809,
+              "selected_probe_mape_percent": 9.517382251865008,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.04637345590163,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-02.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "whetstone-double",
+                "execl"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4777.2780780506255,
+                "whetstone-double": 1772.646541066819,
+                "execl": 1473.797256080082
+              },
+              "predicted_suite": 1752.855973726337,
+              "actual_suite": 1765.9,
+              "relative_error_percent": 0.7386616611168877,
+              "selected_probe_mape_percent": 23.48862298978653,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.044488062150776,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-03.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "whetstone-double",
+                "execl"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4840.023920499914,
+                "whetstone-double": 1559.5603582003303,
+                "execl": 972.6081442626115
+              },
+              "predicted_suite": 1621.0267875249106,
+              "actual_suite": 1764.2,
+              "relative_error_percent": 8.115475143129434,
+              "selected_probe_mape_percent": 6.166386640662165,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.044636261067353,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-04.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "whetstone-double",
+                "execl"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4833.983863588393,
+                "whetstone-double": 1667.2587155475069,
+                "execl": 929.461538480902
+              },
+              "predicted_suite": 1625.0757207819788,
+              "actual_suite": 1760.5,
+              "relative_error_percent": 7.692375985119068,
+              "selected_probe_mape_percent": 2.129233165532788,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.044612091965973,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-05.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "whetstone-double",
+                "execl"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4753.586441331345,
+                "whetstone-double": 1835.9411048635748,
+                "execl": 995.9190402483925
+              },
+              "predicted_suite": 1643.7074030384908,
+              "actual_suite": 1760.5,
+              "relative_error_percent": 6.634058333513727,
+              "selected_probe_mape_percent": 7.900507878003084,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.044481088989414,
+              "router_scores": null
+            }
+          ]
+        },
+        "random_fixed": {
+          "summary": {
+            "n_runs": 5,
+            "mean_error_percent": 4.479129452904742,
+            "median_error_percent": 4.399496059184564,
+            "max_error_percent": 6.513896843794413,
+            "mean_selected_probe_mape_percent": 4.994123502091881
+          },
+          "per_run": [
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-01.json",
+              "selected_test_ids": [
+                "whetstone-double",
+                "pipe",
+                "syscall"
+              ],
+              "predicted_selected_scores": {
+                "whetstone-double": 1795.7237412449722,
+                "pipe": 2377.2170488547267,
+                "syscall": 1270.2659667821308
+              },
+              "predicted_suite": 1708.6249997514494,
+              "actual_suite": 1762.6,
+              "relative_error_percent": 3.0622376176415798,
+              "selected_probe_mape_percent": 6.4800439418641105,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.051611196016893,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-02.json",
+              "selected_test_ids": [
+                "whetstone-double",
+                "pipe",
+                "syscall"
+              ],
+              "predicted_selected_scores": {
+                "whetstone-double": 1772.646541066819,
+                "pipe": 2287.5043938570434,
+                "syscall": 1337.0673894867255
+              },
+              "predicted_suite": 1712.5519239254227,
+              "actual_suite": 1765.9,
+              "relative_error_percent": 3.0210134251417076,
+              "selected_probe_mape_percent": 2.7881917594645436,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.049805619055405,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-03.json",
+              "selected_test_ids": [
+                "whetstone-double",
+                "pipe",
+                "syscall"
+              ],
+              "predicted_selected_scores": {
+                "whetstone-double": 1559.5603582003303,
+                "pipe": 2343.4840702850347,
+                "syscall": 1399.4117304252738
+              },
+              "predicted_suite": 1649.281831881779,
+              "actual_suite": 1764.2,
+              "relative_error_percent": 6.513896843794413,
+              "selected_probe_mape_percent": 4.1695422058243325,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.044188900035806,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-04.json",
+              "selected_test_ids": [
+                "whetstone-double",
+                "pipe",
+                "syscall"
+              ],
+              "predicted_selected_scores": {
+                "whetstone-double": 1667.2587155475069,
+                "pipe": 2324.0944802499207,
+                "syscall": 1476.3589666389075
+              },
+              "predicted_suite": 1665.4505465732047,
+              "actual_suite": 1760.5,
+              "relative_error_percent": 5.399003318761446,
+              "selected_probe_mape_percent": 3.5609775579847516,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.055898332037032,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-05.json",
+              "selected_test_ids": [
+                "whetstone-double",
+                "pipe",
+                "syscall"
+              ],
+              "predicted_selected_scores": {
+                "whetstone-double": 1835.9411048635748,
+                "pipe": 2513.161043499473,
+                "syscall": 1412.973385650651
+              },
+              "predicted_suite": 1683.0468718780558,
+              "actual_suite": 1760.5,
+              "relative_error_percent": 4.399496059184564,
+              "selected_probe_mape_percent": 7.971862045321664,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.046213925117627,
+              "router_scores": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "heldout_host": "iZbp1acaw5wdllhz47922rZ",
+      "training_hosts": [
+        "aces-System-Product-Name",
+        "iZbp15n87643uk1sqjrdvdZ",
+        "iZbp16krl0yc7euw7sb6slZ",
+        "iZbp1glgt48i9a8d49embxZ"
+      ],
+      "training_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-05.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-05.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-05.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-05.json"
+      ],
+      "test_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-05.json"
+      ],
+      "inner_probe_folds": [
+        {
+          "heldout_source_host": "aces-System-Product-Name",
+          "probe_fit_hosts": [
+            "iZbp15n87643uk1sqjrdvdZ",
+            "iZbp16krl0yc7euw7sb6slZ",
+            "iZbp1glgt48i9a8d49embxZ"
+          ]
+        },
+        {
+          "heldout_source_host": "iZbp15n87643uk1sqjrdvdZ",
+          "probe_fit_hosts": [
+            "aces-System-Product-Name",
+            "iZbp16krl0yc7euw7sb6slZ",
+            "iZbp1glgt48i9a8d49embxZ"
+          ]
+        },
+        {
+          "heldout_source_host": "iZbp16krl0yc7euw7sb6slZ",
+          "probe_fit_hosts": [
+            "aces-System-Product-Name",
+            "iZbp15n87643uk1sqjrdvdZ",
+            "iZbp1glgt48i9a8d49embxZ"
+          ]
+        },
+        {
+          "heldout_source_host": "iZbp1glgt48i9a8d49embxZ",
+          "probe_fit_hosts": [
+            "aces-System-Product-Name",
+            "iZbp15n87643uk1sqjrdvdZ",
+            "iZbp16krl0yc7euw7sb6slZ"
+          ]
+        }
+      ],
+      "reconstructor_train_rows": 400,
+      "probe_calibration_factors": {
+        "dhry2reg": 1.004007507860009,
+        "whetstone-double": 1.088811430496238,
+        "execl": 1.024522696405047,
+        "fstime": 1.1707238398338229,
+        "fsbuffer": 0.9575164668086564,
+        "fsdisk": 1.0774464028745636,
+        "pipe": 1.0521604088561054,
+        "context1": 0.9656707665900447,
+        "spawn": 0.7712382033190844,
+        "syscall": 1.0249021031791645,
+        "shell1": 1.0999895054824267,
+        "shell8": 0.9154073822554909
+      },
+      "policies": {
+        "learned_router": {
+          "summary": {
+            "n_runs": 5,
+            "mean_error_percent": 2.2917458904417374,
+            "median_error_percent": 2.157643905283334,
+            "max_error_percent": 4.181099464423622,
+            "mean_selected_probe_mape_percent": 22.256213111005366
+          },
+          "per_run": [
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-01.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4695.01578900703,
+                "fsdisk": 4949.2745924967185,
+                "shell8": 1071.6080724286264
+              },
+              "predicted_suite": 1675.843875190307,
+              "actual_suite": 1712.8,
+              "relative_error_percent": 2.157643905283334,
+              "selected_probe_mape_percent": 28.92592612164953,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.062298170999838,
+              "router_scores": {
+                "e_001": 9.268291473388672,
+                "e_002": 8.062569618225098,
+                "e_003": 7.5354413986206055,
+                "e_004": 8.59317398071289,
+                "e_005": 8.13526439666748,
+                "e_006": 9.241416931152344,
+                "e_007": 8.558998107910156,
+                "e_008": 7.197324752807617,
+                "e_009": 7.422977447509766,
+                "e_010": 7.905420780181885,
+                "e_011": 8.16058349609375,
+                "e_012": 8.619181632995605
+              }
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-02.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "fstime"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4991.1099285243035,
+                "fsdisk": 4891.030101990141,
+                "fstime": 2597.6881538858993
+              },
+              "predicted_suite": 1730.3081341475636,
+              "actual_suite": 1717.9,
+              "relative_error_percent": 0.7222850077166009,
+              "selected_probe_mape_percent": 6.994219131010375,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.062080370999865,
+              "router_scores": {
+                "e_001": 9.151239395141602,
+                "e_002": 8.100452423095703,
+                "e_003": 7.505784034729004,
+                "e_004": 8.391449928283691,
+                "e_005": 7.988586902618408,
+                "e_006": 9.065313339233398,
+                "e_007": 8.37902545928955,
+                "e_008": 7.06511926651001,
+                "e_009": 7.382228851318359,
+                "e_010": 7.90672492980957,
+                "e_011": 7.979978561401367,
+                "e_012": 8.387811660766602
+              }
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-03.json",
+              "selected_test_ids": [
+                "fsdisk",
+                "dhry2reg",
+                "fstime"
+              ],
+              "predicted_selected_scores": {
+                "fsdisk": 4894.6037107166285,
+                "dhry2reg": 4979.715960841822,
+                "fstime": 2605.4440692660596
+              },
+              "predicted_suite": 1697.1237629920147,
+              "actual_suite": 1715.9,
+              "relative_error_percent": 1.0942500733134448,
+              "selected_probe_mape_percent": 7.092265582540203,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.061782194000443,
+              "router_scores": {
+                "e_001": 9.004738807678223,
+                "e_002": 8.060131072998047,
+                "e_003": 7.5734782218933105,
+                "e_004": 8.382164001464844,
+                "e_005": 7.838436126708984,
+                "e_006": 9.03659439086914,
+                "e_007": 8.320442199707031,
+                "e_008": 7.02345085144043,
+                "e_009": 7.366462707519531,
+                "e_010": 7.7619781494140625,
+                "e_011": 7.896146297454834,
+                "e_012": 8.18734359741211
+              }
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-04.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4812.029620986611,
+                "fsdisk": 4935.3477793700895,
+                "shell8": 1083.695026102386
+              },
+              "predicted_suite": 1571.813244385595,
+              "actual_suite": 1640.4,
+              "relative_error_percent": 4.181099464423622,
+              "selected_probe_mape_percent": 32.42307755470942,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.058410773000105,
+              "router_scores": {
+                "e_001": 9.493430137634277,
+                "e_002": 8.38377571105957,
+                "e_003": 7.519493579864502,
+                "e_004": 8.623274803161621,
+                "e_005": 8.390754699707031,
+                "e_006": 9.394274711608887,
+                "e_007": 8.564531326293945,
+                "e_008": 7.292107105255127,
+                "e_009": 7.614026069641113,
+                "e_010": 8.080656051635742,
+                "e_011": 8.190433502197266,
+                "e_012": 9.007062911987305
+              }
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-05.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 5019.110585993614,
+                "fsdisk": 5159.8904799841375,
+                "shell8": 1071.6080724286264
+              },
+              "predicted_suite": 1581.4720588709306,
+              "actual_suite": 1635.5,
+              "relative_error_percent": 3.303451001471685,
+              "selected_probe_mape_percent": 35.84557716511731,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.05845585499992,
+              "router_scores": {
+                "e_001": 9.491275787353516,
+                "e_002": 8.369234085083008,
+                "e_003": 7.5418701171875,
+                "e_004": 8.646398544311523,
+                "e_005": 8.385169982910156,
+                "e_006": 9.371644973754883,
+                "e_007": 8.62432861328125,
+                "e_008": 7.301388263702393,
+                "e_009": 7.718303680419922,
+                "e_010": 8.096932411193848,
+                "e_011": 8.213754653930664,
+                "e_012": 8.870905876159668
+              }
+            }
+          ]
+        },
+        "score_ranked_fixed": {
+          "summary": {
+            "n_runs": 5,
+            "mean_error_percent": 4.228692195313845,
+            "median_error_percent": 4.181099464423622,
+            "max_error_percent": 7.086988160662096,
+            "mean_selected_probe_mape_percent": 26.27916464430598
+          },
+          "per_run": [
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-01.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4695.01578900703,
+                "fsdisk": 4949.2745924967185,
+                "shell8": 1071.6080724286264
+              },
+              "predicted_suite": 1675.843875190307,
+              "actual_suite": 1712.8,
+              "relative_error_percent": 2.157643905283334,
+              "selected_probe_mape_percent": 28.92592612164953,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.062298170999838,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-02.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4991.1099285243035,
+                "fsdisk": 4891.030101990141,
+                "shell8": 1086.6776123961363
+              },
+              "predicted_suite": 1596.152630387986,
+              "actual_suite": 1717.9,
+              "relative_error_percent": 7.086988160662096,
+              "selected_probe_mape_percent": 29.662081047949098,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.058029684999838,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-03.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4979.715960841822,
+                "fsdisk": 4894.6037107166285,
+                "shell8": 5119.203455764019
+              },
+              "predicted_suite": 1791.6446038330962,
+              "actual_suite": 1715.9,
+              "relative_error_percent": 4.414278444728486,
+              "selected_probe_mape_percent": 4.53916133210454,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.058067740000297,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-04.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4812.029620986611,
+                "fsdisk": 4935.3477793700895,
+                "shell8": 1083.695026102386
+              },
+              "predicted_suite": 1571.813244385595,
+              "actual_suite": 1640.4,
+              "relative_error_percent": 4.181099464423622,
+              "selected_probe_mape_percent": 32.42307755470942,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.058410773000105,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-05.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 5019.110585993614,
+                "fsdisk": 5159.8904799841375,
+                "shell8": 1071.6080724286264
+              },
+              "predicted_suite": 1581.4720588709306,
+              "actual_suite": 1635.5,
+              "relative_error_percent": 3.303451001471685,
+              "selected_probe_mape_percent": 35.84557716511731,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.05845585499992,
+              "router_scores": null
+            }
+          ]
+        },
+        "fixed_first_three": {
+          "summary": {
+            "n_runs": 5,
+            "mean_error_percent": 3.1145526139945163,
+            "median_error_percent": 3.6726877192068597,
+            "max_error_percent": 6.867841849966898,
+            "mean_selected_probe_mape_percent": 10.670039760355895
+          },
+          "per_run": [
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-01.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "whetstone-double",
+                "execl"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4695.01578900703,
+                "whetstone-double": 1773.962220063672,
+                "execl": 675.7352061663931
+              },
+              "predicted_suite": 1830.432395206233,
+              "actual_suite": 1712.8,
+              "relative_error_percent": 6.867841849966898,
+              "selected_probe_mape_percent": 11.197837279976126,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.049375936999695,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-02.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "whetstone-double",
+                "execl"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4991.1099285243035,
+                "whetstone-double": 1712.8389256316273,
+                "execl": 769.3536239558887
+              },
+              "predicted_suite": 1654.8068976717454,
+              "actual_suite": 1717.9,
+              "relative_error_percent": 3.6726877192068597,
+              "selected_probe_mape_percent": 8.43594367706124,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.04633929099964,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-03.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "whetstone-double",
+                "execl"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4979.715960841822,
+                "whetstone-double": 1723.754187158405,
+                "execl": 965.3298433331607
+              },
+              "predicted_suite": 1644.4235745505664,
+              "actual_suite": 1715.9,
+              "relative_error_percent": 4.1655356051887455,
+              "selected_probe_mape_percent": 8.247334213074208,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.045621322999978,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-04.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "whetstone-double",
+                "execl"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 4812.029620986611,
+                "whetstone-double": 1587.9088583365765,
+                "execl": 980.6501637936121
+              },
+              "predicted_suite": 1631.1014425301685,
+              "actual_suite": 1640.4,
+              "relative_error_percent": 0.5668469562199232,
+              "selected_probe_mape_percent": 10.647910569041633,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.04619343000013,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-05.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "whetstone-double",
+                "execl"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 5019.110585993614,
+                "whetstone-double": 1460.6334492223816,
+                "execl": 1019.337618162119
+              },
+              "predicted_suite": 1630.595937886274,
+              "actual_suite": 1635.5,
+              "relative_error_percent": 0.2998509393901567,
+              "selected_probe_mape_percent": 14.821173062626272,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.04680181699996,
+              "router_scores": null
+            }
+          ]
+        },
+        "random_fixed": {
+          "summary": {
+            "n_runs": 5,
+            "mean_error_percent": 7.52057704308586,
+            "median_error_percent": 5.890132294013853,
+            "max_error_percent": 12.58589495625364,
+            "mean_selected_probe_mape_percent": 27.47580996122546
+          },
+          "per_run": [
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-01.json",
+              "selected_test_ids": [
+                "pipe",
+                "spawn",
+                "syscall"
+              ],
+              "predicted_selected_scores": {
+                "pipe": 2496.8150288843663,
+                "spawn": 804.1350696170998,
+                "syscall": 1454.6472574473914
+              },
+              "predicted_suite": 1794.8390286488216,
+              "actual_suite": 1712.8,
+              "relative_error_percent": 4.789761130827978,
+              "selected_probe_mape_percent": 29.53814855599829,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.066164534000109,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-02.json",
+              "selected_test_ids": [
+                "pipe",
+                "spawn",
+                "syscall"
+              ],
+              "predicted_selected_scores": {
+                "pipe": 2628.802985546116,
+                "spawn": 775.1659756054629,
+                "syscall": 1118.6992393299395
+              },
+              "predicted_suite": 1559.7997338203522,
+              "actual_suite": 1717.9,
+              "relative_error_percent": 9.20311229871633,
+              "selected_probe_mape_percent": 19.971985240771364,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.058593213999757,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-03.json",
+              "selected_test_ids": [
+                "pipe",
+                "spawn",
+                "syscall"
+              ],
+              "predicted_selected_scores": {
+                "pipe": 2527.356566261066,
+                "spawn": 533.1230478622444,
+                "syscall": 1402.3340063162398
+              },
+              "predicted_suite": 1499.9386284456439,
+              "actual_suite": 1715.9,
+              "relative_error_percent": 12.58589495625364,
+              "selected_probe_mape_percent": 23.59954996119526,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.058080444000097,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-04.json",
+              "selected_test_ids": [
+                "pipe",
+                "spawn",
+                "syscall"
+              ],
+              "predicted_selected_scores": {
+                "pipe": 2238.8117918989687,
+                "spawn": 784.0606076819104,
+                "syscall": 1496.4619658550182
+              },
+              "predicted_suite": 1543.7782698489968,
+              "actual_suite": 1640.4,
+              "relative_error_percent": 5.890132294013853,
+              "selected_probe_mape_percent": 31.050186322211875,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.065563502999794,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-05.json",
+              "selected_test_ids": [
+                "pipe",
+                "spawn",
+                "syscall"
+              ],
+              "predicted_selected_scores": {
+                "pipe": 2441.930021397467,
+                "spawn": 795.6681869243175,
+                "syscall": 1437.112380674018
+              },
+              "predicted_suite": 1551.533682919976,
+              "actual_suite": 1635.5,
+              "relative_error_percent": 5.133984535617491,
+              "selected_probe_mape_percent": 33.21917972595048,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.064127424000162,
+              "router_scores": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "heldout_host": "iZbp1glgt48i9a8d49embxZ",
+      "training_hosts": [
+        "aces-System-Product-Name",
+        "iZbp15n87643uk1sqjrdvdZ",
+        "iZbp16krl0yc7euw7sb6slZ",
+        "iZbp1acaw5wdllhz47922rZ"
+      ],
+      "training_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-05.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-05.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-05.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-05.json"
+      ],
+      "test_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-05.json"
+      ],
+      "inner_probe_folds": [
+        {
+          "heldout_source_host": "aces-System-Product-Name",
+          "probe_fit_hosts": [
+            "iZbp15n87643uk1sqjrdvdZ",
+            "iZbp16krl0yc7euw7sb6slZ",
+            "iZbp1acaw5wdllhz47922rZ"
+          ]
+        },
+        {
+          "heldout_source_host": "iZbp15n87643uk1sqjrdvdZ",
+          "probe_fit_hosts": [
+            "aces-System-Product-Name",
+            "iZbp16krl0yc7euw7sb6slZ",
+            "iZbp1acaw5wdllhz47922rZ"
+          ]
+        },
+        {
+          "heldout_source_host": "iZbp16krl0yc7euw7sb6slZ",
+          "probe_fit_hosts": [
+            "aces-System-Product-Name",
+            "iZbp15n87643uk1sqjrdvdZ",
+            "iZbp1acaw5wdllhz47922rZ"
+          ]
+        },
+        {
+          "heldout_source_host": "iZbp1acaw5wdllhz47922rZ",
+          "probe_fit_hosts": [
+            "aces-System-Product-Name",
+            "iZbp15n87643uk1sqjrdvdZ",
+            "iZbp16krl0yc7euw7sb6slZ"
+          ]
+        }
+      ],
+      "reconstructor_train_rows": 400,
+      "probe_calibration_factors": {
+        "dhry2reg": 1.0495108207003212,
+        "whetstone-double": 1.109360562575888,
+        "execl": 0.9688167427570654,
+        "fstime": 1.1367671781135584,
+        "fsbuffer": 1.1680203336753325,
+        "fsdisk": 1.04524399702597,
+        "pipe": 1.0649206849682595,
+        "context1": 0.6107016787437181,
+        "spawn": 0.7738146621813898,
+        "syscall": 1.1167499377401737,
+        "shell1": 1.0005361014185639,
+        "shell8": 0.9056254698370815
+      },
+      "policies": {
+        "learned_router": {
+          "summary": {
+            "n_runs": 5,
+            "mean_error_percent": 25.30154531416337,
+            "median_error_percent": 26.72668826170635,
+            "max_error_percent": 27.520025713095364,
+            "mean_selected_probe_mape_percent": 269.31653976082015
+          },
+          "per_run": [
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-01.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 5093.802088626558,
+                "fsdisk": 5361.221466866589,
+                "shell8": 14259.59528961904
+              },
+              "predicted_suite": 2022.5579446568333,
+              "actual_suite": 1596.0,
+              "relative_error_percent": 26.72668826170635,
+              "selected_probe_mape_percent": 288.7407452003452,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.071764010000038,
+              "router_scores": {
+                "e_001": 7.838720321655273,
+                "e_002": 6.65598726272583,
+                "e_003": 5.985260009765625,
+                "e_004": 7.080739498138428,
+                "e_005": 6.860689163208008,
+                "e_006": 7.748455047607422,
+                "e_007": 7.220381259918213,
+                "e_008": 5.569227695465088,
+                "e_009": 5.665951728820801,
+                "e_010": 6.477630138397217,
+                "e_011": 6.855473041534424,
+                "e_012": 7.625548839569092
+              }
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-02.json",
+              "selected_test_ids": [
+                "fsdisk",
+                "dhry2reg",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "fsdisk": 5456.214651784854,
+                "dhry2reg": 5418.851657521803,
+                "shell8": 14924.994150291483
+              },
+              "predicted_suite": 2039.427771229534,
+              "actual_suite": 1599.3,
+              "relative_error_percent": 27.520025713095364,
+              "selected_probe_mape_percent": 304.5355135563165,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.074734196000065,
+              "router_scores": {
+                "e_001": 8.309186935424805,
+                "e_002": 7.280058860778809,
+                "e_003": 6.626197338104248,
+                "e_004": 7.656414031982422,
+                "e_005": 7.227306842803955,
+                "e_006": 8.360118865966797,
+                "e_007": 7.487573146820068,
+                "e_008": 6.105276584625244,
+                "e_009": 6.389880180358887,
+                "e_010": 7.008555889129639,
+                "e_011": 7.180846214294434,
+                "e_012": 8.04722785949707
+              }
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-03.json",
+              "selected_test_ids": [
+                "fsdisk",
+                "dhry2reg",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "fsdisk": 6471.328250436457,
+                "dhry2reg": 5500.324571819545,
+                "shell8": 11018.492411599947
+              },
+              "predicted_suite": 2006.862957018433,
+              "actual_suite": 1598.9,
+              "relative_error_percent": 25.515226531892733,
+              "selected_probe_mape_percent": 228.6751102583479,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.104530379999915,
+              "router_scores": {
+                "e_001": 8.534701347351074,
+                "e_002": 7.576381206512451,
+                "e_003": 6.902403831481934,
+                "e_004": 7.87571382522583,
+                "e_005": 7.471518039703369,
+                "e_006": 8.547609329223633,
+                "e_007": 7.730024814605713,
+                "e_008": 6.409002780914307,
+                "e_009": 6.769587993621826,
+                "e_010": 7.324089050292969,
+                "e_011": 7.5242533683776855,
+                "e_012": 8.31208610534668
+              }
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-04.json",
+              "selected_test_ids": [
+                "fsdisk",
+                "dhry2reg",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "fsdisk": 5456.214651784854,
+                "dhry2reg": 5637.261527613198,
+                "shell8": 14259.59528961904
+              },
+              "predicted_suite": 2038.4199625156436,
+              "actual_suite": 1602.1,
+              "relative_error_percent": 27.234252700558255,
+              "selected_probe_mape_percent": 291.16308382798314,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.077229658999954,
+              "router_scores": {
+                "e_001": 8.295397758483887,
+                "e_002": 7.253570556640625,
+                "e_003": 6.552377223968506,
+                "e_004": 7.707479953765869,
+                "e_005": 7.143322944641113,
+                "e_006": 8.332839012145996,
+                "e_007": 7.462747573852539,
+                "e_008": 6.050025463104248,
+                "e_009": 6.329692840576172,
+                "e_010": 6.955533504486084,
+                "e_011": 7.148866176605225,
+                "e_012": 8.044792175292969
+              }
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-05.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 5443.930186346943,
+                "fsdisk": 5737.893956561274,
+                "shell8": 11453.28098599369
+              },
+              "predicted_suite": 1904.8943302818493,
+              "actual_suite": 1593.9,
+              "relative_error_percent": 19.511533363564162,
+              "selected_probe_mape_percent": 233.46824596110812,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.074114549,
+              "router_scores": {
+                "e_001": 8.900613784790039,
+                "e_002": 7.867033958435059,
+                "e_003": 7.180784702301025,
+                "e_004": 8.257670402526855,
+                "e_005": 7.9755024909973145,
+                "e_006": 8.83920669555664,
+                "e_007": 8.163294792175293,
+                "e_008": 6.8293585777282715,
+                "e_009": 7.197664737701416,
+                "e_010": 7.61742639541626,
+                "e_011": 7.901565074920654,
+                "e_012": 8.655149459838867
+              }
+            }
+          ]
+        },
+        "score_ranked_fixed": {
+          "summary": {
+            "n_runs": 5,
+            "mean_error_percent": 25.30154531416337,
+            "median_error_percent": 26.72668826170635,
+            "max_error_percent": 27.520025713095364,
+            "mean_selected_probe_mape_percent": 269.31653976082015
+          },
+          "per_run": [
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-01.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 5093.802088626558,
+                "fsdisk": 5361.221466866589,
+                "shell8": 14259.59528961904
+              },
+              "predicted_suite": 2022.5579446568333,
+              "actual_suite": 1596.0,
+              "relative_error_percent": 26.72668826170635,
+              "selected_probe_mape_percent": 288.7407452003452,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.071764010000038,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-02.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 5418.851657521803,
+                "fsdisk": 5456.214651784854,
+                "shell8": 14924.994150291483
+              },
+              "predicted_suite": 2039.427771229534,
+              "actual_suite": 1599.3,
+              "relative_error_percent": 27.520025713095364,
+              "selected_probe_mape_percent": 304.5355135563165,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.074734196000065,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-03.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 5500.324571819545,
+                "fsdisk": 6471.328250436457,
+                "shell8": 11018.492411599947
+              },
+              "predicted_suite": 2006.862957018433,
+              "actual_suite": 1598.9,
+              "relative_error_percent": 25.515226531892733,
+              "selected_probe_mape_percent": 228.6751102583479,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.104530379999915,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-04.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 5637.261527613198,
+                "fsdisk": 5456.214651784854,
+                "shell8": 14259.59528961904
+              },
+              "predicted_suite": 2038.4199625156436,
+              "actual_suite": 1602.1,
+              "relative_error_percent": 27.234252700558255,
+              "selected_probe_mape_percent": 291.16308382798314,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.077229658999954,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-05.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "fsdisk",
+                "shell8"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 5443.930186346943,
+                "fsdisk": 5737.893956561274,
+                "shell8": 11453.28098599369
+              },
+              "predicted_suite": 1904.8943302818493,
+              "actual_suite": 1593.9,
+              "relative_error_percent": 19.511533363564162,
+              "selected_probe_mape_percent": 233.46824596110812,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.074114549,
+              "router_scores": null
+            }
+          ]
+        },
+        "fixed_first_three": {
+          "summary": {
+            "n_runs": 5,
+            "mean_error_percent": 63.250795467805666,
+            "median_error_percent": 100.0,
+            "max_error_percent": 100.0,
+            "mean_selected_probe_mape_percent": 42.45024759737508
+          },
+          "per_run": [
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-01.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "whetstone-double",
+                "execl"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 5093.802088626558,
+                "whetstone-double": 2084.0732604325317,
+                "execl": 0.0
+              },
+              "predicted_suite": 0.0,
+              "actual_suite": 1596.0,
+              "relative_error_percent": 100.0,
+              "selected_probe_mape_percent": 45.36832517879423,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.056402728999956,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-02.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "whetstone-double",
+                "execl"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 5418.851657521803,
+                "whetstone-double": 2150.2523846994195,
+                "execl": 86.3794135172539
+              },
+              "predicted_suite": 1513.4912757849002,
+              "actual_suite": 1599.3,
+              "relative_error_percent": 5.365392622716176,
+              "selected_probe_mape_percent": 44.844905962555835,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.085058849999939,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-03.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "whetstone-double",
+                "execl"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 5500.324571819545,
+                "whetstone-double": 1824.7425886199912,
+                "execl": 0.0
+              },
+              "predicted_suite": 0.0,
+              "actual_suite": 1598.9,
+              "relative_error_percent": 100.0,
+              "selected_probe_mape_percent": 42.79932293665041,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.0821292669998,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-04.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "whetstone-double",
+                "execl"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 5637.261527613198,
+                "whetstone-double": 1632.47830850054,
+                "execl": 0.0
+              },
+              "predicted_suite": 0.0,
+              "actual_suite": 1602.1,
+              "relative_error_percent": 100.0,
+              "selected_probe_mape_percent": 39.63269392135297,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.067408546000024,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-05.json",
+              "selected_test_ids": [
+                "dhry2reg",
+                "whetstone-double",
+                "execl"
+              ],
+              "predicted_selected_scores": {
+                "dhry2reg": 5443.930186346943,
+                "whetstone-double": 1794.926399679716,
+                "execl": 58.744591388768725
+              },
+              "predicted_suite": 1420.346848206701,
+              "actual_suite": 1593.9,
+              "relative_error_percent": 10.888584716312133,
+              "selected_probe_mape_percent": 39.60598998752195,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.057316195999988,
+              "router_scores": null
+            }
+          ]
+        },
+        "random_fixed": {
+          "summary": {
+            "n_runs": 5,
+            "mean_error_percent": 63.86849527618747,
+            "median_error_percent": 100.0,
+            "max_error_percent": 100.0,
+            "mean_selected_probe_mape_percent": 47.10446117107882
+          },
+          "per_run": [
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-01.json",
+              "selected_test_ids": [
+                "execl",
+                "fsdisk",
+                "syscall"
+              ],
+              "predicted_selected_scores": {
+                "execl": 0.0,
+                "fsdisk": 5361.221466866589,
+                "syscall": 1050.3641581081627
+              },
+              "predicted_suite": 0.0,
+              "actual_suite": 1596.0,
+              "relative_error_percent": 100.0,
+              "selected_probe_mape_percent": 50.097309707774535,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.078043958000023,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-02.json",
+              "selected_test_ids": [
+                "execl",
+                "fsdisk",
+                "syscall"
+              ],
+              "predicted_selected_scores": {
+                "execl": 86.3794135172539,
+                "fsdisk": 5456.214651784854,
+                "syscall": 1344.3725533258093
+              },
+              "predicted_suite": 1465.529806324881,
+              "actual_suite": 1599.3,
+              "relative_error_percent": 8.364296484406859,
+              "selected_probe_mape_percent": 40.58642744804403,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.115309507999996,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-03.json",
+              "selected_test_ids": [
+                "execl",
+                "fsdisk",
+                "syscall"
+              ],
+              "predicted_selected_scores": {
+                "execl": 0.0,
+                "fsdisk": 6471.328250436457,
+                "syscall": 1285.4389898215468
+              },
+              "predicted_suite": 0.0,
+              "actual_suite": 1598.9,
+              "relative_error_percent": 100.0,
+              "selected_probe_mape_percent": 53.10865589771455,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.07975416399995,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-04.json",
+              "selected_test_ids": [
+                "execl",
+                "fsdisk",
+                "syscall"
+              ],
+              "predicted_selected_scores": {
+                "execl": 0.0,
+                "fsdisk": 5456.214651784854,
+                "syscall": 1459.32931374347
+              },
+              "predicted_suite": 0.0,
+              "actual_suite": 1602.1,
+              "relative_error_percent": 100.0,
+              "selected_probe_mape_percent": 46.214016711962906,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.074334709999903,
+              "router_scores": null
+            },
+            {
+              "run": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-05.json",
+              "selected_test_ids": [
+                "execl",
+                "fsdisk",
+                "syscall"
+              ],
+              "predicted_selected_scores": {
+                "execl": 58.744591388768725,
+                "fsdisk": 5737.893956561274,
+                "syscall": 1268.6617323626385
+              },
+              "predicted_suite": 1418.9187906292004,
+              "actual_suite": 1593.9,
+              "relative_error_percent": 10.9781798965305,
+              "selected_probe_mape_percent": 45.51589608989806,
+              "suite_output_mode": "probe_plus_imputed_geomean",
+              "selected_probe_wall_seconds_from_archive": 15.07030062399997,
+              "router_scores": null
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "across_host_mean_error_percent": {
+    "learned_router": 15.947138485778982,
+    "score_ranked_fixed": 16.86342272233718,
+    "fixed_first_three": 25.414978154127176,
+    "random_fixed": 29.18926279826642
+  },
+  "limitations": [
+    "Archived probe telemetry is replayed; this is not an online target-host timing experiment.",
+    "Five hosts with one five-run session each. Source-host folds are not independent sessions.",
+    "The router uses score-ranking supervision, not reconstruction-value supervision."
+  ]
+}

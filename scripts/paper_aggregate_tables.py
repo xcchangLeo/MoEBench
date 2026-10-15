@@ -3,18 +3,25 @@
 
 from __future__ import annotations
 
+import argparse
+import hashlib
 import json
 import math
 import re
 import statistics
+import subprocess
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
 EXP_ROOT = REPO / "dataset" / "experiments"
+INPUT_FILES: set[Path] = set()
 
 _registry_path = REPO / "dataset" / "machines_registry.json"
 _registry = json.loads(_registry_path.read_text(encoding="utf-8")) if _registry_path.is_file() else {}
+if _registry_path.is_file():
+    INPUT_FILES.add(_registry_path.resolve())
 MACHINES = {
     str(m["hostname_slug"]): str(m["config_label"])
     for m in _registry.get("machines", [])
@@ -62,11 +69,48 @@ RECON_LABEL = {"xgboost": "XGBoost", "lightgbm": "LightGBM", "mlp": "MLP"}
 
 
 def _load(path: Path) -> dict[str, Any]:
-    with open(path, encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+    except FileNotFoundError as exc:
+        raise FileNotFoundError(f"Required experiment input is missing: {path}") from exc
+    INPUT_FILES.add(path.resolve())
+    return data
+
+
+def _resolve_experiment_path(reference: str, summary_dir: Path) -> Path:
+    """Resolve experiment paths saved on the original collection machine."""
+    recorded = Path(reference)
+    candidates: list[Path] = []
+    if recorded.is_absolute():
+        candidates.append(recorded)
+        if "dataset" in recorded.parts:
+            dataset_index = len(recorded.parts) - 1 - recorded.parts[::-1].index("dataset")
+            candidates.append(REPO.joinpath(*recorded.parts[dataset_index:]))
+        candidates.extend((summary_dir / recorded.name, EXP_ROOT / recorded.name))
+    else:
+        candidates.extend((summary_dir / recorded, REPO / recorded, EXP_ROOT / recorded))
+
+    attempted: list[str] = []
+    for candidate in candidates:
+        try:
+            resolved = candidate.resolve()
+            if resolved.is_file():
+                return resolved
+        except OSError as exc:
+            attempted.append(f"{candidate} ({type(exc).__name__})")
+        else:
+            attempted.append(str(candidate))
+    attempted_text = ", ".join(attempted)
+    raise FileNotFoundError(
+        f"Cannot locate experiment JSON recorded as {reference!r}; "
+        f"tried: {attempted_text}. Restore the result artifact or correct its relative path."
+    )
 
 
 def _latest_dir(prefix: str, machine: str) -> Path | None:
+    if not EXP_ROOT.is_dir():
+        raise FileNotFoundError(f"Experiment directory does not exist: {EXP_ROOT}")
     pat = re.compile(rf"^{re.escape(prefix)}{re.escape(machine)}_(\d{{8}}T\d{{6}}Z)$")
     best: tuple[str, Path] | None = None
     for p in EXP_ROOT.iterdir():
@@ -122,7 +166,7 @@ def _best_hybrid_per_host(suite_key: str) -> dict[str, dict[str, Any]]:
         if not combos:
             continue
         best = min(combos, key=lambda c: float(c.get("mean_suite_rel_err") or 1e18))
-        exp_path = Path(best["experiment_json"])
+        exp_path = _resolve_experiment_path(best["experiment_json"], ddir)
         out[machine] = {
             **best,
             "hybrid_wall_s": _hybrid_wall_from_exp(exp_path),
@@ -266,7 +310,7 @@ def aggregate_model_combo(suite_key: str) -> dict[tuple[str, str], dict[str, flo
             rt = c["router_type"]
             rc = c["reconstruct_type"]
             rel = float(c.get("mean_suite_rel_err") or 0)
-            exp = Path(c["experiment_json"])
+            exp = _resolve_experiment_path(c["experiment_json"], ddir)
             wall = _hybrid_wall_from_exp(exp) or 0.0
             cell.setdefault((rt, rc), []).append((rel, wall))
     out: dict[tuple[str, str], dict[str, float | None]] = {}
@@ -278,6 +322,13 @@ def aggregate_model_combo(suite_key: str) -> dict[tuple[str, str], dict[str, flo
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--provenance-out",
+        type=Path,
+        help="Write a JSON manifest of the input files and hashes used for aggregation.",
+    )
+    args = parser.parse_args()
     report: dict[str, Any] = {}
 
     for suite_key, suite_label in (
@@ -382,7 +433,37 @@ def main() -> int:
             "probe_per_host_unixbench": per_host_probe,
         }
 
-    print(json.dumps(report, indent=2, ensure_ascii=False))
+    report_json = json.dumps(report, indent=2, ensure_ascii=False)
+    print(report_json)
+    if args.provenance_out:
+        script_path = Path(__file__).resolve()
+        try:
+            revision = subprocess.run(
+                ["git", "-C", str(REPO), "rev-parse", "HEAD"],
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+        except (OSError, subprocess.CalledProcessError):
+            revision = None
+        manifest = {
+            "schema": "moebench.paper_aggregation_provenance.v1",
+            "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+            "repository_revision": revision,
+            "script": str(script_path.relative_to(REPO)),
+            "script_sha256": hashlib.sha256(script_path.read_bytes()).hexdigest(),
+            "inputs": [
+                {
+                    "path": str(path.relative_to(REPO)) if path.is_relative_to(REPO) else str(path),
+                    "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+                }
+                for path in sorted(INPUT_FILES)
+            ],
+        }
+        args.provenance_out.parent.mkdir(parents=True, exist_ok=True)
+        args.provenance_out.write_text(
+            json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        )
     return 0
 
 

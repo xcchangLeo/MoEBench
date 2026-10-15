@@ -1,0 +1,40 @@
+{
+  "round": 4,
+  "reviewer_role": "independent_read_only",
+  "recommendation": "reject",
+  "score": 2,
+  "confidence": 4,
+  "new_diagnostic_audit": {
+    "script": "scripts/run_corrected_oof_unixbench.py",
+    "outer_folds_per_machine": 5,
+    "machines": 5,
+    "inner_probe_protocol": "each outer training run receives probe predictions from an inner model fit that excludes that run",
+    "outer_heldout_isolation": "held-out run excluded from outer probe, reconstructor, and router fitting",
+    "artifact_hashes_match_workspace": true,
+    "compared_with_prior_run_level_oof": true,
+    "identical_predictions_and_errors_for_all_25_runs": true,
+    "aggregate_mean_error_percent": 0.5904479982000117,
+    "aggregate_median_error_percent": 0.21030635980161358,
+    "aggregate_p95_error_percent": 3.653038977384974,
+    "aggregate_max_error_percent": 4.7155275894633055,
+    "assessment": "addresses oracle-score versus probe-predicted-score mismatch in reconstructor training features; does not establish routing benefit or independent-session generalization"
+  },
+  "verified_fixes": [
+    "round-3 crossfit diagnostic uses inner leave-one-run-out probe predictions for outer-training reconstructor features, excluding each target training run from its probe fit",
+    "outer held-out runs are excluded from the outer probe, reconstructor, and fold-local router fits",
+    "all five crossfit report artifacts cover five outer folds per machine and their recorded input hashes match workspace artifacts",
+    "crossfit and prior run-level OOF suite predictions and errors are exactly equal for all 25 held-out runs"
+  ],
+  "blocking_findings": [
+    "one collection session and five runs per host-suite pair; run-level folds do not establish independent session, temporal, configuration, or cross-host generalization",
+    "model and Top-K choices lack an independent locked test",
+    "learned Top-3 and three fixed Top-3 policies produce identical suite predictions for all 25 runs despite selecting different probes",
+    "fold-matched xi-only mean error is 0.608 percent versus 0.590 percent for the policy pipeline, with small inconsistent differences; the corrected crossfit OOF errors are unchanged",
+    "representative M5 fold has zero probe-feature split gain and 10 percent probe score/time perturbations do not change output; this sensitivity diagnostic covers one fold",
+    "selected Tousi MLP proxy has 98.85 percent GPU error while available RF, decision-tree, and elastic-net proxies are around 0.26 percent; baselines do not establish new-host generalization",
+    "CPU full-suite timing lacks complete per-cell run identifiers, aggregation statistics, and consistent elapsed-time provenance; live timing evidence is one run per host and omits context collection from BenchScout time",
+    "submission archive lacks raw data, checkpoints, full split manifests, and a complete portable table-generation path; absolute machine-specific paths remain in artifacts",
+    "PTS is a paper-defined log-mean proxy rather than an official PTS aggregate"
+  ],
+  "round3_mismatch_status": "addressed as a training-feature construction issue; no change in held-out predictions and no effect on remaining validity concerns"
+}

@@ -1,0 +1,771 @@
+{
+  "schema": "moebench.hybrid.phoronix_crossfit_reconstructor_oof.v1",
+  "generated_at_utc": "2026-10-12T12:42:46.346288+00:00",
+  "machine": "aces-System-Product-Name",
+  "benchmark": "phoronix",
+  "pts_suite": "pts/nvidia-gpu-compute",
+  "pts_suite_target": "logmean",
+  "protocol": "outer run-level OOF with inner-OOF probe-predicted training features; outer held-out inference uses outer-training probe model",
+  "folds": 5,
+  "seed": 42,
+  "top_k": 3,
+  "train_aug": 20,
+  "train_k_range": [
+    2,
+    6
+  ],
+  "reconstructor": "lightgbm",
+  "reconstructor_estimators": 30,
+  "input_artifacts": {
+    "probe_dataset": "/home/zyf/code/MoEBench/dataset/models/aces-System-Product-Name/probe_dataset_pts_gpu.json",
+    "probe_dataset_sha256": "0119fb5e5dedc6a48d5ab7b8a4f463e5e6283b9aadde08c1d5b6205254af755d",
+    "runs": [
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-01.json",
+        "sha256": "5c5564b6e3badb5b854e86ede134a695b72109073d2198f3550d81b80918920f"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-02.json",
+        "sha256": "0da0a1de636a28d83e0929dd1097f078e8e55485a6e3376bd21c5ce53b2a033d"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-03.json",
+        "sha256": "e98a333faa61e9809ebf2ef76a517a2e14b3478ab918dbff8d0795262ab504eb"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-04.json",
+        "sha256": "f76d82f03074ea564a138f02946936d296f751871e802b224831f6dfd6c4ad7c"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-05.json",
+        "sha256": "0de357c30160691b6968c22c78a2a70900153077373bfc2de8445c13e408af5a"
+      }
+    ]
+  },
+  "fold_manifest": [
+    {
+      "fold": 0,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-05.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-02.json"
+      ],
+      "reconstructor_train_rows": 80,
+      "reconstructor_probe_inputs": "inner-OOF probe predictions and probe wall times",
+      "inner_probe_folds": [
+        {
+          "inner_fold": 0,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-05.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-04.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-03.json"
+          ],
+          "probe_fit_samples": 30
+        },
+        {
+          "inner_fold": 1,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-03.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-04.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-05.json"
+          ],
+          "probe_fit_samples": 30
+        },
+        {
+          "inner_fold": 2,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-03.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-05.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-04.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-01.json"
+          ],
+          "probe_fit_samples": 30
+        },
+        {
+          "inner_fold": 3,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-03.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-05.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-01.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-04.json"
+          ],
+          "probe_fit_samples": 30
+        }
+      ]
+    },
+    {
+      "fold": 1,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-04.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-05.json"
+      ],
+      "reconstructor_train_rows": 80,
+      "reconstructor_probe_inputs": "inner-OOF probe predictions and probe wall times",
+      "inner_probe_folds": [
+        {
+          "inner_fold": 0,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-03.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-02.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-04.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-01.json"
+          ],
+          "probe_fit_samples": 30
+        },
+        {
+          "inner_fold": 1,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-02.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-04.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-03.json"
+          ],
+          "probe_fit_samples": 30
+        },
+        {
+          "inner_fold": 2,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-03.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-04.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-02.json"
+          ],
+          "probe_fit_samples": 30
+        },
+        {
+          "inner_fold": 3,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-03.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-02.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-04.json"
+          ],
+          "probe_fit_samples": 30
+        }
+      ]
+    },
+    {
+      "fold": 2,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-05.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-03.json"
+      ],
+      "reconstructor_train_rows": 80,
+      "reconstructor_probe_inputs": "inner-OOF probe predictions and probe wall times",
+      "inner_probe_folds": [
+        {
+          "inner_fold": 0,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-02.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-04.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-05.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-01.json"
+          ],
+          "probe_fit_samples": 30
+        },
+        {
+          "inner_fold": 1,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-04.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-05.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-02.json"
+          ],
+          "probe_fit_samples": 30
+        },
+        {
+          "inner_fold": 2,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-02.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-05.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-04.json"
+          ],
+          "probe_fit_samples": 30
+        },
+        {
+          "inner_fold": 3,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-02.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-04.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-05.json"
+          ],
+          "probe_fit_samples": 30
+        }
+      ]
+    },
+    {
+      "fold": 3,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-05.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-01.json"
+      ],
+      "reconstructor_train_rows": 80,
+      "reconstructor_probe_inputs": "inner-OOF probe predictions and probe wall times",
+      "inner_probe_folds": [
+        {
+          "inner_fold": 0,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-05.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-02.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-04.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-03.json"
+          ],
+          "probe_fit_samples": 30
+        },
+        {
+          "inner_fold": 1,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-03.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-02.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-04.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-05.json"
+          ],
+          "probe_fit_samples": 30
+        },
+        {
+          "inner_fold": 2,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-03.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-05.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-04.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-02.json"
+          ],
+          "probe_fit_samples": 30
+        },
+        {
+          "inner_fold": 3,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-03.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-05.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-02.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-04.json"
+          ],
+          "probe_fit_samples": 30
+        }
+      ]
+    },
+    {
+      "fold": 4,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-05.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-04.json"
+      ],
+      "reconstructor_train_rows": 80,
+      "reconstructor_probe_inputs": "inner-OOF probe predictions and probe wall times",
+      "inner_probe_folds": [
+        {
+          "inner_fold": 0,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-03.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-05.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-02.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-01.json"
+          ],
+          "probe_fit_samples": 30
+        },
+        {
+          "inner_fold": 1,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-05.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-02.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-03.json"
+          ],
+          "probe_fit_samples": 30
+        },
+        {
+          "inner_fold": 2,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-03.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-02.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-05.json"
+          ],
+          "probe_fit_samples": 30
+        },
+        {
+          "inner_fold": 3,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-03.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-05.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-02.json"
+          ],
+          "probe_fit_samples": 30
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "n_runs": 5,
+    "mean_relative_error_percent": 0.9533914658465864,
+    "median_relative_error_percent": 0.46987509004461603,
+    "p95_relative_error_percent": 1.9057834296871974,
+    "max_relative_error_percent": 1.9684961600740916
+  },
+  "per_run": [
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-01.json",
+      "session": "aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z",
+      "router": {
+        "top_k": 3,
+        "selected_experts": [
+          "e_003",
+          "e_004",
+          "e_010"
+        ],
+        "selected_test_ids": [
+          "pts/clpeak-1.1.0",
+          "pts/fahbench-1.0.2",
+          "pts/viennacl-1.1.0"
+        ],
+        "scores": {
+          "e_001": 7.593024253845215,
+          "e_002": 7.605719566345215,
+          "e_003": 7.627203941345215,
+          "e_004": 7.616950035095215,
+          "e_005": 7.601325035095215,
+          "e_006": 7.593512535095215,
+          "e_007": 7.597418785095215,
+          "e_008": 7.607184410095215,
+          "e_009": 7.600836753845215,
+          "e_010": 7.608160972595215
+        },
+        "probabilities": {
+          "e_001": 0.09879133897215496,
+          "e_002": 0.10005352083709386,
+          "e_003": 0.10222636572851992,
+          "e_004": 0.10118350200890137,
+          "e_005": 0.09961479721149298,
+          "e_006": 0.09883958870939981,
+          "e_007": 0.0992264359218562,
+          "e_008": 0.10020019100997393,
+          "e_009": 0.09956616904686871,
+          "e_010": 0.10029809055373835
+        }
+      },
+      "probe": {
+        "predicted_subtest": {
+          "pts/clpeak-1.1.0": 4597.328676828765,
+          "pts/fahbench-1.0.2": 346.03849915512114,
+          "pts/viennacl-1.1.0": 160.47229281872166
+        },
+        "probe_duration_s": 4.0,
+        "probe_wall_s_selected_sum": 15.03099592399667
+      },
+      "reconstruction": {
+        "predicted_suite": 235.46646562069657,
+        "predicted_subtest": {
+          "pts/blender-5.1.0": 15.062703074095776,
+          "pts/cl-mem-1.0.1": 630.281453680992,
+          "pts/clpeak-1.1.0": 4593.865333449842,
+          "pts/fahbench-1.0.2": 345.9463190104813,
+          "pts/financebench-1.1.1": 5.392395474668591,
+          "pts/hashcat-1.3.1": 34647773.217871085,
+          "pts/luxcorerender-1.4.0": 15.706881759222592,
+          "pts/ncnn-1.6.0": 10.838189746439458,
+          "pts/rodinia-1.3.2": 3.8164976006082725,
+          "pts/viennacl-1.1.0": 159.64431284666063
+        }
+      },
+      "ground_truth_suite": 236.1129186736582,
+      "timing_seconds": {
+        "xi_collection_estimate": 3.0,
+        "probe_selected_subtests": 15.03099592399667,
+        "hybrid_wall_estimate": 18.03099592399667,
+        "full_suite_from_dataset": 8387.45
+      },
+      "comparison": {
+        "suite_absolute_error": 0.6464530529616468,
+        "suite_relative_error": 0.0027378978524048372,
+        "benchmark_time_saved_seconds_vs_full": 8372.419004076004,
+        "benchmark_time_ratio_full_over_hybrid_probe": 558.0102637516927,
+        "fraction_saved_vs_full": 0.9982079182678887
+      }
+    },
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-02.json",
+      "session": "aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z",
+      "router": {
+        "top_k": 3,
+        "selected_experts": [
+          "e_002",
+          "e_003",
+          "e_010"
+        ],
+        "selected_test_ids": [
+          "pts/cl-mem-1.0.1",
+          "pts/clpeak-1.1.0",
+          "pts/viennacl-1.1.0"
+        ],
+        "scores": {
+          "e_001": -19.80253028869629,
+          "e_002": -19.78202247619629,
+          "e_003": -19.78299903869629,
+          "e_004": -19.79667091369629,
+          "e_005": -19.79960060119629,
+          "e_006": -19.80155372619629,
+          "e_007": -19.79178810119629,
+          "e_008": -19.78983497619629,
+          "e_009": -19.81229591369629,
+          "e_010": -19.78885841369629
+        },
+        "probabilities": {
+          "e_001": 0.0992274707666772,
+          "e_002": 0.1012834185726774,
+          "e_003": 0.1011845572642076,
+          "e_004": 0.09981058841236629,
+          "e_005": 0.09951860250170781,
+          "e_006": 0.09932441992434884,
+          "e_007": 0.10029913657497856,
+          "e_008": 0.10049522475613124,
+          "e_009": 0.0982631686673879,
+          "e_010": 0.10059341255951725
+        }
+      },
+      "probe": {
+        "predicted_subtest": {
+          "pts/cl-mem-1.0.1": 630.5277083790786,
+          "pts/clpeak-1.1.0": 4614.6060116186845,
+          "pts/viennacl-1.1.0": 149.1873903209057
+        },
+        "probe_duration_s": 4.0,
+        "probe_wall_s_selected_sum": 15.035030130005907
+      },
+      "reconstruction": {
+        "predicted_suite": 238.87694950699802,
+        "predicted_subtest": {
+          "pts/blender-5.1.0": 15.16774476226419,
+          "pts/cl-mem-1.0.1": 630.5055629553276,
+          "pts/clpeak-1.1.0": 4598.1653022825685,
+          "pts/fahbench-1.0.2": 346.2537190020086,
+          "pts/financebench-1.1.1": 5.618966133054345,
+          "pts/hashcat-1.3.1": 34764276.07089844,
+          "pts/luxcorerender-1.4.0": 15.491065867990256,
+          "pts/ncnn-1.6.0": 12.832115633785723,
+          "pts/rodinia-1.3.2": 3.8410294805187735,
+          "pts/viennacl-1.1.0": 151.60363290309914
+        }
+      },
+      "ground_truth_suite": 234.98805578162268,
+      "timing_seconds": {
+        "xi_collection_estimate": 3.0,
+        "probe_selected_subtests": 15.035030130005907,
+        "hybrid_wall_estimate": 18.035030130005907,
+        "full_suite_from_dataset": 8639.92
+      },
+      "comparison": {
+        "suite_absolute_error": 3.8888937253753397,
+        "suite_relative_error": 0.01654932508139621,
+        "benchmark_time_saved_seconds_vs_full": 8624.884969869994,
+        "benchmark_time_ratio_full_over_hybrid_probe": 574.6526561830445,
+        "fraction_saved_vs_full": 0.9982598183629008
+      }
+    },
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-03.json",
+      "session": "aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z",
+      "router": {
+        "top_k": 3,
+        "selected_experts": [
+          "e_002",
+          "e_003",
+          "e_004"
+        ],
+        "selected_test_ids": [
+          "pts/cl-mem-1.0.1",
+          "pts/clpeak-1.1.0",
+          "pts/fahbench-1.0.2"
+        ],
+        "scores": {
+          "e_001": 3.72025990486145,
+          "e_002": 3.72758412361145,
+          "e_003": 3.72660756111145,
+          "e_004": 3.72563099861145,
+          "e_005": 3.70219349861145,
+          "e_006": 3.72025990486145,
+          "e_007": 3.71733021736145,
+          "e_008": 3.71733021736145,
+          "e_009": 3.71244740486145,
+          "e_010": 3.71635365486145
+        },
+        "probabilities": {
+          "e_001": 0.10016357898376135,
+          "e_002": 0.1008998921146677,
+          "e_003": 0.10080140516093439,
+          "e_004": 0.10070301433891989,
+          "e_005": 0.09837023152430525,
+          "e_006": 0.10016357898376135,
+          "e_007": 0.09987056043443115,
+          "e_008": 0.09987056043443115,
+          "e_009": 0.09938409982803476,
+          "e_010": 0.09977307819675296
+        }
+      },
+      "probe": {
+        "predicted_subtest": {
+          "pts/cl-mem-1.0.1": 630.527774210371,
+          "pts/clpeak-1.1.0": 4607.982516264947,
+          "pts/fahbench-1.0.2": 346.3611796473424
+        },
+        "probe_duration_s": 4.0,
+        "probe_wall_s_selected_sum": 15.039167012029793
+      },
+      "reconstruction": {
+        "predicted_suite": 236.2056571409106,
+        "predicted_subtest": {
+          "pts/blender-5.1.0": 15.063054650602863,
+          "pts/cl-mem-1.0.1": 630.4529130255803,
+          "pts/clpeak-1.1.0": 4612.551391983368,
+          "pts/fahbench-1.0.2": 346.01140780933196,
+          "pts/financebench-1.1.1": 5.4472711910959335,
+          "pts/hashcat-1.3.1": 34695016.0258789,
+          "pts/luxcorerender-1.4.0": 15.72773819109425,
+          "pts/ncnn-1.6.0": 10.901421263813974,
+          "pts/rodinia-1.3.2": 3.861081255134194,
+          "pts/viennacl-1.1.0": 160.88812117576597
+        }
+      },
+      "ground_truth_suite": 235.1009762172142,
+      "timing_seconds": {
+        "xi_collection_estimate": 3.0,
+        "probe_selected_subtests": 15.039167012029793,
+        "hybrid_wall_estimate": 18.039167012029793,
+        "full_suite_from_dataset": 11612.46
+      },
+      "comparison": {
+        "suite_absolute_error": 1.1046809236964066,
+        "suite_relative_error": 0.00469875090044616,
+        "benchmark_time_saved_seconds_vs_full": 11597.42083298797,
+        "benchmark_time_ratio_full_over_hybrid_probe": 772.1478184736708,
+        "fraction_saved_vs_full": 0.9987049111891856
+      }
+    },
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-04.json",
+      "session": "aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z",
+      "router": {
+        "top_k": 3,
+        "selected_experts": [
+          "e_005",
+          "e_004",
+          "e_009"
+        ],
+        "selected_test_ids": [
+          "pts/financebench-1.1.1",
+          "pts/fahbench-1.0.2",
+          "pts/rodinia-1.3.2"
+        ],
+        "scores": {
+          "e_001": -71.10167694091797,
+          "e_002": -71.09093475341797,
+          "e_003": -71.08995819091797,
+          "e_004": -71.08605194091797,
+          "e_005": -71.08409881591797,
+          "e_006": -71.09288787841797,
+          "e_007": -71.09484100341797,
+          "e_008": -71.09874725341797,
+          "e_009": -71.08702850341797,
+          "e_010": -71.10363006591797
+        },
+        "probabilities": {
+          "e_001": 0.09913263715595998,
+          "e_002": 0.1002032787525456,
+          "e_003": 0.10030118131315645,
+          "e_004": 0.10069374903732169,
+          "e_005": 0.10089060869909365,
+          "e_006": 0.10000776022195072,
+          "e_007": 0.0998126231908066,
+          "e_008": 0.09942349065076725,
+          "e_009": 0.10059546329692265,
+          "e_010": 0.09893920768147549
+        }
+      },
+      "probe": {
+        "predicted_subtest": {
+          "pts/financebench-1.1.1": 5.327290368841696,
+          "pts/fahbench-1.0.2": 346.36110801956227,
+          "pts/rodinia-1.3.2": 3.8180033073476354
+        },
+        "probe_duration_s": 4.0,
+        "probe_wall_s_selected_sum": 15.032517743995413
+      },
+      "reconstruction": {
+        "predicted_suite": 236.2053530599922,
+        "predicted_subtest": {
+          "pts/blender-5.1.0": 15.061775760608723,
+          "pts/cl-mem-1.0.1": 630.3079864943402,
+          "pts/clpeak-1.1.0": 4595.0480311632155,
+          "pts/fahbench-1.0.2": 345.99027497246857,
+          "pts/financebench-1.1.1": 5.462234151462324,
+          "pts/hashcat-1.3.1": 34671295.242822275,
+          "pts/luxcorerender-1.4.0": 15.748370567057282,
+          "pts/ncnn-1.6.0": 10.679458557069303,
+          "pts/rodinia-1.3.2": 3.8562534441647602,
+          "pts/viennacl-1.1.0": 162.14851796030996
+        }
+      },
+      "ground_truth_suite": 237.1536446013014,
+      "timing_seconds": {
+        "xi_collection_estimate": 3.0,
+        "probe_selected_subtests": 15.032517743995413,
+        "hybrid_wall_estimate": 18.032517743995413,
+        "full_suite_from_dataset": 13102.960000000003
+      },
+      "comparison": {
+        "suite_absolute_error": 0.948291541309203,
+        "suite_relative_error": 0.003998637857341195,
+        "benchmark_time_saved_seconds_vs_full": 13087.927482256007,
+        "benchmark_time_ratio_full_over_hybrid_probe": 871.6410799005274,
+        "fraction_saved_vs_full": 0.9988527387900142
+      }
+    },
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-05.json",
+      "session": "aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z",
+      "router": {
+        "top_k": 3,
+        "selected_experts": [
+          "e_001",
+          "e_005",
+          "e_004"
+        ],
+        "selected_test_ids": [
+          "pts/blender-5.1.0",
+          "pts/financebench-1.1.1",
+          "pts/fahbench-1.0.2"
+        ],
+        "scores": {
+          "e_001": 273.984130859375,
+          "e_002": 273.9598693847656,
+          "e_003": 273.9562683105469,
+          "e_004": 273.9815979003906,
+          "e_005": 273.9820251464844,
+          "e_006": 273.9695129394531,
+          "e_007": 273.96026611328125,
+          "e_008": 273.9814147949219,
+          "e_009": 273.9778747558594,
+          "e_010": 273.96807861328125
+        },
+        "probabilities": {
+          "e_001": 0.10120481940265175,
+          "e_002": 0.09877898736729936,
+          "e_003": 0.09842391660432716,
+          "e_004": 0.10094879613119113,
+          "e_005": 0.10099193532487674,
+          "e_006": 0.09973617586571558,
+          "e_007": 0.09881818358294665,
+          "e_008": 0.10093031354673856,
+          "e_009": 0.10057364797170068,
+          "e_010": 0.09959322420255233
+        }
+      },
+      "probe": {
+        "predicted_subtest": {
+          "pts/blender-5.1.0": 15.052684193446698,
+          "pts/financebench-1.1.1": 5.460822434986749,
+          "pts/fahbench-1.0.2": 346.03828851043204
+        },
+        "probe_duration_s": 4.0,
+        "probe_wall_s_selected_sum": 15.037209408998024
+      },
+      "reconstruction": {
+        "predicted_suite": 235.24853176772595,
+        "predicted_subtest": {
+          "pts/blender-5.1.0": 15.085903874249198,
+          "pts/cl-mem-1.0.1": 630.5621148325969,
+          "pts/clpeak-1.1.0": 4610.420373407007,
+          "pts/fahbench-1.0.2": 346.03275648145944,
+          "pts/financebench-1.1.1": 5.351624664687551,
+          "pts/hashcat-1.3.1": 34787581.04804689,
+          "pts/luxcorerender-1.4.0": 15.622369253775103,
+          "pts/ncnn-1.6.0": 12.16332597285509,
+          "pts/rodinia-1.3.2": 3.8222027532057825,
+          "pts/viennacl-1.1.0": 151.31141511201858
+        }
+      },
+      "ground_truth_suite": 239.97237883023763,
+      "timing_seconds": {
+        "xi_collection_estimate": 3.0,
+        "probe_selected_subtests": 15.037209408998024,
+        "hybrid_wall_estimate": 18.037209408998024,
+        "full_suite_from_dataset": 27018.48
+      },
+      "comparison": {
+        "suite_absolute_error": 4.72384706251168,
+        "suite_relative_error": 0.019684961600740916,
+        "benchmark_time_saved_seconds_vs_full": 27003.442790591,
+        "benchmark_time_ratio_full_over_hybrid_probe": 1796.7748712625214,
+        "fraction_saved_vs_full": 0.9994434472476247
+      }
+    }
+  ]
+}

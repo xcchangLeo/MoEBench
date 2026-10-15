@@ -1,0 +1,554 @@
+{
+  "schema": "moebench.hybrid.run_level_oof.v1",
+  "generated_at_utc": "2026-10-12T10:08:23.311489+00:00",
+  "protocol": "run-level stratified-shuffle folds; router, probe, and reconstructor fit only on training runs",
+  "machine": "aces-System-Product-Name",
+  "benchmark": "unixbench",
+  "folds": 5,
+  "seed": 42,
+  "top_k": 3,
+  "probe_duration_s": 4.0,
+  "xi_overhead_s": 3.0,
+  "reconstructor": "lightgbm",
+  "probe_model": "lightgbm",
+  "router_model": "fold-local MLP",
+  "input_artifacts": {
+    "probe_dataset": "/home/zyf/code/MoEBench/dataset/models/aces-System-Product-Name/probe_dataset_unixbench.json",
+    "probe_dataset_sha256": "67c20c33e8772a0f0d5777aa0a9e4e50cf6decbe64a55b3bed041833b55c468e",
+    "runs": [
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-01.json",
+        "sha256": "330b63bfdc2f41d7ae6e31cb7d576013003ebc9cd4a31c0551553d67c5d64e12"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-02.json",
+        "sha256": "a1e881918422b9ab877132964859febb0f0614971566c604e1be0594e0817ecf"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-03.json",
+        "sha256": "705e87c02fc8ac50599100c6eba4e74c8dc25e754436ed42683bed2205e6e7c3"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-04.json",
+        "sha256": "17589632d6422d3158ffa32a6a88cca8e980571188d71db1980298af573991fa"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-05.json",
+        "sha256": "b5d938b0ab50e247a26096172884a6e9c62910b33ab37d327f11b945f869c875"
+      }
+    ]
+  },
+  "fold_manifest": [
+    {
+      "fold": 0,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-05.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-02.json"
+      ],
+      "probe_training_samples": 48,
+      "router_fit_scope": "training_fold_only",
+      "router_fit_runs": 4
+    },
+    {
+      "fold": 1,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-04.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-05.json"
+      ],
+      "probe_training_samples": 48,
+      "router_fit_scope": "training_fold_only",
+      "router_fit_runs": 4
+    },
+    {
+      "fold": 2,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-05.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-03.json"
+      ],
+      "probe_training_samples": 48,
+      "router_fit_scope": "training_fold_only",
+      "router_fit_runs": 4
+    },
+    {
+      "fold": 3,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-05.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-01.json"
+      ],
+      "probe_training_samples": 48,
+      "router_fit_scope": "training_fold_only",
+      "router_fit_runs": 4
+    },
+    {
+      "fold": 4,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-05.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-04.json"
+      ],
+      "probe_training_samples": 48,
+      "router_fit_scope": "training_fold_only",
+      "router_fit_runs": 4
+    }
+  ],
+  "summary": {
+    "n_runs": 5,
+    "mean_relative_error_percent": 0.18051158000403864,
+    "median_relative_error_percent": 0.1907171050994672,
+    "p95_relative_error_percent": 0.2969851250035897,
+    "max_relative_error_percent": 0.31324722550560036,
+    "mean_hybrid_wall_estimate_s": 18.131815330806422,
+    "mean_probe_wall_s": 15.131815330806422
+  },
+  "per_run": [
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-01.json",
+      "session": "aces-System-Product-Name_20260524T102558Z",
+      "router": {
+        "top_k": 3,
+        "selected_experts": [
+          "e_011",
+          "e_001",
+          "e_004"
+        ],
+        "selected_test_ids": [
+          "shell1",
+          "dhry2reg",
+          "fstime"
+        ],
+        "scores": {
+          "e_001": 76.27043151855469,
+          "e_002": 76.26359558105469,
+          "e_003": 76.26139831542969,
+          "e_004": 76.26725769042969,
+          "e_005": 76.26310729980469,
+          "e_006": 76.25138854980469,
+          "e_007": 76.26164245605469,
+          "e_008": 76.26359558105469,
+          "e_009": 76.25016784667969,
+          "e_010": 76.26603698730469,
+          "e_011": 76.27995300292969,
+          "e_012": 76.26017761230469
+        },
+        "probabilities": {
+          "e_001": 0.08393329252373914,
+          "e_002": 0.08336148642396622,
+          "e_003": 0.08317852018172829,
+          "e_004": 0.08366732497021595,
+          "e_005": 0.08332079250901961,
+          "e_006": 0.08235007587353545,
+          "e_007": 0.08319882991674685,
+          "e_008": 0.08336148642396622,
+          "e_009": 0.08224961220920234,
+          "e_010": 0.08356525431682198,
+          "e_011": 0.08473627880123066,
+          "e_012": 0.08307704584982732
+        }
+      },
+      "probe": {
+        "predicted_subtest": {
+          "shell1": 3765.777892423848,
+          "dhry2reg": 7373.9981785458285,
+          "fstime": 4013.5798088773663
+        },
+        "probe_duration_s": 4.0,
+        "probe_wall_s_selected_sum": 15.05819270000211
+      },
+      "reconstruction": {
+        "predicted_suite": 3189.842267133381,
+        "predicted_subtest": {
+          "dhry2reg": 7218.37640325636,
+          "whetstone-double": 2495.997053390898,
+          "execl": 956.7848834770645,
+          "fstime": 4028.959507508728,
+          "fsbuffer": 2560.069772547342,
+          "fsdisk": 8048.552266326544,
+          "pipe": 3748.253550115787,
+          "context1": 966.0226026150247,
+          "spawn": 1094.0479316482276,
+          "syscall": 2345.428654268698,
+          "shell1": 3794.4867661771327,
+          "shell8": 21844.312009565743
+        }
+      },
+      "ground_truth_suite": 3189.6,
+      "timing_seconds": {
+        "xi_collection_estimate": 3.0,
+        "probe_selected_subtests": 15.05819270000211,
+        "hybrid_wall_estimate": 18.05819270000211,
+        "full_suite_from_dataset": 320.0
+      },
+      "comparison": {
+        "suite_absolute_error": 0.2422671333811195,
+        "suite_relative_error": 7.59553340171556e-05,
+        "benchmark_time_saved_seconds_vs_full": 304.9418072999979,
+        "benchmark_time_ratio_full_over_hybrid_probe": 21.250890221371332,
+        "fraction_saved_vs_full": 0.9529431478124935
+      }
+    },
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-02.json",
+      "session": "aces-System-Product-Name_20260524T102558Z",
+      "router": {
+        "top_k": 3,
+        "selected_experts": [
+          "e_001",
+          "e_008",
+          "e_003"
+        ],
+        "selected_test_ids": [
+          "dhry2reg",
+          "context1",
+          "execl"
+        ],
+        "scores": {
+          "e_001": 3.0600686073303223,
+          "e_002": 3.0463967323303223,
+          "e_003": 3.0522561073303223,
+          "e_004": 3.0239357948303223,
+          "e_005": 3.0307717323303223,
+          "e_006": 3.0415139198303223,
+          "e_007": 3.0444436073303223,
+          "e_008": 3.0581154823303223,
+          "e_009": 3.0454201698303223,
+          "e_010": 3.0327248573303223,
+          "e_011": 3.0307717323303223,
+          "e_012": 3.0376076698303223
+        },
+        "probabilities": {
+          "e_001": 0.08484755391943903,
+          "e_002": 0.0836954226121306,
+          "e_003": 0.08418726501637064,
+          "e_004": 0.0818364996822632,
+          "e_005": 0.08239784535530448,
+          "e_006": 0.08328774966166959,
+          "e_007": 0.083532114522312,
+          "e_008": 0.08468199776924693,
+          "e_009": 0.08361372869708535,
+          "e_010": 0.08255893591080035,
+          "e_011": 0.08239784535530448,
+          "e_012": 0.08296304149807339
+        }
+      },
+      "probe": {
+        "predicted_subtest": {
+          "dhry2reg": 7380.900443973556,
+          "context1": 987.3869555976797,
+          "execl": 974.6252417933749
+        },
+        "probe_duration_s": 4.0,
+        "probe_wall_s_selected_sum": 15.053518195985816
+      },
+      "reconstruction": {
+        "predicted_suite": 3185.6716448669677,
+        "predicted_subtest": {
+          "dhry2reg": 7216.3039663230065,
+          "whetstone-double": 2494.1670658397647,
+          "execl": 958.0999817207958,
+          "fstime": 4026.74632340788,
+          "fsbuffer": 2563.199793434878,
+          "fsdisk": 7967.111940641059,
+          "pipe": 3743.5004608498944,
+          "context1": 975.7287289073092,
+          "spawn": 1091.3402745963467,
+          "syscall": 2345.3999715740515,
+          "shell1": 3765.4579793805187,
+          "shell8": 21914.564320962072
+        }
+      },
+      "ground_truth_suite": 3178.3,
+      "timing_seconds": {
+        "xi_collection_estimate": 3.0,
+        "probe_selected_subtests": 15.053518195985816,
+        "hybrid_wall_estimate": 18.053518195985816,
+        "full_suite_from_dataset": 319.9
+      },
+      "comparison": {
+        "suite_absolute_error": 7.371644866967472,
+        "suite_relative_error": 0.00231936722995547,
+        "benchmark_time_saved_seconds_vs_full": 304.84648180401416,
+        "benchmark_time_ratio_full_over_hybrid_probe": 21.25084620320217,
+        "fraction_saved_vs_full": 0.9529430503407759
+      }
+    },
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-03.json",
+      "session": "aces-System-Product-Name_20260524T102558Z",
+      "router": {
+        "top_k": 3,
+        "selected_experts": [
+          "e_004",
+          "e_007",
+          "e_008"
+        ],
+        "selected_test_ids": [
+          "fstime",
+          "pipe",
+          "context1"
+        ],
+        "scores": {
+          "e_001": -155.6398468017578,
+          "e_002": -155.6303253173828,
+          "e_003": -155.6336212158203,
+          "e_004": -155.6194610595703,
+          "e_005": -155.6383819580078,
+          "e_006": -155.6305694580078,
+          "e_007": -155.6289825439453,
+          "e_008": -155.6300811767578,
+          "e_009": -155.6303253173828,
+          "e_010": -155.6370391845703,
+          "e_011": -155.6327667236328,
+          "e_012": -155.6344757080078
+        },
+        "probabilities": {
+          "e_001": 0.08269383735461536,
+          "e_002": 0.08348496581666265,
+          "e_003": 0.08321026079687098,
+          "e_004": 0.08439691285271732,
+          "e_005": 0.08281505966962681,
+          "e_006": 0.08346458623277347,
+          "e_007": 0.08359714250827784,
+          "e_008": 0.0835053503766436,
+          "e_009": 0.08348496581666265,
+          "e_010": 0.08292633622485777,
+          "e_011": 0.08328139370156923,
+          "e_012": 0.08313918864872237
+        }
+      },
+      "probe": {
+        "predicted_subtest": {
+          "fstime": 4004.514291892635,
+          "pipe": 3739.6540401243046,
+          "context1": 987.8596899923734
+        },
+        "probe_duration_s": 4.0,
+        "probe_wall_s_selected_sum": 15.124598110007355
+      },
+      "reconstruction": {
+        "predicted_suite": 3189.0789080088502,
+        "predicted_subtest": {
+          "dhry2reg": 7232.311344195547,
+          "whetstone-double": 2495.9314355679744,
+          "execl": 960.8999166261533,
+          "fstime": 4003.3190642288964,
+          "fsbuffer": 2547.7002841721965,
+          "fsdisk": 7944.380305621086,
+          "pipe": 3752.5621107440593,
+          "context1": 971.4795822903764,
+          "spawn": 1094.7644607706904,
+          "syscall": 2345.664909617775,
+          "shell1": 3783.5672923919906,
+          "shell8": 21915.946785781012
+        }
+      },
+      "ground_truth_suite": 3199.1,
+      "timing_seconds": {
+        "xi_collection_estimate": 3.0,
+        "probe_selected_subtests": 15.124598110007355,
+        "hybrid_wall_estimate": 18.124598110007355,
+        "full_suite_from_dataset": 320.0
+      },
+      "comparison": {
+        "suite_absolute_error": 10.02109199114966,
+        "suite_relative_error": 0.0031324722550560035,
+        "benchmark_time_saved_seconds_vs_full": 304.87540188999265,
+        "benchmark_time_ratio_full_over_hybrid_probe": 21.157586976692524,
+        "fraction_saved_vs_full": 0.952735630906227
+      }
+    },
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-04.json",
+      "session": "aces-System-Product-Name_20260524T102558Z",
+      "router": {
+        "top_k": 3,
+        "selected_experts": [
+          "e_008",
+          "e_003",
+          "e_004"
+        ],
+        "selected_test_ids": [
+          "context1",
+          "execl",
+          "fstime"
+        ],
+        "scores": {
+          "e_001": 30.040294647216797,
+          "e_002": 30.028575897216797,
+          "e_003": 30.044200897216797,
+          "e_004": 30.043224334716797,
+          "e_005": 30.031017303466797,
+          "e_006": 30.030529022216797,
+          "e_007": 30.031017303466797,
+          "e_008": 30.048595428466797,
+          "e_009": 30.039806365966797,
+          "e_010": 30.041759490966797,
+          "e_011": 30.032970428466797,
+          "e_012": 30.038829803466797
+        },
+        "probabilities": {
+          "e_001": 0.08355920507862252,
+          "e_002": 0.08258571085256998,
+          "e_003": 0.08388624656050053,
+          "e_004": 0.08380436638490554,
+          "e_005": 0.0827875824482231,
+          "e_006": 0.0827471686914236,
+          "e_007": 0.0827875824482231,
+          "e_008": 0.08425569848189465,
+          "e_009": 0.08351841464493014,
+          "e_010": 0.08368169595102827,
+          "e_011": 0.08294943495282729,
+          "e_012": 0.08343689350485134
+        }
+      },
+      "probe": {
+        "predicted_subtest": {
+          "context1": 997.9730699245187,
+          "execl": 972.9244674197633,
+          "fstime": 4044.6565788984576
+        },
+        "probe_duration_s": 4.0,
+        "probe_wall_s_selected_sum": 15.139011189021403
+      },
+      "reconstruction": {
+        "predicted_suite": 3185.2254669307913,
+        "predicted_subtest": {
+          "dhry2reg": 7216.304013643133,
+          "whetstone-double": 2493.8999295125614,
+          "execl": 958.0999738342671,
+          "fstime": 4029.3997121856055,
+          "fsbuffer": 2563.1997837945282,
+          "fsdisk": 7944.298821467104,
+          "pipe": 3743.3003853328596,
+          "context1": 976.2998835116057,
+          "spawn": 1090.900068229897,
+          "syscall": 2345.3999698218436,
+          "shell1": 3764.300214451123,
+          "shell8": 21925.997931019818
+        }
+      },
+      "ground_truth_suite": 3190.3,
+      "timing_seconds": {
+        "xi_collection_estimate": 3.0,
+        "probe_selected_subtests": 15.139011189021403,
+        "hybrid_wall_estimate": 18.139011189021403,
+        "full_suite_from_dataset": 319.9
+      },
+      "comparison": {
+        "suite_absolute_error": 5.074533069208883,
+        "suite_relative_error": 0.0015906131301786299,
+        "benchmark_time_saved_seconds_vs_full": 304.7609888109786,
+        "benchmark_time_ratio_full_over_hybrid_probe": 21.130838467969884,
+        "fraction_saved_vs_full": 0.9526758012221901
+      }
+    },
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-05.json",
+      "session": "aces-System-Product-Name_20260524T102558Z",
+      "router": {
+        "top_k": 3,
+        "selected_experts": [
+          "e_012",
+          "e_003",
+          "e_002"
+        ],
+        "selected_test_ids": [
+          "shell8",
+          "execl",
+          "whetstone-double"
+        ],
+        "scores": {
+          "e_001": -56.78020477294922,
+          "e_002": -56.773155212402344,
+          "e_003": -56.77233123779297,
+          "e_004": -56.792625427246094,
+          "e_005": -56.779991149902344,
+          "e_006": -56.780906677246094,
+          "e_007": -56.787742614746094,
+          "e_008": -56.779197692871094,
+          "e_009": -56.778831481933594,
+          "e_010": -56.779930114746094,
+          "e_011": -56.77556610107422,
+          "e_012": -56.770835876464844
+        },
+        "probabilities": {
+          "e_001": 0.08325454251807501,
+          "e_002": 0.0838435240476537,
+          "e_003": 0.08391263745256461,
+          "e_004": 0.08222686207047895,
+          "e_005": 0.08327232950690164,
+          "e_006": 0.08319612630064255,
+          "e_007": 0.08262934223837393,
+          "e_008": 0.08333842874224112,
+          "e_009": 0.08336895377531994,
+          "e_010": 0.08327741220165435,
+          "e_011": 0.08364163011500513,
+          "e_012": 0.08403821103108909
+        }
+      },
+      "probe": {
+        "predicted_subtest": {
+          "shell8": 21798.33029793499,
+          "execl": 1044.5562695244907,
+          "whetstone-double": 2490.905214399767
+        },
+        "probe_duration_s": 4.0,
+        "probe_wall_s_selected_sum": 15.283756459015422
+      },
+      "reconstruction": {
+        "predicted_suite": 3179.4247066170565,
+        "predicted_subtest": {
+          "dhry2reg": 7331.395111969417,
+          "whetstone-double": 2493.6529456650906,
+          "execl": 955.86694625674,
+          "fstime": 4023.3222959172354,
+          "fsbuffer": 2558.3259235098094,
+          "fsdisk": 7790.088801215359,
+          "pipe": 3742.6468780086284,
+          "context1": 963.155786201131,
+          "spawn": 1095.7781247444302,
+          "syscall": 2347.018760443882,
+          "shell1": 3744.13527617157,
+          "shell8": 21803.165715771003
+        }
+      },
+      "ground_truth_suite": 3185.5,
+      "timing_seconds": {
+        "xi_collection_estimate": 3.0,
+        "probe_selected_subtests": 15.283756459015422,
+        "hybrid_wall_estimate": 18.28375645901542,
+        "full_suite_from_dataset": 319.9
+      },
+      "comparison": {
+        "suite_absolute_error": 6.075293382943528,
+        "suite_relative_error": 0.001907171050994672,
+        "benchmark_time_saved_seconds_vs_full": 304.61624354098456,
+        "benchmark_time_ratio_full_over_hybrid_probe": 20.930718233952277,
+        "fraction_saved_vs_full": 0.9522233308564695
+      }
+    }
+  ]
+}

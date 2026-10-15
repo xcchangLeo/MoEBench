@@ -1,0 +1,53 @@
+version: 1
+name: benchscout-www-review-edit
+source_archive: BenchScout_WWW2026_submission.zip
+working_root: work_submission
+round_artifacts: agent_workflow/rounds
+roles:
+  reviewer:
+    mode: read_only
+    input_scope:
+      - anonymous_submission_pdf
+    output:
+      - review.md
+      - review.json
+  modifier:
+    mode: experiment_and_edit
+    requires:
+      - review.md
+    scope:
+      - run_auditable_experiments
+      - modify_code
+      - modify_manuscript
+      - compile_submission
+    output:
+      - change_plan.md
+      - patch.diff
+      - evidence_manifest.json
+  coordinator:
+    scope:
+      - raw_evidence_and_claim_provenance_audit
+      - reviewer_independence
+    output:
+      - compile.log
+      - protocol_audit.log
+      - manifest.sha256
+gates:
+  max_rounds: null
+  required_reviewer_decision: weak_accept_or_better
+  block_on:
+    - unsupported_claim
+    - data_leakage_or_unknown_split
+    - fabricated_or_untraceable_result
+    - compile_error
+    - broken_double_blind_or_acm_format
+    - invalid_web_workload_or_failed_transactions
+    - missing_matched_baseline_for_primary_claim
+  require:
+    - all_headline_numbers_traceable
+    - independent_web_sessions_for_web_generalization_claims
+    - same_budget_fixed_and_history_only_controls
+    - web_operational_outcome_and_tail_latency_reported
+    - measured_end_to_end_cost_for_speedup_claims
+    - independent_re_review
+    - protocol_audit_recorded

@@ -1,0 +1,483 @@
+{
+  "schema": "moebench.hybrid.unixbench_policy_oof.v1",
+  "generated_at_utc": "2026-10-15T04:07:33.168888+00:00",
+  "machine": "aces-System-Product-Name",
+  "benchmark": "unixbench",
+  "policy": "train_assoc_diverse_top_k",
+  "split_protocol": "whole-session holdout; held-out session is excluded from router/probe/reconstructor fitting",
+  "model_protocol": "fold-local router, probe, and reconstructor; all policies share the same models within each fold",
+  "selection_uses": "training-fitted router and held-out xi for learned; fixed component IDs for fixed policies; outer-training-run labels only for association policies; no held-out score labels or ti timings",
+  "folds": 5,
+  "seed": 44,
+  "top_k": 3,
+  "probe_duration_s": 4.0,
+  "partial_source": "probe_predictions",
+  "xi_overhead_s": 3.0,
+  "train_aug": 20,
+  "train_k_range": [
+    2,
+    6
+  ],
+  "reconstructor": "lightgbm",
+  "probe_model": "ridge",
+  "router_model": "fold-local MLP",
+  "suite_output_mode": "probe_plus_imputed_geomean",
+  "selected_test_ids_by_policy": "per-outer-fold exhaustive Top-K maximizing suite association minus pairwise redundancy, fit on outer-training run labels",
+  "input_artifacts": {
+    "probe_dataset": "/home/zyf/code/MoEBench/dataset/experiments/paired_session_oof_5sessions_ridge_20261015/paired_probe_dataset.json",
+    "probe_dataset_sha256": "a12d9022a5f47bd0282c897b36f78abe10a0c79c6050e56f2910c0ec06b8f363",
+    "runs": [
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T000121Z/run-01.json",
+        "sha256": "5980f64e45d5845bdea132cded3e9cd7f6874817da559b48d81d792a2e6a1a22"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T030240Z/run-01.json",
+        "sha256": "9f74203dfb0617d3e5beb97a70c0342d24f8c1220e439cdc7f5746b3bb142c1b"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T033602Z/run-01.json",
+        "sha256": "1d85c9682a1ecf154664df84b7431f78c655a1917f489c5b313f4be63a51ce8e"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T091500Z/run-01.json",
+        "sha256": "ca72b18ea4ff43a8531b2f38348191a08e56b9a0540a093e34ae1f4393037340"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T100000Z/run-01.json",
+        "sha256": "f3de6bec02f38f58a42ad1a97c1c5fb1adba4d35b7a1e86a095c112b9c8b3ca0"
+      }
+    ]
+  },
+  "fold_manifest": [
+    {
+      "fold": 0,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T000121Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T030240Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T091500Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T100000Z/run-01.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T033602Z/run-01.json"
+      ],
+      "probe_training_samples": 48,
+      "router_fit_scope": "training_runs_only",
+      "router_fit_runs": 4,
+      "probe_fit_scope": "training_run_samples_only",
+      "reconstructor_probe_inputs": "inner-run-held-out probe-model predictions",
+      "probe_prediction_calibration_factor": 0.9947689187676999,
+      "probe_prediction_calibration_factors": {
+        "dhry2reg": 1.2263039503741897,
+        "whetstone-double": 1.1260608082656718,
+        "execl": 0.5415166438726058,
+        "fstime": 0.9118737116482873,
+        "fsbuffer": 1.170817338113083,
+        "fsdisk": 1.025687474357812,
+        "pipe": 1.138715253906106,
+        "context1": 1.2267550465531725,
+        "spawn": 0.1587895526922981,
+        "syscall": 1.6880031459191898,
+        "shell1": 0.6662972609723824,
+        "shell8": 0.6641133492376775
+      },
+      "reconstructor_probe_fit_manifest": [
+        {
+          "inner_fold": 0,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T091500Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T030240Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T000121Z/run-01.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T100000Z/run-01.json"
+          ],
+          "probe_fit_samples": 36
+        },
+        {
+          "inner_fold": 1,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T100000Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T030240Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T000121Z/run-01.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T091500Z/run-01.json"
+          ],
+          "probe_fit_samples": 36
+        },
+        {
+          "inner_fold": 2,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T100000Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T091500Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T000121Z/run-01.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T030240Z/run-01.json"
+          ],
+          "probe_fit_samples": 36
+        },
+        {
+          "inner_fold": 3,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T100000Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T091500Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T030240Z/run-01.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T000121Z/run-01.json"
+          ],
+          "probe_fit_samples": 36
+        }
+      ],
+      "reconstructor_fit_scope": "training_runs_only",
+      "training_fold_selections": {
+        "train_assoc_top_k": {
+          "selected_test_ids": [
+            "dhry2reg",
+            "shell1",
+            "whetstone-double"
+          ],
+          "training_fold_spearman_rho": {
+            "dhry2reg": -1.0,
+            "whetstone-double": -0.7999999999999999,
+            "execl": -0.39999999999999997,
+            "fstime": 0.0,
+            "fsbuffer": -0.39999999999999997,
+            "fsdisk": 0.39999999999999997,
+            "pipe": 0.39999999999999997,
+            "context1": 0.39999999999999997,
+            "spawn": 0.7999999999999999,
+            "syscall": 0.39999999999999997,
+            "shell1": 1.0,
+            "shell8": 0.7999999999999999
+          },
+          "selection_method": "absolute Spearman correlation between each component index and official suite index across outer-training runs; descending absolute value, test-id order breaks ties",
+          "n_training_runs": 4
+        },
+        "train_assoc_diverse_top_k": {
+          "selected_test_ids": [
+            "dhry2reg",
+            "fstime",
+            "shell1"
+          ],
+          "training_fold_spearman_rho_with_suite": {
+            "dhry2reg": -1.0,
+            "whetstone-double": -0.7999999999999999,
+            "execl": -0.39999999999999997,
+            "fstime": 0.0,
+            "fsbuffer": -0.39999999999999997,
+            "fsdisk": 0.39999999999999997,
+            "pipe": 0.39999999999999997,
+            "context1": 0.39999999999999997,
+            "spawn": 0.7999999999999999,
+            "syscall": 0.39999999999999997,
+            "shell1": 1.0,
+            "shell8": 0.7999999999999999
+          },
+          "mean_abs_suite_association": 0.6666666666666666,
+          "mean_abs_pairwise_redundancy": 0.3333333333333333,
+          "objective": 0.3333333333333333,
+          "selection_method": "exhaustive Top-K maximizing mean absolute training-fold Spearman association with suite index minus mean absolute pairwise expert association",
+          "n_training_runs": 4
+        }
+      }
+    }
+  ],
+  "summary": {
+    "n_runs": 1,
+    "mean_relative_error_percent": 11.857197469406941,
+    "xi_only_mean_relative_error_percent": 7.769259585400546,
+    "selected_probe_score_mape_percent": 32.2712202305926,
+    "mean_error_reduction_vs_xi_only_percentage_points": -4.087937884006395,
+    "median_relative_error_percent": 11.857197469406941,
+    "p95_relative_error_percent": 11.857197469406941,
+    "max_relative_error_percent": 11.857197469406941,
+    "exhaustive_random_subset_mean_error_percent": 33.769038012979166,
+    "exhaustive_random_subset_median_error_percent": 14.576269143059733,
+    "mean_selected_error_percentile_within_random_subsets": 39.09090909090909,
+    "mean_probe_wall_s": 15.109002696961397,
+    "mean_hybrid_wall_estimate_s": 26.964341696961398
+  },
+  "per_run": [
+    null,
+    null,
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T033602Z/run-01.json",
+      "session": "aces-System-Product-Name_20261015T033602Z",
+      "policy": "train_assoc_diverse_top_k",
+      "selection": {
+        "selected_test_ids": [
+          "dhry2reg",
+          "fstime",
+          "shell1"
+        ],
+        "selection_inputs": "outer-training-run component labels and official suite index"
+      },
+      "probe": {
+        "predicted_subtest": {
+          "dhry2reg": 3774.4440007259145,
+          "fstime": 3019.027253016882,
+          "shell1": 1644.0175125853227
+        },
+        "heldout_actual_subtest": {
+          "dhry2reg": 5571.3,
+          "fstime": 2185.6,
+          "shell1": 2234.6
+        },
+        "heldout_component_relative_error": {
+          "dhry2reg": 0.32252005802489286,
+          "fstime": 0.38132652498942254,
+          "shell1": 0.26429002390346246
+        },
+        "probe_duration_budget_s": 4.0,
+        "historical_probe_wall_sum_s": 15.109002696961397,
+        "partial_source": "probe_predictions"
+      },
+      "prediction": 1425.004688512098,
+      "ground_truth": 1616.7,
+      "comparison": {
+        "suite_absolute_error": 191.69531148790202,
+        "suite_relative_error": 0.11857197469406941
+      },
+      "xi_only_prediction": 1491.0943802828294,
+      "xi_only_comparison": {
+        "suite_absolute_error": 125.60561971717061,
+        "suite_relative_error": 0.07769259585400545
+      },
+      "all_top_k_subset_relative_errors": [
+        0.19217250701247654,
+        0.13530818336868966,
+        0.09491824930104063,
+        0.0996287759765834,
+        0.1066810826541381,
+        0.045944891962902794,
+        1.0,
+        0.1552858808230221,
+        0.07765089817479587,
+        0.09322854349374746,
+        0.22801270091465495,
+        0.1919530140858924,
+        0.19615852025072247,
+        0.20245474172479286,
+        0.06619195809639575,
+        1.0,
+        0.2458485684492839,
+        0.1765369138037825,
+        0.1904444634123084,
+        0.1350732399691718,
+        0.1395747787222951,
+        0.14631420171988677,
+        0.0004596536416405585,
+        1.0,
+        0.19276259223234413,
+        0.11857197469406941,
+        0.13345849989936187,
+        0.09938413820838506,
+        0.10643836105176133,
+        0.04622908321335795,
+        1.0,
+        0.15505636551714835,
+        0.07740028884861011,
+        0.09298216673328823,
+        0.11108893094034436,
+        0.040783950769354885,
+        1.0,
+        0.1594539014596063,
+        0.0822019883048964,
+        0.0977027698119556,
+        0.032631838162844214,
+        1.0,
+        0.16603761793717126,
+        0.08939079318206725,
+        0.1047701622516641,
+        1.0,
+        0.02355286933869484,
+        0.06618927457108108,
+        0.048182298330443796,
+        1.0,
+        1.0,
+        1.0,
+        0.13893634275982975,
+        0.1534789321362198,
+        0.07567787859281128,
+        0.2166074564664802,
+        0.18001502830441526,
+        0.1842826660948499,
+        0.19067190716276164,
+        0.052395994097762875,
+        1.0,
+        0.23470682889221067,
+        0.1643711724719702,
+        0.17848419049059597,
+        0.12229491947140317,
+        0.12686296339881162,
+        0.1337019537944917,
+        0.014307431256697072,
+        1.0,
+        0.18083656705782486,
+        0.10554986655317547,
+        0.12065632343240965,
+        0.08607855135506819,
+        0.09323699241034508,
+        0.06168594170957471,
+        1.0,
+        0.14257327323360372,
+        0.0637699153360338,
+        0.07958199794875287,
+        0.09795626924069534,
+        0.05616036355532485,
+        1.0,
+        0.1470357778257431,
+        0.06864255450354483,
+        0.08437234263083689,
+        0.0478878126499494,
+        1.0,
+        0.1537167613126147,
+        0.07593756589086265,
+        0.09154414784842617,
+        1.0,
+        0.009126960740061514,
+        0.08194102245464517,
+        0.06366801338414109,
+        1.0,
+        1.0,
+        1.0,
+        0.12621509526275354,
+        0.14097253504787913,
+        0.062022058405101776,
+        0.2163946027030993,
+        0.22047290184482338,
+        0.22657867689957079,
+        0.09443753342247323,
+        1.0,
+        0.2686599387858595,
+        0.20144480448973623,
+        0.21493168226589357,
+        0.18406102943796646,
+        0.1904520065116873,
+        0.052138522820412446,
+        1.0,
+        0.23449889286715578,
+        0.16414412570952938,
+        0.17826097834341154,
+        0.1946653247180407,
+        0.057071697939151574,
+        1.0,
+        0.23848296765655688,
+        0.168494364115855,
+        0.18253774514249654,
+        0.06445733997618096,
+        1.0,
+        0.24444767588908875,
+        0.17500726967292585,
+        0.1889406535926566,
+        1.0,
+        0.11535949964827208,
+        0.03405501054888402,
+        0.05036895113115481,
+        1.0,
+        1.0,
+        1.0,
+        0.21989449233186265,
+        0.2330697715030218,
+        0.16258365835532781,
+        0.1266257253682459,
+        0.1334665739700774,
+        0.014583026366390597,
+        1.0,
+        0.18061399406939785,
+        0.10530683759070583,
+        0.12041739901015472,
+        0.13797647466734714,
+        0.009302596828880965,
+        1.0,
+        0.18487851452351273,
+        0.10996329652902828,
+        0.12499521455234883,
+        0.0013970671391576543,
+        1.0,
+        0.19126308850995824,
+        0.11693465636337272,
+        0.13184883440009318,
+        1.0,
+        0.053088180391279265,
+        0.03393946720664313,
+        0.016477161156213088,
+        1.0,
+        1.0,
+        1.0,
+        0.1649815654391567,
+        0.17908427447051392,
+        0.10363652633859884,
+        0.09771117703958729,
+        0.05644733042777327,
+        1.0,
+        0.14680402090360092,
+        0.06838949754128183,
+        0.08412355957266843,
+        0.048172531806858085,
+        1.0,
+        0.1534868196649348,
+        0.0756864910391518,
+        0.09129731342474928,
+        1.0,
+        0.008857732934435718,
+        0.08223499412987474,
+        0.0639570201426383,
+        1.0,
+        1.0,
+        1.0,
+        0.1259776812014456,
+        0.14073913069616395,
+        0.061767202603262086,
+        0.04271728462301701,
+        1.0,
+        0.157892524358557,
+        0.08049711001049112,
+        0.09602668537589472,
+        1.0,
+        0.014016164296756183,
+        0.07660246778060661,
+        0.05841962208865956,
+        1.0,
+        1.0,
+        1.0,
+        0.13052655807863453,
+        0.14521118114130793,
+        0.06665026495270636,
+        1.0,
+        0.021739045929310655,
+        0.06816980070949245,
+        0.05012937516677817,
+        1.0,
+        1.0,
+        1.0,
+        0.13733685276244043,
+        0.1519064560837904,
+        0.07396088127777452,
+        1.0,
+        1.0,
+        1.0,
+        0.010051499881569465,
+        0.007007359923133944,
+        0.08425542902763487,
+        1.0,
+        1.0,
+        1.0,
+        0.12434596054567353
+      ],
+      "timing_estimate_seconds": {
+        "xi_collection_estimate": 11.855339,
+        "selected_probe_wall_sum": 15.109002696961397,
+        "selected_partial_execution_wall_s": 15.109002696961397,
+        "hybrid_wall_estimate": 26.964341696961398,
+        "full_suite_wall_from_run": 320.8,
+        "cost_basis": "measured xi and selected partial wall time where available; xi fallback is configured estimate"
+      }
+    },
+    null,
+    null
+  ]
+}

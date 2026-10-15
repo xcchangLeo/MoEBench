@@ -1,0 +1,321 @@
+{
+  "schema": "moebench.cloudsuite.session_uncertainty_audit.v1",
+  "input_path": "/home/zyf/code/MoEBench/agent_workflow/rounds/round-8-cloudsuite/final_supplemented_analysis.json",
+  "input_sha256": "ff3bc3c19b750235106bb23938e7045576abe7ee185ded5a2d77beaabfc07b52",
+  "aggregation": "Compute curve MAPE within each held-out session across that session's profiles and offered loads; sessions are the independent units.",
+  "unselected_load_metric": "Within each held-out session, compute MAPE only over offered-load cells absent from the method's selected_loads; history-only has no selected loads and therefore uses all loads.",
+  "interval_note": "The 95% Student-t interval uses df=3 and is descriptive only; n=4 sessions does not support a general superiority claim.",
+  "primary_sessions": [
+    1,
+    2,
+    4,
+    5
+  ],
+  "loads": [
+    20,
+    40,
+    60,
+    80,
+    100
+  ],
+  "results": {
+    "same_config": {
+      "history_only": {
+        "heldout_sessions": [
+          1,
+          2,
+          4,
+          5
+        ],
+        "n_independent_sessions": 4,
+        "mean_session_mape_percent": 5.261689250003007,
+        "session_sd_percent": 2.462279499318883,
+        "descriptive_95pct_t_interval": [
+          1.3436534782583163,
+          9.179725021747698
+        ],
+        "per_session": [
+          {
+            "session": 1,
+            "profile_count": 2,
+            "curve_mape_percent": 8.919240809065297,
+            "curve_mape_cells": 10,
+            "unselected_load_mape_percent": 8.919240809065297,
+            "unselected_load_cells": 10
+          },
+          {
+            "session": 2,
+            "profile_count": 2,
+            "curve_mape_percent": 4.519418770917951,
+            "curve_mape_cells": 10,
+            "unselected_load_mape_percent": 4.519418770917951,
+            "unselected_load_cells": 10
+          },
+          {
+            "session": 4,
+            "profile_count": 2,
+            "curve_mape_percent": 3.7320062248358745,
+            "curve_mape_cells": 10,
+            "unselected_load_mape_percent": 3.7320062248358745,
+            "unselected_load_cells": 10
+          },
+          {
+            "session": 5,
+            "profile_count": 2,
+            "curve_mape_percent": 3.8760911951929082,
+            "curve_mape_cells": 10,
+            "unselected_load_mape_percent": 3.8760911951929082,
+            "unselected_load_cells": 10
+          }
+        ]
+      },
+      "adaptive_correlation_3": {
+        "heldout_sessions": [
+          1,
+          2,
+          4,
+          5
+        ],
+        "n_independent_sessions": 4,
+        "mean_session_mape_percent": 6.39556172034637,
+        "session_sd_percent": 4.2793619383523085,
+        "descriptive_95pct_t_interval": [
+          -0.4138574212844057,
+          13.204980861977145
+        ],
+        "per_session": [
+          {
+            "session": 1,
+            "profile_count": 2,
+            "curve_mape_percent": 12.72808016482604,
+            "curve_mape_cells": 10,
+            "unselected_load_mape_percent": 12.642671000224393,
+            "unselected_load_cells": 4
+          },
+          {
+            "session": 2,
+            "profile_count": 2,
+            "curve_mape_percent": 5.274775085230418,
+            "curve_mape_cells": 10,
+            "unselected_load_mape_percent": 3.182149607900966,
+            "unselected_load_cells": 4
+          },
+          {
+            "session": 4,
+            "profile_count": 2,
+            "curve_mape_percent": 3.809558352747339,
+            "curve_mape_cells": 10,
+            "unselected_load_mape_percent": 4.052308298153549,
+            "unselected_load_cells": 4
+          },
+          {
+            "session": 5,
+            "profile_count": 2,
+            "curve_mape_percent": 3.7698332785816833,
+            "curve_mape_cells": 10,
+            "unselected_load_mape_percent": 1.360664398660112,
+            "unselected_load_cells": 4
+          }
+        ]
+      }
+    },
+    "cold_start_config": {
+      "history_only": {
+        "heldout_sessions": [
+          1,
+          2,
+          4,
+          5
+        ],
+        "n_independent_sessions": 4,
+        "mean_session_mape_percent": 39.15752745088637,
+        "session_sd_percent": 0.9395981089498656,
+        "descriptive_95pct_t_interval": [
+          37.66241732916884,
+          40.6526375726039
+        ],
+        "per_session": [
+          {
+            "session": 1,
+            "profile_count": 2,
+            "curve_mape_percent": 39.03419351852877,
+            "curve_mape_cells": 10,
+            "unselected_load_mape_percent": 39.03419351852877,
+            "unselected_load_cells": 10
+          },
+          {
+            "session": 2,
+            "profile_count": 2,
+            "curve_mape_percent": 38.44546322863591,
+            "curve_mape_cells": 10,
+            "unselected_load_mape_percent": 38.44546322863591,
+            "unselected_load_cells": 10
+          },
+          {
+            "session": 4,
+            "profile_count": 2,
+            "curve_mape_percent": 40.517920026944175,
+            "curve_mape_cells": 10,
+            "unselected_load_mape_percent": 40.517920026944175,
+            "unselected_load_cells": 10
+          },
+          {
+            "session": 5,
+            "profile_count": 2,
+            "curve_mape_percent": 38.63253302943662,
+            "curve_mape_cells": 10,
+            "unselected_load_mape_percent": 38.63253302943662,
+            "unselected_load_cells": 10
+          }
+        ]
+      },
+      "adaptive_correlation_3": {
+        "heldout_sessions": [
+          1,
+          2,
+          4,
+          5
+        ],
+        "n_independent_sessions": 4,
+        "mean_session_mape_percent": 17.34883266029366,
+        "session_sd_percent": 1.4095253540217632,
+        "descriptive_95pct_t_interval": [
+          15.105963497891087,
+          19.59170182269623
+        ],
+        "per_session": [
+          {
+            "session": 1,
+            "profile_count": 2,
+            "curve_mape_percent": 19.16970868302857,
+            "curve_mape_cells": 10,
+            "unselected_load_mape_percent": 34.642481202169066,
+            "unselected_load_cells": 4
+          },
+          {
+            "session": 2,
+            "profile_count": 2,
+            "curve_mape_percent": 15.828306200832992,
+            "curve_mape_cells": 10,
+            "unselected_load_mape_percent": 29.86407052458304,
+            "unselected_load_cells": 4
+          },
+          {
+            "session": 4,
+            "profile_count": 2,
+            "curve_mape_percent": 17.57786101466685,
+            "curve_mape_cells": 10,
+            "unselected_load_mape_percent": 37.545147797249214,
+            "unselected_load_cells": 4
+          },
+          {
+            "session": 5,
+            "profile_count": 2,
+            "curve_mape_percent": 16.819454742646222,
+            "curve_mape_cells": 10,
+            "unselected_load_mape_percent": 34.276363345546095,
+            "unselected_load_cells": 4
+          }
+        ]
+      },
+      "adaptive_correlation_linear_interp_3": {
+        "heldout_sessions": [
+          1,
+          2,
+          4,
+          5
+        ],
+        "n_independent_sessions": 4,
+        "mean_session_mape_percent": 7.211282946685328,
+        "session_sd_percent": 1.6922925202920436,
+        "descriptive_95pct_t_interval": [
+          4.518468165668661,
+          9.904097727701995
+        ],
+        "per_session": [
+          {
+            "session": 1,
+            "profile_count": 2,
+            "curve_mape_percent": 9.111442272135267,
+            "curve_mape_cells": 10,
+            "unselected_load_mape_percent": 9.496815174935811,
+            "unselected_load_cells": 4
+          },
+          {
+            "session": 2,
+            "profile_count": 2,
+            "curve_mape_percent": 8.149394454679964,
+            "curve_mape_cells": 10,
+            "unselected_load_mape_percent": 10.666791159200468,
+            "unselected_load_cells": 4
+          },
+          {
+            "session": 4,
+            "profile_count": 2,
+            "curve_mape_percent": 5.6010813147498695,
+            "curve_mape_cells": 10,
+            "unselected_load_mape_percent": 7.603198547456759,
+            "unselected_load_cells": 4
+          },
+          {
+            "session": 5,
+            "profile_count": 2,
+            "curve_mape_percent": 5.9832137451762115,
+            "curve_mape_cells": 10,
+            "unselected_load_mape_percent": 7.185760851871073,
+            "unselected_load_cells": 4
+          }
+        ]
+      },
+      "fixed_evenly_spaced_linear_interp_3": {
+        "heldout_sessions": [
+          1,
+          2,
+          4,
+          5
+        ],
+        "n_independent_sessions": 4,
+        "mean_session_mape_percent": 7.909106772543198,
+        "session_sd_percent": 1.893050549212286,
+        "descriptive_95pct_t_interval": [
+          4.896841198473977,
+          10.921372346612419
+        ],
+        "per_session": [
+          {
+            "session": 1,
+            "profile_count": 2,
+            "curve_mape_percent": 10.589855456466397,
+            "curve_mape_cells": 10,
+            "unselected_load_mape_percent": 7.147338043212938,
+            "unselected_load_cells": 4
+          },
+          {
+            "session": 2,
+            "profile_count": 2,
+            "curve_mape_percent": 6.415059141485793,
+            "curve_mape_cells": 10,
+            "unselected_load_mape_percent": 7.909409071043961,
+            "unselected_load_cells": 4
+          },
+          {
+            "session": 4,
+            "profile_count": 2,
+            "curve_mape_percent": 6.755310164422592,
+            "curve_mape_cells": 10,
+            "unselected_load_mape_percent": 10.203832458577487,
+            "unselected_load_cells": 4
+          },
+          {
+            "session": 5,
+            "profile_count": 2,
+            "curve_mape_percent": 7.87620232779801,
+            "curve_mape_cells": 10,
+            "unselected_load_mape_percent": 10.49703275683386,
+            "unselected_load_cells": 4
+          }
+        ]
+      }
+    }
+  }
+}

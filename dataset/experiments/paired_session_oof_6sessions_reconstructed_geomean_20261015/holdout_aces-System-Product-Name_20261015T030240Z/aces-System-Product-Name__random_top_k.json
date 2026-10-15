@@ -1,0 +1,509 @@
+{
+  "schema": "moebench.hybrid.unixbench_policy_oof.v1",
+  "generated_at_utc": "2026-10-15T05:07:22.177596+00:00",
+  "machine": "aces-System-Product-Name",
+  "benchmark": "unixbench",
+  "policy": "random_top_k",
+  "split_protocol": "whole-session holdout; held-out session is excluded from router/probe/reconstructor fitting",
+  "model_protocol": "fold-local router, probe, and reconstructor; all policies share the same models within each fold",
+  "selection_uses": "training-fitted router and held-out xi for learned; fixed component IDs for fixed policies; outer-training-run labels only for association policies; no held-out score labels or ti timings",
+  "folds": 5,
+  "seed": 43,
+  "top_k": 3,
+  "probe_duration_s": 4.0,
+  "partial_source": "probe_predictions",
+  "xi_overhead_s": 3.0,
+  "train_aug": 20,
+  "train_k_range": [
+    2,
+    6
+  ],
+  "reconstructor": "lightgbm",
+  "probe_model": "lightgbm",
+  "router_model": "fold-local MLP",
+  "suite_output_mode": "reconstructed_geomean",
+  "log1p_partial_index": true,
+  "selected_test_ids_by_policy": "per-run seeded random subset; no xi, score, or timing inputs",
+  "input_artifacts": {
+    "probe_dataset": "/home/zyf/code/MoEBench/dataset/experiments/paired_session_oof_6sessions_reconstructed_geomean_20261015/paired_probe_dataset.json",
+    "probe_dataset_sha256": "bdbf2e58238c261000f85f60bd61cbba8629429049d6c9cb34a2487d52753c75",
+    "runs": [
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T000121Z/run-01.json",
+        "sha256": "5980f64e45d5845bdea132cded3e9cd7f6874817da559b48d81d792a2e6a1a22"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T030240Z/run-01.json",
+        "sha256": "9f74203dfb0617d3e5beb97a70c0342d24f8c1220e439cdc7f5746b3bb142c1b"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T033602Z/run-01.json",
+        "sha256": "1d85c9682a1ecf154664df84b7431f78c655a1917f489c5b313f4be63a51ce8e"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T042255Z/run-01.json",
+        "sha256": "975202e7d8d6a2861572dc1977de001c05d01a204048f52143309fe16d6ff31b"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T091500Z/run-01.json",
+        "sha256": "ca72b18ea4ff43a8531b2f38348191a08e56b9a0540a093e34ae1f4393037340"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T100000Z/run-01.json",
+        "sha256": "f3de6bec02f38f58a42ad1a97c1c5fb1adba4d35b7a1e86a095c112b9c8b3ca0"
+      }
+    ]
+  },
+  "fold_manifest": [
+    {
+      "fold": 0,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T000121Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T033602Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T042255Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T091500Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T100000Z/run-01.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T030240Z/run-01.json"
+      ],
+      "probe_training_samples": 60,
+      "router_fit_scope": "training_runs_only",
+      "router_fit_runs": 5,
+      "probe_fit_scope": "training_run_samples_only",
+      "reconstructor_probe_inputs": "inner-run-held-out probe-model predictions",
+      "probe_prediction_calibration_factor": 0.9026300990466416,
+      "probe_prediction_calibration_factors": {
+        "dhry2reg": 0.916494772351679,
+        "whetstone-double": 0.9367947990220662,
+        "execl": 0.8925432801666816,
+        "fstime": 1.1626235535912393,
+        "fsbuffer": 0.8641188018906938,
+        "fsdisk": 0.7755221857760639,
+        "pipe": 1.0130773089360403,
+        "context1": 0.7819045487881656,
+        "spawn": 0.588270941307174,
+        "syscall": 1.030516096284069,
+        "shell1": 1.2170137949548951,
+        "shell8": 1.114157706078474
+      },
+      "reconstructor_probe_fit_manifest": [
+        {
+          "inner_fold": 0,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T042255Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T033602Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T000121Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T100000Z/run-01.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T091500Z/run-01.json"
+          ],
+          "probe_fit_samples": 48
+        },
+        {
+          "inner_fold": 1,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T091500Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T033602Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T000121Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T100000Z/run-01.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T042255Z/run-01.json"
+          ],
+          "probe_fit_samples": 48
+        },
+        {
+          "inner_fold": 2,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T091500Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T042255Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T000121Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T100000Z/run-01.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T033602Z/run-01.json"
+          ],
+          "probe_fit_samples": 48
+        },
+        {
+          "inner_fold": 3,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T091500Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T042255Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T033602Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T100000Z/run-01.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T000121Z/run-01.json"
+          ],
+          "probe_fit_samples": 48
+        },
+        {
+          "inner_fold": 4,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T091500Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T042255Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T033602Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T000121Z/run-01.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T100000Z/run-01.json"
+          ],
+          "probe_fit_samples": 48
+        }
+      ],
+      "reconstructor_fit_scope": "training_runs_only",
+      "training_fold_selections": {
+        "train_assoc_diverse_top_k": {
+          "selected_test_ids": [
+            "execl",
+            "fstime",
+            "shell8"
+          ],
+          "training_fold_spearman_rho_with_suite": {
+            "dhry2reg": -0.7,
+            "whetstone-double": -0.19999999999999998,
+            "execl": -0.7,
+            "fstime": -0.09999999999999999,
+            "fsbuffer": 0.0,
+            "fsdisk": 0.3,
+            "pipe": 0.09999999999999999,
+            "context1": 0.3,
+            "spawn": 0.9999999999999999,
+            "syscall": 0.8999999999999998,
+            "shell1": 0.9999999999999999,
+            "shell8": 0.7999999999999999
+          },
+          "mean_abs_suite_association": 0.5333333333333333,
+          "mean_abs_pairwise_redundancy": 0.13333333333333333,
+          "objective": 0.4,
+          "selection_method": "exhaustive Top-K maximizing mean absolute training-fold Spearman association with suite index minus mean absolute pairwise expert association",
+          "n_training_runs": 5
+        },
+        "train_probe_reliable_top_k": {
+          "selected_test_ids": [
+            "execl",
+            "dhry2reg",
+            "syscall"
+          ],
+          "selection_method": "lowest inner-OOF relative probe error",
+          "inner_oof_probe_error_median_relative": {
+            "dhry2reg": 0.13658087445896921,
+            "whetstone-double": 0.28394158474423037,
+            "execl": 0.12039384780674277,
+            "fstime": 0.207083238883757,
+            "fsbuffer": 0.2195458899147996,
+            "fsdisk": 0.2957639191257359,
+            "pipe": 0.41912153199300534,
+            "context1": 0.2789284850047867,
+            "spawn": 0.8737263515603936,
+            "syscall": 0.1525871239839353,
+            "shell1": 0.7044696293546224,
+            "shell8": 0.7522122962974565
+          }
+        }
+      }
+    }
+  ],
+  "summary": {
+    "n_runs": 1,
+    "mean_relative_error_percent": 0.23924163415699257,
+    "xi_only_mean_relative_error_percent": 0.23924163415699257,
+    "selected_probe_score_mape_percent": 39.39762038175505,
+    "mean_error_reduction_vs_xi_only_percentage_points": 0.0,
+    "median_relative_error_percent": 0.23924163415699257,
+    "p95_relative_error_percent": 0.23924163415699257,
+    "max_relative_error_percent": 0.23924163415699257,
+    "exhaustive_random_subset_mean_error_percent": 0.23924163415699265,
+    "exhaustive_random_subset_median_error_percent": 0.23924163415699257,
+    "mean_selected_error_percentile_within_random_subsets": 100.0,
+    "mean_probe_wall_s": 15.073063852003543,
+    "mean_hybrid_wall_estimate_s": 24.30382585200354
+  },
+  "per_run": [
+    null,
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T030240Z/run-01.json",
+      "session": "aces-System-Product-Name_20261015T030240Z",
+      "policy": "random_top_k",
+      "selection": {
+        "selected_test_ids": [
+          "syscall",
+          "fsbuffer",
+          "context1"
+        ],
+        "selection_inputs": "fixed test-id list"
+      },
+      "probe": {
+        "predicted_subtest": {
+          "syscall": 1943.535145205256,
+          "fsbuffer": 2241.7239436256796,
+          "context1": 841.9884830314661
+        },
+        "heldout_actual_subtest": {
+          "syscall": 1025.7,
+          "fsbuffer": 2045.7,
+          "context1": 706.8
+        },
+        "heldout_component_relative_error": {
+          "syscall": 0.8948378134008539,
+          "fsbuffer": 0.09582242930326026,
+          "context1": 0.19126836874853728
+        },
+        "probe_duration_budget_s": 4.0,
+        "historical_probe_wall_sum_s": 15.073063852003543,
+        "selection_probe_wall_sum_s": 15.073063852003543,
+        "all_subtest_probe_count": 3,
+        "partial_source": "probe_predictions"
+      },
+      "prediction": 1474.364247888794,
+      "ground_truth": 1477.9,
+      "comparison": {
+        "suite_absolute_error": 3.535752111206193,
+        "suite_relative_error": 0.0023924163415699256
+      },
+      "xi_only_prediction": 1474.364247888794,
+      "xi_only_comparison": {
+        "suite_absolute_error": 3.535752111206193,
+        "suite_relative_error": 0.0023924163415699256
+      },
+      "all_top_k_subset_relative_errors": [
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256,
+        0.0023924163415699256
+      ],
+      "timing_estimate_seconds": {
+        "xi_collection_estimate": 9.230762,
+        "selected_probe_wall_sum": 15.073063852003543,
+        "selected_partial_execution_wall_s": 15.073063852003543,
+        "selection_probe_wall_s": 15.073063852003543,
+        "hybrid_wall_estimate": 24.30382585200354,
+        "full_suite_wall_from_run": 319.0,
+        "cost_basis": "measured xi and selected partial wall time where available; xi fallback is configured estimate"
+      }
+    },
+    null,
+    null,
+    null,
+    null
+  ]
+}

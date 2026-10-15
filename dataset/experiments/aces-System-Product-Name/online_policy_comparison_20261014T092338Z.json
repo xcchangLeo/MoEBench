@@ -1,0 +1,1955 @@
+{
+  "schema": "moebench.experiment.online_routing_policy_comparison.v1",
+  "created_at_utc": "2026-10-14T09:23:38.210838+00:00",
+  "machine": "aces-System-Product-Name",
+  "protocol": "One live full UnixBench reference, followed by randomized repeated online micro-probe policy runs. Each repetition shares one freshly collected context across policies.",
+  "host_runtime": {
+    "hostname": "aces-System-Product-Name",
+    "python": "3.13.5",
+    "scikit_learn": "1.7.2",
+    "cpu_affinity": [
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31
+    ],
+    "load_average_at_start": [
+      60.46,
+      70.12,
+      68.01
+    ]
+  },
+  "policies": [
+    "learned",
+    "fixed_first_k",
+    "fixed_cpu_mix",
+    "fixed_io_mix"
+  ],
+  "top_k": 3,
+  "probe_duration_s": 4.0,
+  "probe_mode": "micro",
+  "enable_ebpf": false,
+  "models": {
+    "router": "/home/zyf/code/MoEBench/dataset/experiments/router_recon_grid_unixbench_aces-System-Product-Name_20260524T140119Z/trained_models/router_mlp.pt",
+    "reconstructor": "/home/zyf/code/MoEBench/dataset/models/aces-System-Product-Name/reconstruct_lightgbm_v2.pkl",
+    "probe": "/home/zyf/code/MoEBench/dataset/models/aces-System-Product-Name/probe_unixbench_4s_lightgbm.pkl"
+  },
+  "unixbench_root": "/home/zyf/code/byte-unixbench/UnixBench",
+  "full_reference": {
+    "path": "/home/zyf/code/MoEBench/dataset/experiments/aces-System-Product-Name/online_policy_comparison_20261014T092338Z_full_reference.json",
+    "suite_index": 1431.5,
+    "elapsed_s": 1721.2180038779916,
+    "load_average_before": [
+      25.34,
+      38.57,
+      57.25
+    ],
+    "status": "complete"
+  },
+  "repetitions": [
+    {
+      "repetition": 1,
+      "policy_order": [
+        "fixed_io_mix",
+        "learned",
+        "fixed_cpu_mix",
+        "fixed_first_k"
+      ],
+      "context_collection_s": 14.53883858800691,
+      "load_average_before_probes": [
+        24.2,
+        37.67,
+        56.66
+      ],
+      "results": [
+        {
+          "policy": "fixed_io_mix",
+          "selected_test_ids": [
+            "fstime",
+            "fsbuffer",
+            "fsdisk"
+          ],
+          "probe_predictions": {
+            "fstime": 4004.3983508152646,
+            "fsbuffer": 2577.1144401443125,
+            "fsdisk": 8005.824483862773
+          },
+          "suite_prediction": 3197.944237524313,
+          "probe_process_wall_sum_s": 15.200759803992696,
+          "probe_phase_elapsed_s": 15.854962988989428,
+          "probes": {
+            "fstime": {
+              "test_id": "fstime",
+              "benchmark": "unixbench",
+              "category": "IO",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.060785890993429,
+              "workload": {
+                "category": "IO",
+                "duration_s": 4.0,
+                "elapsed_s": 4.059148719999939,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.4304568527918782,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 33472.0,
+                  "major_faults_per_sec": 66.0,
+                  "minor_faults_per_sec": 33406.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 23.06,
+                  "loadavg_5m": 37.21,
+                  "loadavg_15m": 56.41,
+                  "runnable_tasks": 11,
+                  "total_tasks": 4898,
+                  "last_pid": 1846931
+                }
+              }
+            },
+            "fsbuffer": {
+              "test_id": "fsbuffer",
+              "benchmark": "unixbench",
+              "category": "IO",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.070217754997429,
+              "workload": {
+                "category": "IO",
+                "duration_s": 4.0,
+                "elapsed_s": 4.068227131996537,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.7897196261682243,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 739306.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 739306.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 24.74,
+                  "loadavg_5m": 37.33,
+                  "loadavg_15m": 56.34,
+                  "runnable_tasks": 43,
+                  "total_tasks": 5022,
+                  "last_pid": 1849457
+                }
+              }
+            },
+            "fsdisk": {
+              "test_id": "fsdisk",
+              "benchmark": "unixbench",
+              "category": "IO",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.069756158001837,
+              "workload": {
+                "category": "IO",
+                "duration_s": 4.0,
+                "elapsed_s": 4.067509361993871,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.7890052356020942,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 519270.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 519270.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 26.28,
+                  "loadavg_5m": 37.44,
+                  "loadavg_15m": 56.27,
+                  "runnable_tasks": 43,
+                  "total_tasks": 5024,
+                  "last_pid": 1851122
+                }
+              }
+            }
+          },
+          "load_average_before": [
+            24.2,
+            37.67,
+            56.66
+          ],
+          "load_average_after": [
+            26.28,
+            37.44,
+            56.27
+          ],
+          "context_collection_s": 14.53883858800691,
+          "suite_absolute_error": 1766.444237524313,
+          "suite_relative_error_percent": 123.39813045926043
+        },
+        {
+          "policy": "learned",
+          "selected_test_ids": [
+            "fsbuffer",
+            "execl",
+            "shell1"
+          ],
+          "probe_predictions": {
+            "fsbuffer": 2570.9196065053234,
+            "execl": 982.0231751143968,
+            "shell1": 3776.9986902439055
+          },
+          "suite_prediction": 3197.9442434015464,
+          "probe_process_wall_sum_s": 15.176572266005678,
+          "probe_phase_elapsed_s": 15.807172938002623,
+          "probes": {
+            "fsbuffer": {
+              "test_id": "fsbuffer",
+              "benchmark": "unixbench",
+              "category": "IO",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.047362262994284,
+              "workload": {
+                "category": "IO",
+                "duration_s": 4.0,
+                "elapsed_s": 4.045362514007138,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.7892819979188346,
+                  "iowait_ratio": 0.0005202913631633715
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 452578.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 452578.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 27.78,
+                  "loadavg_5m": 37.56,
+                  "loadavg_15m": 56.21,
+                  "runnable_tasks": 44,
+                  "total_tasks": 5111,
+                  "last_pid": 1852387
+                }
+              }
+            },
+            "execl": {
+              "test_id": "execl",
+              "benchmark": "unixbench",
+              "category": "thread",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.065478675998747,
+              "workload": {
+                "category": "thread",
+                "duration_s": 4.0,
+                "elapsed_s": 4.063329361000797,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.7865466101694916,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 625590.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 625590.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 31.88,
+                  "loadavg_5m": 38.25,
+                  "loadavg_15m": 56.33,
+                  "runnable_tasks": 43,
+                  "total_tasks": 5011,
+                  "last_pid": 1860123
+                }
+              }
+            },
+            "shell1": {
+              "test_id": "shell1",
+              "benchmark": "unixbench",
+              "category": "thread",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.063731327012647,
+              "workload": {
+                "category": "thread",
+                "duration_s": 4.0,
+                "elapsed_s": 4.061540901006083,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.7821888412017167,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 617216.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 617216.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 33.33,
+                  "loadavg_5m": 38.45,
+                  "loadavg_15m": 56.3,
+                  "runnable_tasks": 43,
+                  "total_tasks": 5017,
+                  "last_pid": 1867989
+                }
+              }
+            }
+          },
+          "load_average_before": [
+            26.28,
+            37.44,
+            56.27
+          ],
+          "load_average_after": [
+            33.33,
+            38.45,
+            56.3
+          ],
+          "context_collection_s": 14.53883858800691,
+          "suite_absolute_error": 1766.4442434015464,
+          "suite_relative_error_percent": 123.3981308698251
+        },
+        {
+          "policy": "fixed_cpu_mix",
+          "selected_test_ids": [
+            "dhry2reg",
+            "whetstone-double",
+            "syscall"
+          ],
+          "probe_predictions": {
+            "dhry2reg": 7299.977408903985,
+            "whetstone-double": 2524.353577552429,
+            "syscall": 2374.5819941456402
+          },
+          "suite_prediction": 3197.9442377058713,
+          "probe_process_wall_sum_s": 15.16979927799548,
+          "probe_phase_elapsed_s": 15.815204360013013,
+          "probes": {
+            "dhry2reg": {
+              "test_id": "dhry2reg",
+              "benchmark": "unixbench",
+              "category": "CPU",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.052394307000213,
+              "workload": {
+                "category": "CPU",
+                "duration_s": 4.0,
+                "elapsed_s": 4.040657713005203,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.788370874803562,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 602568.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 602568.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 34.03,
+                  "loadavg_5m": 38.51,
+                  "loadavg_15m": 56.22,
+                  "runnable_tasks": 44,
+                  "total_tasks": 5021,
+                  "last_pid": 1869793
+                }
+              }
+            },
+            "whetstone-double": {
+              "test_id": "whetstone-double",
+              "benchmark": "unixbench",
+              "category": "CPU",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.057131202993332,
+              "workload": {
+                "category": "CPU",
+                "duration_s": 4.0,
+                "elapsed_s": 4.05134368299332,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.7845659163987139,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 564182.0,
+                  "major_faults_per_sec": 4.0,
+                  "minor_faults_per_sec": 564178.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 34.99,
+                  "loadavg_5m": 38.63,
+                  "loadavg_15m": 56.17,
+                  "runnable_tasks": 47,
+                  "total_tasks": 5040,
+                  "last_pid": 1870930
+                }
+              }
+            },
+            "syscall": {
+              "test_id": "syscall",
+              "benchmark": "unixbench",
+              "category": "syscall",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.0602737680019345,
+              "workload": {
+                "category": "syscall",
+                "duration_s": 4.0,
+                "elapsed_s": 4.058343643002445,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.7854487519915029,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 577058.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 577058.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 35.71,
+                  "loadavg_5m": 38.72,
+                  "loadavg_15m": 56.1,
+                  "runnable_tasks": 61,
+                  "total_tasks": 5026,
+                  "last_pid": 1871946
+                }
+              }
+            }
+          },
+          "load_average_before": [
+            33.33,
+            38.45,
+            56.3
+          ],
+          "load_average_after": [
+            35.71,
+            38.72,
+            56.1
+          ],
+          "context_collection_s": 14.53883858800691,
+          "suite_absolute_error": 1766.4442377058713,
+          "suite_relative_error_percent": 123.3981304719435
+        },
+        {
+          "policy": "fixed_first_k",
+          "selected_test_ids": [
+            "dhry2reg",
+            "whetstone-double",
+            "execl"
+          ],
+          "probe_predictions": {
+            "dhry2reg": 7299.977408903985,
+            "whetstone-double": 2524.353577552429,
+            "execl": 982.0231751143968
+          },
+          "suite_prediction": 3197.9442434015464,
+          "probe_process_wall_sum_s": 15.166251199989347,
+          "probe_phase_elapsed_s": 15.80104444900644,
+          "probes": {
+            "dhry2reg": {
+              "test_id": "dhry2reg",
+              "benchmark": "unixbench",
+              "category": "CPU",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.042717374992208,
+              "workload": {
+                "category": "CPU",
+                "duration_s": 4.0,
+                "elapsed_s": 4.0390544590045465,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.7871443624868283,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 499768.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 499768.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 36.13,
+                  "loadavg_5m": 38.76,
+                  "loadavg_15m": 56.02,
+                  "runnable_tasks": 45,
+                  "total_tasks": 5104,
+                  "last_pid": 1873119
+                }
+              }
+            },
+            "whetstone-double": {
+              "test_id": "whetstone-double",
+              "benchmark": "unixbench",
+              "category": "CPU",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.057918852995499,
+              "workload": {
+                "category": "CPU",
+                "duration_s": 4.0,
+                "elapsed_s": 4.038275660990621,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.7883096366508688,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 547066.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 547066.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 39.33,
+                  "loadavg_5m": 39.38,
+                  "loadavg_15m": 56.13,
+                  "runnable_tasks": 49,
+                  "total_tasks": 5037,
+                  "last_pid": 1874073
+                }
+              }
+            },
+            "execl": {
+              "test_id": "execl",
+              "benchmark": "unixbench",
+              "category": "thread",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.06561497200164,
+              "workload": {
+                "category": "thread",
+                "duration_s": 4.0,
+                "elapsed_s": 4.043315340997651,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.7882787750791974,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 589766.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 589766.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 39.94,
+                  "loadavg_5m": 39.5,
+                  "loadavg_15m": 56.08,
+                  "runnable_tasks": 40,
+                  "total_tasks": 5023,
+                  "last_pid": 1881817
+                }
+              }
+            }
+          },
+          "load_average_before": [
+            35.71,
+            38.72,
+            56.1
+          ],
+          "load_average_after": [
+            39.94,
+            39.5,
+            56.08
+          ],
+          "context_collection_s": 14.53883858800691,
+          "suite_absolute_error": 1766.4442434015464,
+          "suite_relative_error_percent": 123.3981308698251
+        }
+      ],
+      "load_average_after_probes": [
+        39.94,
+        39.5,
+        56.08
+      ]
+    },
+    {
+      "repetition": 2,
+      "policy_order": [
+        "learned",
+        "fixed_first_k",
+        "fixed_cpu_mix",
+        "fixed_io_mix"
+      ],
+      "context_collection_s": 14.413841924004373,
+      "load_average_before_probes": [
+        40.07,
+        39.62,
+        55.86
+      ],
+      "results": [
+        {
+          "policy": "learned",
+          "selected_test_ids": [
+            "fsbuffer",
+            "pipe",
+            "shell1"
+          ],
+          "probe_predictions": {
+            "fsbuffer": 2561.718374161131,
+            "pipe": 3743.1271026180943,
+            "shell1": 3767.1562293812435
+          },
+          "suite_prediction": 3197.9442434015464,
+          "probe_process_wall_sum_s": 15.15197471101419,
+          "probe_phase_elapsed_s": 15.78524823099724,
+          "probes": {
+            "fsbuffer": {
+              "test_id": "fsbuffer",
+              "benchmark": "unixbench",
+              "category": "IO",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.039366101002088,
+              "workload": {
+                "category": "IO",
+                "duration_s": 4.0,
+                "elapsed_s": 4.037907714009634,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.33718487394957986,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 46620.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 46620.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 37.74,
+                  "loadavg_5m": 39.15,
+                  "loadavg_15m": 55.62,
+                  "runnable_tasks": 12,
+                  "total_tasks": 4958,
+                  "last_pid": 1884655
+                }
+              }
+            },
+            "pipe": {
+              "test_id": "pipe",
+              "benchmark": "unixbench",
+              "category": "thread",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.056456600010279,
+              "workload": {
+                "category": "thread",
+                "duration_s": 4.0,
+                "elapsed_s": 4.0549592949973885,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.38095238095238093,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 2312.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 2312.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 35.52,
+                  "loadavg_5m": 38.66,
+                  "loadavg_15m": 55.37,
+                  "runnable_tasks": 8,
+                  "total_tasks": 4875,
+                  "last_pid": 1892970
+                }
+              }
+            },
+            "shell1": {
+              "test_id": "shell1",
+              "benchmark": "unixbench",
+              "category": "thread",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.056152010001824,
+              "workload": {
+                "category": "thread",
+                "duration_s": 4.0,
+                "elapsed_s": 4.054684433998773,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.3853211009174312,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 15486.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 15486.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 33.48,
+                  "loadavg_5m": 38.19,
+                  "loadavg_15m": 55.13,
+                  "runnable_tasks": 7,
+                  "total_tasks": 4879,
+                  "last_pid": 1901491
+                }
+              }
+            }
+          },
+          "load_average_before": [
+            40.07,
+            39.62,
+            55.86
+          ],
+          "load_average_after": [
+            33.48,
+            38.19,
+            55.13
+          ],
+          "context_collection_s": 14.413841924004373,
+          "suite_absolute_error": 1766.4442434015464,
+          "suite_relative_error_percent": 123.3981308698251
+        },
+        {
+          "policy": "fixed_first_k",
+          "selected_test_ids": [
+            "dhry2reg",
+            "whetstone-double",
+            "execl"
+          ],
+          "probe_predictions": {
+            "dhry2reg": 7292.428896595927,
+            "whetstone-double": 2520.7059503287564,
+            "execl": 975.1596052765018
+          },
+          "suite_prediction": 3197.9442434015464,
+          "probe_process_wall_sum_s": 15.16495454600954,
+          "probe_phase_elapsed_s": 15.794305663002888,
+          "probes": {
+            "dhry2reg": {
+              "test_id": "dhry2reg",
+              "benchmark": "unixbench",
+              "category": "CPU",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.049580373000936,
+              "workload": {
+                "category": "CPU",
+                "duration_s": 4.0,
+                "elapsed_s": 4.03906363400165,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.40131578947368424,
+                  "iowait_ratio": 0.0005060728744939271
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 778.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 778.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 31.76,
+                  "loadavg_5m": 37.75,
+                  "loadavg_15m": 54.89,
+                  "runnable_tasks": 9,
+                  "total_tasks": 4876,
+                  "last_pid": 1901753
+                }
+              }
+            },
+            "whetstone-double": {
+              "test_id": "whetstone-double",
+              "benchmark": "unixbench",
+              "category": "CPU",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.057058306003455,
+              "workload": {
+                "category": "CPU",
+                "duration_s": 4.0,
+                "elapsed_s": 4.055504218005808,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.39203675344563554,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 7296.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 7296.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 31.86,
+                  "loadavg_5m": 37.67,
+                  "loadavg_15m": 54.78,
+                  "runnable_tasks": 8,
+                  "total_tasks": 4875,
+                  "last_pid": 1902096
+                }
+              }
+            },
+            "execl": {
+              "test_id": "execl",
+              "benchmark": "unixbench",
+              "category": "thread",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.058315867005149,
+              "workload": {
+                "category": "thread",
+                "duration_s": 4.0,
+                "elapsed_s": 4.056821461999789,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.5478348439073515,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 852.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 852.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 30.51,
+                  "loadavg_5m": 37.3,
+                  "loadavg_15m": 54.56,
+                  "runnable_tasks": 9,
+                  "total_tasks": 4875,
+                  "last_pid": 1910654
+                }
+              }
+            }
+          },
+          "load_average_before": [
+            33.48,
+            38.19,
+            55.13
+          ],
+          "load_average_after": [
+            30.51,
+            37.3,
+            54.56
+          ],
+          "context_collection_s": 14.413841924004373,
+          "suite_absolute_error": 1766.4442434015464,
+          "suite_relative_error_percent": 123.3981308698251
+        },
+        {
+          "policy": "fixed_cpu_mix",
+          "selected_test_ids": [
+            "dhry2reg",
+            "whetstone-double",
+            "syscall"
+          ],
+          "probe_predictions": {
+            "dhry2reg": 7292.428896595927,
+            "whetstone-double": 2520.7059503287564,
+            "syscall": 2372.9833803290803
+          },
+          "suite_prediction": 3197.9442377058713,
+          "probe_process_wall_sum_s": 15.16044334799517,
+          "probe_phase_elapsed_s": 15.789394217004883,
+          "probes": {
+            "dhry2reg": {
+              "test_id": "dhry2reg",
+              "benchmark": "unixbench",
+              "category": "CPU",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.051704201992834,
+              "workload": {
+                "category": "CPU",
+                "duration_s": 4.0,
+                "elapsed_s": 4.035122892004438,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.4436438497169326,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 6936.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 6936.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 27.95,
+                  "loadavg_5m": 36.53,
+                  "loadavg_15m": 54.13,
+                  "runnable_tasks": 6,
+                  "total_tasks": 4870,
+                  "last_pid": 1911001
+                }
+              }
+            },
+            "whetstone-double": {
+              "test_id": "whetstone-double",
+              "benchmark": "unixbench",
+              "category": "CPU",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.048939754997264,
+              "workload": {
+                "category": "CPU",
+                "duration_s": 4.0,
+                "elapsed_s": 4.047349412998301,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.5545361875637105,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 2854.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 2854.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 26.19,
+                  "loadavg_5m": 36.02,
+                  "loadavg_15m": 53.87,
+                  "runnable_tasks": 11,
+                  "total_tasks": 4882,
+                  "last_pid": 1911266
+                }
+              }
+            },
+            "syscall": {
+              "test_id": "syscall",
+              "benchmark": "unixbench",
+              "category": "syscall",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.059799391005072,
+              "workload": {
+                "category": "syscall",
+                "duration_s": 4.0,
+                "elapsed_s": 4.057100795995211,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.42545638945233266,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 57438.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 57438.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 25.69,
+                  "loadavg_5m": 35.76,
+                  "loadavg_15m": 53.69,
+                  "runnable_tasks": 45,
+                  "total_tasks": 4976,
+                  "last_pid": 1911601
+                }
+              }
+            }
+          },
+          "load_average_before": [
+            30.51,
+            37.3,
+            54.56
+          ],
+          "load_average_after": [
+            25.69,
+            35.76,
+            53.69
+          ],
+          "context_collection_s": 14.413841924004373,
+          "suite_absolute_error": 1766.4442377058713,
+          "suite_relative_error_percent": 123.3981304719435
+        },
+        {
+          "policy": "fixed_io_mix",
+          "selected_test_ids": [
+            "fstime",
+            "fsbuffer",
+            "fsdisk"
+          ],
+          "probe_predictions": {
+            "fstime": 4005.0905610843765,
+            "fsbuffer": 2569.945761242796,
+            "fsdisk": 8005.824483862773
+          },
+          "suite_prediction": 3197.944237524313,
+          "probe_process_wall_sum_s": 15.178970448992914,
+          "probe_phase_elapsed_s": 15.812227606002125,
+          "probes": {
+            "fstime": {
+              "test_id": "fstime",
+              "benchmark": "unixbench",
+              "category": "IO",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.060672830994008,
+              "workload": {
+                "category": "IO",
+                "duration_s": 4.0,
+                "elapsed_s": 4.050052969992976,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.4312306101344364,
+                  "iowait_ratio": 0.000517063081695967
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 92318.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 92318.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 24.28,
+                  "loadavg_5m": 35.29,
+                  "loadavg_15m": 53.44,
+                  "runnable_tasks": 8,
+                  "total_tasks": 4880,
+                  "last_pid": 1911930
+                }
+              }
+            },
+            "fsbuffer": {
+              "test_id": "fsbuffer",
+              "benchmark": "unixbench",
+              "category": "IO",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.054841274002683,
+              "workload": {
+                "category": "IO",
+                "duration_s": 4.0,
+                "elapsed_s": 4.0531368919910165,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.686734693877551,
+                  "iowait_ratio": 0.0010204081632653062
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 395068.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 395068.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 23.69,
+                  "loadavg_5m": 34.99,
+                  "loadavg_15m": 53.25,
+                  "runnable_tasks": 44,
+                  "total_tasks": 4991,
+                  "last_pid": 1912575
+                }
+              }
+            },
+            "fsdisk": {
+              "test_id": "fsdisk",
+              "benchmark": "unixbench",
+              "category": "IO",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.063456343996222,
+              "workload": {
+                "category": "IO",
+                "duration_s": 4.0,
+                "elapsed_s": 4.0578371599985985,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.6941896024464832,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 359656.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 359656.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 23.48,
+                  "loadavg_5m": 34.76,
+                  "loadavg_15m": 53.07,
+                  "runnable_tasks": 26,
+                  "total_tasks": 4908,
+                  "last_pid": 1912778
+                }
+              }
+            }
+          },
+          "load_average_before": [
+            25.69,
+            35.76,
+            53.69
+          ],
+          "load_average_after": [
+            23.48,
+            34.76,
+            53.07
+          ],
+          "context_collection_s": 14.413841924004373,
+          "suite_absolute_error": 1766.444237524313,
+          "suite_relative_error_percent": 123.39813045926043
+        }
+      ],
+      "load_average_after_probes": [
+        23.48,
+        34.76,
+        53.07
+      ]
+    },
+    {
+      "repetition": 3,
+      "policy_order": [
+        "learned",
+        "fixed_io_mix",
+        "fixed_first_k",
+        "fixed_cpu_mix"
+      ],
+      "context_collection_s": 14.312153274004231,
+      "load_average_before_probes": [
+        22.75,
+        34.04,
+        52.54
+      ],
+      "results": [
+        {
+          "policy": "learned",
+          "selected_test_ids": [
+            "fsbuffer",
+            "pipe",
+            "execl"
+          ],
+          "probe_predictions": {
+            "fsbuffer": 2570.9196065053234,
+            "pipe": 3759.259526382428,
+            "execl": 975.828341475408
+          },
+          "suite_prediction": 3197.9442434015464,
+          "probe_process_wall_sum_s": 15.161598304010113,
+          "probe_phase_elapsed_s": 15.80326966199209,
+          "probes": {
+            "fsbuffer": {
+              "test_id": "fsbuffer",
+              "benchmark": "unixbench",
+              "category": "IO",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.038098327000625,
+              "workload": {
+                "category": "IO",
+                "duration_s": 4.0,
+                "elapsed_s": 4.036415797992959,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.7929085303186023,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 515756.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 515756.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 24.14,
+                  "loadavg_5m": 34.14,
+                  "loadavg_15m": 52.47,
+                  "runnable_tasks": 74,
+                  "total_tasks": 5116,
+                  "last_pid": 1916981
+                }
+              }
+            },
+            "pipe": {
+              "test_id": "pipe",
+              "benchmark": "unixbench",
+              "category": "thread",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.062598253003671,
+              "workload": {
+                "category": "thread",
+                "duration_s": 4.0,
+                "elapsed_s": 4.043458197003929,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.7834497581945191,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 506214.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 506214.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 26.77,
+                  "loadavg_5m": 34.52,
+                  "loadavg_15m": 52.5,
+                  "runnable_tasks": 44,
+                  "total_tasks": 5028,
+                  "last_pid": 1924835
+                }
+              }
+            },
+            "execl": {
+              "test_id": "execl",
+              "benchmark": "unixbench",
+              "category": "thread",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.0609017240058165,
+              "workload": {
+                "category": "thread",
+                "duration_s": 4.0,
+                "elapsed_s": 4.041659608003101,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.793724279835391,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 608812.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 608812.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 28.23,
+                  "loadavg_5m": 34.69,
+                  "loadavg_15m": 52.46,
+                  "runnable_tasks": 55,
+                  "total_tasks": 5113,
+                  "last_pid": 1932701
+                }
+              }
+            }
+          },
+          "load_average_before": [
+            22.75,
+            34.04,
+            52.54
+          ],
+          "load_average_after": [
+            28.23,
+            34.69,
+            52.46
+          ],
+          "context_collection_s": 14.312153274004231,
+          "suite_absolute_error": 1766.4442434015464,
+          "suite_relative_error_percent": 123.3981308698251
+        },
+        {
+          "policy": "fixed_io_mix",
+          "selected_test_ids": [
+            "fstime",
+            "fsbuffer",
+            "fsdisk"
+          ],
+          "probe_predictions": {
+            "fstime": 4013.599583159457,
+            "fsbuffer": 2577.1144401443125,
+            "fsdisk": 8005.824483862773
+          },
+          "suite_prediction": 3197.944237524313,
+          "probe_process_wall_sum_s": 15.189549731003353,
+          "probe_phase_elapsed_s": 15.812794897996355,
+          "probes": {
+            "fstime": {
+              "test_id": "fstime",
+              "benchmark": "unixbench",
+              "category": "IO",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.055030674004229,
+              "workload": {
+                "category": "IO",
+                "duration_s": 4.0,
+                "elapsed_s": 4.046469644003082,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.7863974495217854,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 646356.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 646356.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 29.17,
+                  "loadavg_5m": 34.78,
+                  "loadavg_15m": 52.39,
+                  "runnable_tasks": 43,
+                  "total_tasks": 5100,
+                  "last_pid": 1934381
+                }
+              }
+            },
+            "fsbuffer": {
+              "test_id": "fsbuffer",
+              "benchmark": "unixbench",
+              "category": "IO",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.068759802001296,
+              "workload": {
+                "category": "IO",
+                "duration_s": 4.0,
+                "elapsed_s": 4.0667747180123115,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.7975769813225644,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 571564.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 571564.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 32.84,
+                  "loadavg_5m": 35.45,
+                  "loadavg_15m": 52.51,
+                  "runnable_tasks": 49,
+                  "total_tasks": 5026,
+                  "last_pid": 1935565
+                }
+              }
+            },
+            "fsdisk": {
+              "test_id": "fsdisk",
+              "benchmark": "unixbench",
+              "category": "IO",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.065759254997829,
+              "workload": {
+                "category": "IO",
+                "duration_s": 4.0,
+                "elapsed_s": 4.060092287007137,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.7844504021447721,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 510108.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 510108.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 33.81,
+                  "loadavg_5m": 35.6,
+                  "loadavg_15m": 52.47,
+                  "runnable_tasks": 41,
+                  "total_tasks": 5020,
+                  "last_pid": 1936756
+                }
+              }
+            }
+          },
+          "load_average_before": [
+            28.23,
+            34.69,
+            52.46
+          ],
+          "load_average_after": [
+            33.81,
+            35.6,
+            52.47
+          ],
+          "context_collection_s": 14.312153274004231,
+          "suite_absolute_error": 1766.444237524313,
+          "suite_relative_error_percent": 123.39813045926043
+        },
+        {
+          "policy": "fixed_first_k",
+          "selected_test_ids": [
+            "dhry2reg",
+            "whetstone-double",
+            "execl"
+          ],
+          "probe_predictions": {
+            "dhry2reg": 7299.977408903985,
+            "whetstone-double": 2524.353577552429,
+            "execl": 982.0231751143968
+          },
+          "suite_prediction": 3197.9442434015464,
+          "probe_process_wall_sum_s": 15.182790446007857,
+          "probe_phase_elapsed_s": 15.820926072003203,
+          "probes": {
+            "dhry2reg": {
+              "test_id": "dhry2reg",
+              "benchmark": "unixbench",
+              "category": "CPU",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.060707323005772,
+              "workload": {
+                "category": "CPU",
+                "duration_s": 4.0,
+                "elapsed_s": 4.0552602899988415,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.7885021097046413,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 544296.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 544296.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 37.11,
+                  "loadavg_5m": 36.26,
+                  "loadavg_15m": 52.59,
+                  "runnable_tasks": 42,
+                  "total_tasks": 5022,
+                  "last_pid": 1937982
+                }
+              }
+            },
+            "whetstone-double": {
+              "test_id": "whetstone-double",
+              "benchmark": "unixbench",
+              "category": "CPU",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.058343484997749,
+              "workload": {
+                "category": "CPU",
+                "duration_s": 4.0,
+                "elapsed_s": 4.052715818994329,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.7872679045092839,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 634858.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 634858.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 37.83,
+                  "loadavg_5m": 36.42,
+                  "loadavg_15m": 52.56,
+                  "runnable_tasks": 42,
+                  "total_tasks": 5083,
+                  "last_pid": 1939246
+                }
+              }
+            },
+            "execl": {
+              "test_id": "execl",
+              "benchmark": "unixbench",
+              "category": "thread",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.063739638004336,
+              "workload": {
+                "category": "thread",
+                "duration_s": 4.0,
+                "elapsed_s": 4.055068714995286,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.7867021276595745,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 485766.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 485766.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 38.4,
+                  "loadavg_5m": 36.56,
+                  "loadavg_15m": 52.52,
+                  "runnable_tasks": 78,
+                  "total_tasks": 5102,
+                  "last_pid": 1946880
+                }
+              }
+            }
+          },
+          "load_average_before": [
+            33.81,
+            35.6,
+            52.47
+          ],
+          "load_average_after": [
+            38.4,
+            36.56,
+            52.52
+          ],
+          "context_collection_s": 14.312153274004231,
+          "suite_absolute_error": 1766.4442434015464,
+          "suite_relative_error_percent": 123.3981308698251
+        },
+        {
+          "policy": "fixed_cpu_mix",
+          "selected_test_ids": [
+            "dhry2reg",
+            "whetstone-double",
+            "syscall"
+          ],
+          "probe_predictions": {
+            "dhry2reg": 7299.977408903985,
+            "whetstone-double": 2524.353577552429,
+            "syscall": 2380.7768277846294
+          },
+          "suite_prediction": 3197.9442377058713,
+          "probe_process_wall_sum_s": 15.166210174997104,
+          "probe_phase_elapsed_s": 15.804813861002913,
+          "probes": {
+            "dhry2reg": {
+              "test_id": "dhry2reg",
+              "benchmark": "unixbench",
+              "category": "CPU",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.048908679003944,
+              "workload": {
+                "category": "CPU",
+                "duration_s": 4.0,
+                "elapsed_s": 4.043333617009921,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.7862838915470495,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 629360.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 629360.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 38.77,
+                  "loadavg_5m": 36.67,
+                  "loadavg_15m": 52.47,
+                  "runnable_tasks": 52,
+                  "total_tasks": 5098,
+                  "last_pid": 1948255
+                }
+              }
+            },
+            "whetstone-double": {
+              "test_id": "whetstone-double",
+              "benchmark": "unixbench",
+              "category": "CPU",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.049574012999074,
+              "workload": {
+                "category": "CPU",
+                "duration_s": 4.0,
+                "elapsed_s": 4.047556675010128,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.7940267765190525,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 580382.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 580382.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 40.71,
+                  "loadavg_5m": 37.11,
+                  "loadavg_15m": 52.52,
+                  "runnable_tasks": 45,
+                  "total_tasks": 5010,
+                  "last_pid": 1949213
+                }
+              }
+            },
+            "syscall": {
+              "test_id": "syscall",
+              "benchmark": "unixbench",
+              "category": "syscall",
+              "probe_mode": "micro",
+              "duration_s": 4.0,
+              "wall_s": 5.067727482994087,
+              "workload": {
+                "category": "syscall",
+                "duration_s": 4.0,
+                "elapsed_s": 4.065573582003708,
+                "returncode": 0,
+                "stderr_excerpt": null,
+                "mode": "micro"
+              },
+              "real_run": null,
+              "ebpf": {
+                "available": false,
+                "reason": "disabled"
+              },
+              "proc": {
+                "cpu_utilization": {
+                  "cpu_utilization_ratio": 0.787718369507676,
+                  "iowait_ratio": 0.0
+                },
+                "vmstat_faults": {
+                  "page_faults_per_sec": 635462.0,
+                  "major_faults_per_sec": 0.0,
+                  "minor_faults_per_sec": 635462.0
+                },
+                "loadavg": {
+                  "loadavg_1m": 40.89,
+                  "loadavg_5m": 37.21,
+                  "loadavg_15m": 52.47,
+                  "runnable_tasks": 43,
+                  "total_tasks": 5012,
+                  "last_pid": 1950598
+                }
+              }
+            }
+          },
+          "load_average_before": [
+            38.4,
+            36.56,
+            52.52
+          ],
+          "load_average_after": [
+            40.89,
+            37.21,
+            52.47
+          ],
+          "context_collection_s": 14.312153274004231,
+          "suite_absolute_error": 1766.4442377058713,
+          "suite_relative_error_percent": 123.3981304719435
+        }
+      ],
+      "load_average_after_probes": [
+        40.89,
+        37.21,
+        52.47
+      ]
+    }
+  ],
+  "summary": {
+    "learned": {
+      "n": 3,
+      "mean_suite_relative_error_percent": 123.3981308698251,
+      "mean_probe_phase_elapsed_s": 15.798563610330651
+    },
+    "fixed_first_k": {
+      "n": 3,
+      "mean_suite_relative_error_percent": 123.3981308698251,
+      "mean_probe_phase_elapsed_s": 15.805425394670843
+    },
+    "fixed_cpu_mix": {
+      "n": 3,
+      "mean_suite_relative_error_percent": 123.3981304719435,
+      "mean_probe_phase_elapsed_s": 15.80313747934027
+    },
+    "fixed_io_mix": {
+      "n": 3,
+      "mean_suite_relative_error_percent": 123.39813045926043,
+      "mean_probe_phase_elapsed_s": 15.826661830995969
+    }
+  }
+}

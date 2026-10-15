@@ -1,0 +1,63 @@
+{
+  "round": 6,
+  "reviewer_role": "independent_read_only",
+  "recommendation": "reject",
+  "score": 2,
+  "confidence": 5,
+  "artifact_consistency": {
+    "source_pdf_zip_content_match": true,
+    "source_sha256": "7c3fc6d2e26fabcfdbbe6ebf51afa1947ce161836792aebf7a53d61f20bfaf2d",
+    "pdf_sha256": "1ced10cd0f915d72bc632ac71931490aef4a06bd35d5c053a600410a0ed86683",
+    "pdf_pages": 12,
+    "pdf_page_size": "Letter"
+  },
+  "gpu_caption_audit": {
+    "caption_identifies_reported_comparison": true,
+    "missing_run_records_disclosed": true,
+    "error_aggregation_and_timing_boundaries_disclosed_as_unspecified": true,
+    "paired_speedup_claim_disclaimed": true,
+    "benchscout_time_cells_bolded": false,
+    "lowest_reported_error_bolded_per_host": true,
+    "m1_hardware": "NVIDIA RTX 3090 Ti",
+    "m6_hardware": "NVIDIA T4",
+    "supplied_values": {
+      "m1_benchscout_error_percent": 0.18,
+      "m1_benchscout_time_seconds": 15.0,
+      "m6_benchscout_error_percent": 0.14,
+      "m6_benchscout_time_seconds": 15.0,
+      "m1_wang_proxy_error_percent": 0.26,
+      "m6_wang_proxy_error_percent": 5.13,
+      "m1_tousi_proxy_error_percent": 98.85,
+      "m6_tousi_proxy_error_percent": 67.14,
+      "m1_full_suite_time_seconds": 27018.0,
+      "m6_full_suite_time_seconds": 12951.0
+    },
+    "auditable_m1_oof": {
+      "mean_error_percent": 0.9533914658465864,
+      "nominal_budget_seconds": 18.03498404380516,
+      "n_runs": 5,
+      "n_sessions": 1,
+      "full_suite_time_semantics": "maximum of five per-profile timing sums, not end-to-end wall time"
+    },
+    "m6_repository_raw_run_present": false,
+    "m6_supplied_protocol_present": false
+  },
+  "verified_fixes": [
+    "GPU table is framed as a reported PTS-GPU comparison rather than an unqualified overall-effectiveness result",
+    "caption discloses missing run-level evidence and unspecified error aggregation and timing boundaries",
+    "caption explicitly disclaims paired speedup interpretation",
+    "BenchScout time values are not bolded",
+    "M1/M6 hardware labels and user-provided values are present",
+    "source, compiled PDF, and root ZIP contain matching source and PDF content"
+  ],
+  "blocking_findings": [
+    "supplied GPU comparison still has no independently auditable raw records, counts, split, target derivation, per-run predictions, model configuration, or timing logs",
+    "M1 supplied 0.18 percent and 15.0 seconds remain unreconciled with audited OOF 0.9534 percent and 18.035 seconds",
+    "GPU Time column still combines quantities with unknown timing boundaries and is not a common interpretable cost metric",
+    "M6 has no raw run or protocol artifacts for proxy or BenchScout cells",
+    "one session and five runs per audited host-suite pair do not support independent generalization; routing policies have identical predictions and xi-only control is nearly tied",
+    "nested crossfit corrects a feature construction issue but leaves every held-out prediction unchanged",
+    "baseline coverage remains weak and submission ZIP lacks raw data, checkpoints, split manifests, and portable table reproduction path"
+  ],
+  "score_change": "none; transparency improved but evidence and contribution limitations remain"
+}

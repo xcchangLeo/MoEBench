@@ -9,6 +9,7 @@ from typing import Any
 import numpy as np
 
 from moebench.reconstruct.data import build_partial_feature_row_from_executed_tests
+from moebench.probe.suite_aggregate import aggregate_suite_index
 from moebench.unixbench.experts import INDEX_SUITE_TEST_IDS
 
 try:
@@ -175,7 +176,7 @@ def predict_from_partial(
 
     sigma_vec: np.ndarray | None = None
 
-    if mt in ("lightgbm", "xgboost"):
+    if mt in ("lightgbm", "lightgbm_small", "xgboost", "ridge"):
         est = bundle.get("estimator")
         if est is None:
             raise ValueError("Bundle missing 'estimator'")
@@ -210,10 +211,127 @@ def predict_from_partial(
     for i, tid in enumerate(tids):
         sub[tid] = float(pred[i])
 
+    suite_output_mode = str(bundle.get("suite_output_mode", "direct"))
+    if suite_output_mode in (
+        "observed_plus_imputed_geomean",
+        "probe_plus_imputed_geomean",
+    ):
+        if bundle.get("benchmark", "unixbench") != "unixbench":
+            raise ValueError(f"{suite_output_mode} is currently defined for UnixBench only")
+        observed: dict[str, float] = {}
+        for item in executed_tests:
+            tid = str(item.get("test_id") or "")
+            if not tid or item.get("missing"):
+                continue
+            index_detail = item.get("index_detail") or {}
+            value = index_detail.get("index")
+            if value is None:
+                value = item.get("score")
+            if value is not None:
+                # Exact partial benchmark scores need no calibration. Micro
+                # probes predict scores and use only training-fold factors.
+                if suite_output_mode == "probe_plus_imputed_geomean":
+                    factors = bundle.get("probe_prediction_calibration_factors") or {}
+                    factor = factors.get(
+                        tid, bundle.get("probe_prediction_calibration_factor", 1.0)
+                    )
+                else:
+                    factor = 1.0
+                observed[tid] = float(value) * float(factor)
+        all_components = {
+            tid: observed.get(tid, float(pred[i]))
+            for i, tid in enumerate(tids)
+        }
+        suite_index = aggregate_suite_index(all_components, mode="geomean_raw_index")
+    elif suite_output_mode == "observed_plus_training_geomean":
+        if bundle.get("benchmark", "unixbench") != "unixbench":
+            raise ValueError("observed_plus_training_geomean is currently defined for UnixBench only")
+        observed: dict[str, float] = {}
+        for item in executed_tests:
+            tid = str(item.get("test_id") or "")
+            if not tid or item.get("missing"):
+                continue
+            index_detail = item.get("index_detail") or {}
+            value = index_detail.get("index")
+            if value is None:
+                value = item.get("score")
+            if value is not None:
+                observed[tid] = max(float(value), 1e-9)
+        training_means = bundle.get("training_component_log_means") or {}
+        all_components = {
+            tid: observed.get(
+                tid,
+                float(np.exp(float(training_means.get(tid, np.log(max(float(pred[i]), 1e-9)))))),
+            )
+            for i, tid in enumerate(tids)
+        }
+        suite_index = aggregate_suite_index(all_components, mode="geomean_raw_index")
+    elif suite_output_mode == "observed_plus_scaled_imputed_geomean":
+        if bundle.get("benchmark", "unixbench") != "unixbench":
+            raise ValueError("observed_plus_scaled_imputed_geomean is currently defined for UnixBench only")
+        observed: dict[str, float] = {}
+        ratios: list[float] = []
+        for item in executed_tests:
+            tid = str(item.get("test_id") or "")
+            if not tid or item.get("missing") or tid not in tids:
+                continue
+            index_detail = item.get("index_detail") or {}
+            value = index_detail.get("index")
+            if value is None:
+                value = item.get("score")
+            if value is None:
+                continue
+            exact = max(float(value), 1e-9)
+            observed[tid] = exact
+            base = max(float(pred[tids.index(tid)]), 1e-9)
+            ratios.append(exact / base)
+        scale = float(np.median(np.asarray(ratios, dtype=np.float64))) if ratios else 1.0
+        all_components = {
+            tid: observed.get(tid, max(float(pred[i]) * scale, 1e-9))
+            for i, tid in enumerate(tids)
+        }
+        suite_index = aggregate_suite_index(all_components, mode="geomean_raw_index")
+    elif suite_output_mode == "reconstructed_geomean":
+        if bundle.get("benchmark", "unixbench") != "unixbench":
+            raise ValueError("reconstructed_geomean is currently defined for UnixBench only")
+        suite_index = aggregate_suite_index(
+            {tid: float(pred[i]) for i, tid in enumerate(tids)},
+            mode="geomean_raw_index",
+        )
+    elif suite_output_mode == "probe_scaled_geomean":
+        if bundle.get("benchmark", "unixbench") != "unixbench":
+            raise ValueError("probe_scaled_geomean is currently defined for UnixBench only")
+        ratios: list[float] = []
+        for item in executed_tests:
+            tid = str(item.get("test_id") or "")
+            if tid not in tids or item.get("missing"):
+                continue
+            index_detail = item.get("index_detail") or {}
+            value = index_detail.get("index")
+            if value is None:
+                value = item.get("score")
+            base = float(pred[tids.index(tid)])
+            if value is not None and float(value) > 0.0 and base > 0.0:
+                ratios.append(float(value) / base)
+        scale = float(np.exp(np.median(np.log(ratios)))) if ratios else 1.0
+        suite_index = aggregate_suite_index(
+            {tid: float(pred[i]) * scale for i, tid in enumerate(tids)},
+            mode="geomean_raw_index",
+        )
+    elif suite_output_mode == "direct":
+        suite_index = float(pred[-1])
+    else:
+        raise ValueError(f"Unknown suite_output_mode: {suite_output_mode!r}")
+
     out: dict[str, Any] = {
         "subtest_index": sub,
-        "suite_index": float(pred[-1]),
+        "suite_index": suite_index,
+        "suite_index_direct_head": float(pred[-1]),
+        "suite_output_mode": suite_output_mode,
     }
+    if suite_output_mode == "probe_scaled_geomean":
+        out["probe_scale_anchor_count"] = len(ratios)
+        out["probe_scale_factor"] = scale
     if return_uncertainty:
         assert sigma_vec is not None
         if len(sigma_vec) != n_out:

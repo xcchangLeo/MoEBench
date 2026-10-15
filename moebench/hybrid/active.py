@@ -43,7 +43,30 @@ def _probe_one_subtest_online(
     probe_duration_s: float,
     probe_mode: str,
     enable_ebpf: bool,
+    unixbench_root: Path | None = None,
 ) -> tuple[float, float, dict[str, Any]]:
+    if probe_mode == "exact":
+        if benchmark != "unixbench":
+            raise ValueError("exact subtest probes are currently supported for UnixBench only")
+        from moebench.probe.real_runner import run_unixbench_subtest_timed
+
+        result = run_unixbench_subtest_timed(
+            tid, duration_s=probe_duration_s, unixbench_root=unixbench_root
+        )
+        partial = result.get("partial_result") or {}
+        score = partial.get("index")
+        if result.get("timed_out") or score is None:
+            raise RuntimeError(
+                f"Exact UnixBench subtest {tid!r} did not finish with an official index; "
+                f"elapsed={result.get('elapsed_s')}, returncode={result.get('returncode')}"
+            )
+        wall = float(result.get("elapsed_s") or probe_duration_s)
+        return float(score), wall, {
+            "test_id": tid,
+            "probe_mode": "exact",
+            "wall_s": wall,
+            "real_run": result,
+        }
     probe = collect_subtest_probe(
         tid,
         duration_s=probe_duration_s,
@@ -146,8 +169,11 @@ def evaluate_hybrid_fixed_k(
     run_name: str | None = None,
     online: bool = True,
     return_uncertainty: bool = False,
+    unixbench_root: Path | None = None,
 ) -> dict[str, Any]:
     """Fixed Top-K hybrid: router → probe K subtests → reconstruct (optional σ)."""
+    if probe_mode == "exact" and not online:
+        raise ValueError("exact subtest probes require online execution")
     _, selected_ids, router_detail = router_select_test_ids(router_meta, xi, top_k=top_k)
     sub_preds: dict[str, float] = {}
     probe_walls: dict[str, float] = {}
@@ -162,6 +188,7 @@ def evaluate_hybrid_fixed_k(
                 probe_duration_s=probe_duration_s,
                 probe_mode=probe_mode,
                 enable_ebpf=enable_ebpf,
+                unixbench_root=unixbench_root,
             )
         else:
             assert probe_index is not None and session and run_name
@@ -239,10 +266,13 @@ def evaluate_hybrid_active_refinement(
     session: str | None = None,
     run_name: str | None = None,
     online: bool = True,
+    unixbench_root: Path | None = None,
 ) -> dict[str, Any]:
     """Hybrid with σ-guided probe refinement after an initial router Top-K batch."""
     if not bundle_has_uncertainty(recon_bundle):
         raise ValueError("Reconstruction bundle must export uncertainty (v2 schema).")
+    if probe_mode == "exact" and not online:
+        raise ValueError("exact subtest probes require online execution")
 
     _, selected_ids, router_detail = router_select_test_ids(
         router_meta, xi, top_k=initial_top_k
@@ -261,6 +291,7 @@ def evaluate_hybrid_active_refinement(
                 probe_duration_s=probe_duration_s,
                 probe_mode=probe_mode,
                 enable_ebpf=enable_ebpf,
+                unixbench_root=unixbench_root,
             )
         else:
             assert probe_index is not None and session and run_name
@@ -438,14 +469,20 @@ def evaluate_hybrid_active_experiment(
     online: bool = True,
     probe_dataset: dict[str, Any] | None = None,
     fixed_k_compare: list[int] | None = None,
+    unixbench_root: Path | None = None,
 ) -> dict[str, Any]:
     benchmark = str(recon_bundle.get("benchmark") or probe_bundle.get("benchmark") or "unixbench")
+    mode = str(probe_mode or probe_bundle.get("probe_mode") or "micro")
     probe_duration_s = float(
         probe_duration_s
         if probe_duration_s is not None
-        else probe_bundle.get("probe_duration_s", 4.0)
+        else 180.0 if mode == "exact" else probe_bundle.get("probe_duration_s", 4.0)
     )
-    mode = str(probe_mode or probe_bundle.get("probe_mode") or "micro")
+    if mode == "exact" and recon_bundle.get("suite_output_mode") != "observed_plus_scaled_imputed_geomean":
+        raise ValueError(
+            "exact UnixBench probes require a reconstructor trained with "
+            "suite_output_mode=observed_plus_scaled_imputed_geomean"
+        )
     recon_test_ids = list(recon_bundle.get("test_ids") or probe_bundle.get("test_ids") or INDEX_SUITE_TEST_IDS)
     gt = _ground_truth_suite(ground_truth_ds, benchmark=benchmark, test_ids=recon_test_ids)
     if gt is None:
@@ -489,6 +526,7 @@ def evaluate_hybrid_active_experiment(
         session=session,
         run_name=run_name,
         online=online,
+        unixbench_root=unixbench_root,
     )
     if active.get("skipped"):
         return {"skipped": True, "reason": active.get("reason"), "active_refinement": active}
@@ -523,6 +561,7 @@ def evaluate_hybrid_active_experiment(
             session=session,
             run_name=run_name,
             online=online,
+            unixbench_root=unixbench_root,
         )
         if not row.get("skipped"):
             extra_compare[f"fixed_k{k}"] = row

@@ -1,0 +1,81 @@
+{
+  "schema": "moebench.cloudsuite.session_quality_audit.v1",
+  "analysis_complete": false,
+  "reason": "audit_only_no_model_analysis",
+  "required_primary_session_count": 4,
+  "eligible_session_ids": [
+    1,
+    2,
+    4
+  ],
+  "remaining_eligible_sessions_needed": 1,
+  "selection_rule": "Among observed session IDs, select by earliest first-cell start timestamp the first four sessions for which both configs have all five probe and five full-reference cells, each structurally valid, mix-valid, zero transaction failures, and throughput-usable. No prediction error is inspected during selection.",
+  "cell_validity_rule": "summary_valid AND mix_valid AND operation_failures == 0 AND throughput_usable AND client exit code 0 AND no client protocol error; latency SLO outcomes do not decide session eligibility.",
+  "input_manifests": [
+    {
+      "path": "/home/zyf/code/MoEBench/agent_workflow/rounds/round-8-cloudsuite/results/bsr8-local-20261013T080042Z-877852/runs.jsonl",
+      "sha256": "ec589816d361722051c080ef55776e64746309af1433546687e6639effa0491e"
+    }
+  ],
+  "candidate_session_audit_in_chronological_order": [
+    {
+      "session": 1,
+      "first_start_epoch_ns": 1791878449165458800,
+      "complete_cell_count": 20,
+      "expected_cell_count": 20,
+      "invalid_cell_count": 0,
+      "transaction_failure_cell_count": 0,
+      "valid_under_predeclared_rule": true,
+      "invalid_cells": []
+    },
+    {
+      "session": 2,
+      "first_start_epoch_ns": 1791882259862171517,
+      "complete_cell_count": 20,
+      "expected_cell_count": 20,
+      "invalid_cell_count": 0,
+      "transaction_failure_cell_count": 0,
+      "valid_under_predeclared_rule": true,
+      "invalid_cells": []
+    },
+    {
+      "session": 3,
+      "first_start_epoch_ns": 1791886040284126895,
+      "complete_cell_count": 20,
+      "expected_cell_count": 20,
+      "invalid_cell_count": 1,
+      "transaction_failure_cell_count": 1,
+      "valid_under_predeclared_rule": false,
+      "invalid_cells": [
+        {
+          "cell": [
+            "fpm8",
+            "full",
+            40
+          ],
+          "reasons": [
+            "transaction_failures=1:[{'operation': 'Register', 'failures': 1}]",
+            "throughput_not_usable_under_zero_failure_rule"
+          ],
+          "operation_failures": 1,
+          "operation_failures_by_name": [
+            {
+              "operation": "Register",
+              "failures": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "session": 4,
+      "first_start_epoch_ns": 1791889810210762642,
+      "complete_cell_count": 20,
+      "expected_cell_count": 20,
+      "invalid_cell_count": 0,
+      "transaction_failure_cell_count": 0,
+      "valid_under_predeclared_rule": true,
+      "invalid_cells": []
+    }
+  ]
+}

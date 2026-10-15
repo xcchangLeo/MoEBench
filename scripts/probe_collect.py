@@ -41,6 +41,7 @@ def main() -> int:
         help="Required for phoronix: cpu or pts/nvidia-gpu-compute",
     )
     ap.add_argument("--dataset-root", type=str, default="dataset")
+    ap.add_argument("--unixbench-root", type=Path, default=None)
     ap.add_argument("--machine", type=str, default="", help="Host slug (default: current hostname)")
     ap.add_argument("--probe-duration-s", type=float, default=4.0, help="Seconds per subtest (3–5 recommended)")
     ap.add_argument(
@@ -63,6 +64,12 @@ def main() -> int:
         default=0,
         help="Limit number of source run JSONs (0 = all on this machine)",
     )
+    ap.add_argument(
+        "--source-run",
+        action="append",
+        default=[],
+        help="Collect probes against this exact labeled run JSON; repeat to specify multiple runs",
+    )
     args = ap.parse_args()
 
     if args.benchmark == "phoronix" and not args.pts_suite.strip():
@@ -80,6 +87,8 @@ def main() -> int:
         enable_ebpf=not args.no_ebpf,
         probe_mode=args.probe_mode,
         live_probe=True,
+        unixbench_root=args.unixbench_root,
+        source_runs=args.source_run or None,
     )
     if args.max_runs > 0:
         by_run: dict[str, list] = {}

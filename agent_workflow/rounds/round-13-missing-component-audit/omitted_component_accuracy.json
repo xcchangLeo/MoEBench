@@ -1,0 +1,1684 @@
+{
+  "schema": "moebench.omitted_component_accuracy_audit.v1",
+  "metric": "For each held-out run, compute MAPE only over component IDs not selected by the router; report per-run means, then equal-weight host means by suite.",
+  "target_join": "Each per_run.run_json is resolved to its exact full-run JSON; the run must be declared held out in the OOF report fold_manifest. Predicted and target component ID sets must match exactly.",
+  "target_definition": {
+    "unixbench": "official per-subtest Index score from the preferred single-copy result block",
+    "pts": "primary value from Phoronix Test Suite export; PTS suite-level log-mean proxy is not used in this component metric"
+  },
+  "inputs": [
+    {
+      "report": "/home/zyf/code/MoEBench/agent_workflow/rounds/round-1-m1-unixbench-oof.json",
+      "report_sha256": "71377f9fac158f16ac4aeae3f6ceb00ab8b2275070e0394c3dd3c8e7a783ca0b",
+      "machine": "aces-System-Product-Name",
+      "benchmark": "unixbench",
+      "pts_suite": null,
+      "n_runs": 5
+    },
+    {
+      "report": "/home/zyf/code/MoEBench/agent_workflow/rounds/round-1-oof-iZbp15n87643uk1sqjrdvdZ.json",
+      "report_sha256": "5b5cba7cef8c1e156c64e113165cb99be77810bbc9bd4c577b3cb5566c9dd4ef",
+      "machine": "iZbp15n87643uk1sqjrdvdZ",
+      "benchmark": "unixbench",
+      "pts_suite": null,
+      "n_runs": 5
+    },
+    {
+      "report": "/home/zyf/code/MoEBench/agent_workflow/rounds/round-1-oof-iZbp16krl0yc7euw7sb6slZ.json",
+      "report_sha256": "80f05c25bfed75f0dbde5bb9153661d7526205b704cbd7b99f9794b197f5f4bd",
+      "machine": "iZbp16krl0yc7euw7sb6slZ",
+      "benchmark": "unixbench",
+      "pts_suite": null,
+      "n_runs": 5
+    },
+    {
+      "report": "/home/zyf/code/MoEBench/agent_workflow/rounds/round-1-oof-iZbp1acaw5wdllhz47922rZ.json",
+      "report_sha256": "2c5a9ad5f4383c06ba4057d0e685664bf2561a8dd4acc29fe905de40d5404080",
+      "machine": "iZbp1acaw5wdllhz47922rZ",
+      "benchmark": "unixbench",
+      "pts_suite": null,
+      "n_runs": 5
+    },
+    {
+      "report": "/home/zyf/code/MoEBench/agent_workflow/rounds/round-1-oof-iZbp1glgt48i9a8d49embxZ.json",
+      "report_sha256": "a82e8b95cef13a071a02969d4c87ace0cd454044646e6db28fc6b482195156e2",
+      "machine": "iZbp1glgt48i9a8d49embxZ",
+      "benchmark": "unixbench",
+      "pts_suite": null,
+      "n_runs": 5
+    },
+    {
+      "report": "/home/zyf/code/MoEBench/agent_workflow/rounds/round-1-oof-pts-cpu-aces-System-Product-Name.json",
+      "report_sha256": "33bf9b8f5bc0863ca614e0d05736bbfdcd1492f04fecd360ef74845f2e654313",
+      "machine": "aces-System-Product-Name",
+      "benchmark": "phoronix",
+      "pts_suite": "cpu",
+      "n_runs": 5
+    },
+    {
+      "report": "/home/zyf/code/MoEBench/agent_workflow/rounds/round-1-oof-pts-cpu-iZbp15n87643uk1sqjrdvdZ.json",
+      "report_sha256": "d2544e3eb034431334fb0f98fd3b66b18b060730cc2b6153851cc1ebdf496ed4",
+      "machine": "iZbp15n87643uk1sqjrdvdZ",
+      "benchmark": "phoronix",
+      "pts_suite": "cpu",
+      "n_runs": 5
+    },
+    {
+      "report": "/home/zyf/code/MoEBench/agent_workflow/rounds/round-1-oof-pts-cpu-iZbp16krl0yc7euw7sb6slZ.json",
+      "report_sha256": "e0e56a218bc9d6980fb23a70c843b0e6267ebded1b03d2023aee84ff81549a99",
+      "machine": "iZbp16krl0yc7euw7sb6slZ",
+      "benchmark": "phoronix",
+      "pts_suite": "cpu",
+      "n_runs": 5
+    },
+    {
+      "report": "/home/zyf/code/MoEBench/agent_workflow/rounds/round-1-oof-pts-cpu-iZbp1acaw5wdllhz47922rZ.json",
+      "report_sha256": "d97c6e8f5e7208b8b1fe3cc1db217e66e97be02b042da2417771afbf570cefb2",
+      "machine": "iZbp1acaw5wdllhz47922rZ",
+      "benchmark": "phoronix",
+      "pts_suite": "cpu",
+      "n_runs": 5
+    },
+    {
+      "report": "/home/zyf/code/MoEBench/agent_workflow/rounds/round-1-oof-pts-cpu-iZbp1glgt48i9a8d49embxZ.json",
+      "report_sha256": "00591d88188a3482d49ea28b88e159175254375f5f5155794236151b4efe8565",
+      "machine": "iZbp1glgt48i9a8d49embxZ",
+      "benchmark": "phoronix",
+      "pts_suite": "cpu",
+      "n_runs": 5
+    },
+    {
+      "report": "/home/zyf/code/MoEBench/agent_workflow/rounds/round-1-oof-pts-gpu-aces-System-Product-Name.json",
+      "report_sha256": "4df4a50e7c2dd354fbcbbd0352097667bb0e21a880703d11ac70903135b70173",
+      "machine": "aces-System-Product-Name",
+      "benchmark": "phoronix",
+      "pts_suite": "pts/nvidia-gpu-compute",
+      "n_runs": 5
+    }
+  ],
+  "suite_summaries_equal_weight_host_means": [
+    {
+      "suite": "pts-cpu",
+      "n_hosts": 5,
+      "n_heldout_runs": 25,
+      "n_omitted_component_predictions": 140,
+      "mean_host_omitted_component_mape_percent": 2.293102541781461,
+      "median_host_omitted_component_mape_percent": 0.6868856179325912
+    },
+    {
+      "suite": "pts-pts/nvidia-gpu-compute",
+      "n_hosts": 1,
+      "n_heldout_runs": 5,
+      "n_omitted_component_predictions": 35,
+      "mean_host_omitted_component_mape_percent": 2.4832282358435482,
+      "median_host_omitted_component_mape_percent": 2.4832282358435482
+    },
+    {
+      "suite": "unixbench",
+      "n_hosts": 5,
+      "n_heldout_runs": 25,
+      "n_omitted_component_predictions": 225,
+      "mean_host_omitted_component_mape_percent": 0.8772301825879916,
+      "median_host_omitted_component_mape_percent": 0.5411632073634629
+    }
+  ],
+  "host_suite_summaries": [
+    {
+      "machine": "aces-System-Product-Name",
+      "suite": "pts-cpu",
+      "n_heldout_runs": 5,
+      "n_omitted_component_predictions": 50,
+      "mean_per_run_omitted_component_mape_percent": 8.267749895914122,
+      "median_per_run_omitted_component_mape_percent": 8.05863948022575,
+      "per_run_omitted_component_mape_percent": [
+        9.314295875089943,
+        8.05863948022575,
+        11.302299054966369,
+        5.17373753234109,
+        7.489777536947456
+      ]
+    },
+    {
+      "machine": "aces-System-Product-Name",
+      "suite": "pts-pts/nvidia-gpu-compute",
+      "n_heldout_runs": 5,
+      "n_omitted_component_predictions": 35,
+      "mean_per_run_omitted_component_mape_percent": 2.4832282358435482,
+      "median_per_run_omitted_component_mape_percent": 1.957671556359398,
+      "per_run_omitted_component_mape_percent": [
+        0.9063343406154168,
+        4.705252877048582,
+        0.8358846907505579,
+        4.0109977144437865,
+        1.957671556359398
+      ]
+    },
+    {
+      "machine": "aces-System-Product-Name",
+      "suite": "unixbench",
+      "n_heldout_runs": 5,
+      "n_omitted_component_predictions": 45,
+      "mean_per_run_omitted_component_mape_percent": 0.5411632073634629,
+      "median_per_run_omitted_component_mape_percent": 0.5587436126345553,
+      "per_run_omitted_component_mape_percent": [
+        0.363384083114836,
+        0.5132593135617386,
+        0.5712377273541243,
+        0.5587436126345553,
+        0.6991913001520605
+      ]
+    },
+    {
+      "machine": "iZbp15n87643uk1sqjrdvdZ",
+      "suite": "pts-cpu",
+      "n_heldout_runs": 5,
+      "n_omitted_component_predictions": 40,
+      "mean_per_run_omitted_component_mape_percent": 0.6868856179325912,
+      "median_per_run_omitted_component_mape_percent": 0.6140446730561003,
+      "per_run_omitted_component_mape_percent": [
+        1.0565990411399573,
+        0.4407234212887499,
+        0.8256231404243564,
+        0.6140446730561003,
+        0.497437813753792
+      ]
+    },
+    {
+      "machine": "iZbp15n87643uk1sqjrdvdZ",
+      "suite": "unixbench",
+      "n_heldout_runs": 5,
+      "n_omitted_component_predictions": 45,
+      "mean_per_run_omitted_component_mape_percent": 0.6843451666939947,
+      "median_per_run_omitted_component_mape_percent": 0.5498315925549133,
+      "per_run_omitted_component_mape_percent": [
+        0.8095268199377242,
+        0.5498315925549133,
+        0.5400659086468054,
+        0.4879421693712028,
+        1.0343593429593276
+      ]
+    },
+    {
+      "machine": "iZbp16krl0yc7euw7sb6slZ",
+      "suite": "pts-cpu",
+      "n_heldout_runs": 5,
+      "n_omitted_component_predictions": 35,
+      "mean_per_run_omitted_component_mape_percent": 1.3708332651004387,
+      "median_per_run_omitted_component_mape_percent": 1.4497610794056544,
+      "per_run_omitted_component_mape_percent": [
+        1.8415084502910566,
+        1.4497610794056544,
+        0.6639821336473053,
+        2.0481712560131418,
+        0.8507434061450355
+      ]
+    },
+    {
+      "machine": "iZbp16krl0yc7euw7sb6slZ",
+      "suite": "unixbench",
+      "n_heldout_runs": 5,
+      "n_omitted_component_predictions": 45,
+      "mean_per_run_omitted_component_mape_percent": 0.44952334621986045,
+      "median_per_run_omitted_component_mape_percent": 0.446344270810231,
+      "per_run_omitted_component_mape_percent": [
+        0.5623573067260786,
+        0.31671737409083517,
+        0.446344270810231,
+        0.44003064897147703,
+        0.4821671305006805
+      ]
+    },
+    {
+      "machine": "iZbp1acaw5wdllhz47922rZ",
+      "suite": "pts-cpu",
+      "n_heldout_runs": 5,
+      "n_omitted_component_predictions": 5,
+      "mean_per_run_omitted_component_mape_percent": 0.6758335075100149,
+      "median_per_run_omitted_component_mape_percent": 0.5636802368423286,
+      "per_run_omitted_component_mape_percent": [
+        1.8771105384690439,
+        0.06294116240954983,
+        0.04673745964702847,
+        0.5636802368423286,
+        0.8286981401821236
+      ]
+    },
+    {
+      "machine": "iZbp1acaw5wdllhz47922rZ",
+      "suite": "unixbench",
+      "n_heldout_runs": 5,
+      "n_omitted_component_predictions": 45,
+      "mean_per_run_omitted_component_mape_percent": 2.2006219680462453,
+      "median_per_run_omitted_component_mape_percent": 0.6624172163900877,
+      "per_run_omitted_component_mape_percent": [
+        0.6624172163900877,
+        0.5669538540086462,
+        4.476247721722983,
+        0.33412877981619005,
+        4.96336226829332
+      ]
+    },
+    {
+      "machine": "iZbp1glgt48i9a8d49embxZ",
+      "suite": "pts-cpu",
+      "n_heldout_runs": 5,
+      "n_omitted_component_predictions": 10,
+      "mean_per_run_omitted_component_mape_percent": 0.46421042245013827,
+      "median_per_run_omitted_component_mape_percent": 0.3560873752296251,
+      "per_run_omitted_component_mape_percent": [
+        0.3560873752296251,
+        1.3551944175786543,
+        0.10715802447465461,
+        0.09671361748061069,
+        0.40589867748714653
+      ]
+    },
+    {
+      "machine": "iZbp1glgt48i9a8d49embxZ",
+      "suite": "unixbench",
+      "n_heldout_runs": 5,
+      "n_omitted_component_predictions": 45,
+      "mean_per_run_omitted_component_mape_percent": 0.5104972246163946,
+      "median_per_run_omitted_component_mape_percent": 0.48718709864447224,
+      "per_run_omitted_component_mape_percent": [
+        0.48718709864447224,
+        0.4501719825961739,
+        0.40653788570295113,
+        0.6838962932810578,
+        0.524692862857318
+      ]
+    }
+  ],
+  "per_run": [
+    {
+      "machine": "aces-System-Product-Name",
+      "suite": "unixbench",
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-01.json",
+      "run_sha256": "330b63bfdc2f41d7ae6e31cb7d576013003ebc9cd4a31c0551553d67c5d64e12",
+      "fold": 3,
+      "n_profile_components": 12,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "dhry2reg",
+        "fstime",
+        "shell1"
+      ],
+      "n_omitted": 9,
+      "omitted_test_ids": [
+        "context1",
+        "execl",
+        "fsbuffer",
+        "fsdisk",
+        "pipe",
+        "shell8",
+        "spawn",
+        "syscall",
+        "whetstone-double"
+      ],
+      "omitted_component_mape_percent": 0.363384083114836
+    },
+    {
+      "machine": "aces-System-Product-Name",
+      "suite": "unixbench",
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-02.json",
+      "run_sha256": "a1e881918422b9ab877132964859febb0f0614971566c604e1be0594e0817ecf",
+      "fold": 0,
+      "n_profile_components": 12,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "context1",
+        "dhry2reg",
+        "execl"
+      ],
+      "n_omitted": 9,
+      "omitted_test_ids": [
+        "fsbuffer",
+        "fsdisk",
+        "fstime",
+        "pipe",
+        "shell1",
+        "shell8",
+        "spawn",
+        "syscall",
+        "whetstone-double"
+      ],
+      "omitted_component_mape_percent": 0.5132593135617386
+    },
+    {
+      "machine": "aces-System-Product-Name",
+      "suite": "unixbench",
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-03.json",
+      "run_sha256": "705e87c02fc8ac50599100c6eba4e74c8dc25e754436ed42683bed2205e6e7c3",
+      "fold": 2,
+      "n_profile_components": 12,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "context1",
+        "fstime",
+        "pipe"
+      ],
+      "n_omitted": 9,
+      "omitted_test_ids": [
+        "dhry2reg",
+        "execl",
+        "fsbuffer",
+        "fsdisk",
+        "shell1",
+        "shell8",
+        "spawn",
+        "syscall",
+        "whetstone-double"
+      ],
+      "omitted_component_mape_percent": 0.5712377273541243
+    },
+    {
+      "machine": "aces-System-Product-Name",
+      "suite": "unixbench",
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-04.json",
+      "run_sha256": "17589632d6422d3158ffa32a6a88cca8e980571188d71db1980298af573991fa",
+      "fold": 4,
+      "n_profile_components": 12,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "context1",
+        "execl",
+        "fstime"
+      ],
+      "n_omitted": 9,
+      "omitted_test_ids": [
+        "dhry2reg",
+        "fsbuffer",
+        "fsdisk",
+        "pipe",
+        "shell1",
+        "shell8",
+        "spawn",
+        "syscall",
+        "whetstone-double"
+      ],
+      "omitted_component_mape_percent": 0.5587436126345553
+    },
+    {
+      "machine": "aces-System-Product-Name",
+      "suite": "unixbench",
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20260524T102558Z/run-05.json",
+      "run_sha256": "b5d938b0ab50e247a26096172884a6e9c62910b33ab37d327f11b945f869c875",
+      "fold": 1,
+      "n_profile_components": 12,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "execl",
+        "shell8",
+        "whetstone-double"
+      ],
+      "n_omitted": 9,
+      "omitted_test_ids": [
+        "context1",
+        "dhry2reg",
+        "fsbuffer",
+        "fsdisk",
+        "fstime",
+        "pipe",
+        "shell1",
+        "spawn",
+        "syscall"
+      ],
+      "omitted_component_mape_percent": 0.6991913001520605
+    },
+    {
+      "machine": "iZbp15n87643uk1sqjrdvdZ",
+      "suite": "unixbench",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-01.json",
+      "run_sha256": "c9506d08b05642e18e7889dd579de7198fc2b6348cbf2d590641dbbd1b4f58a3",
+      "fold": 3,
+      "n_profile_components": 12,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "dhry2reg",
+        "fstime",
+        "shell1"
+      ],
+      "n_omitted": 9,
+      "omitted_test_ids": [
+        "context1",
+        "execl",
+        "fsbuffer",
+        "fsdisk",
+        "pipe",
+        "shell8",
+        "spawn",
+        "syscall",
+        "whetstone-double"
+      ],
+      "omitted_component_mape_percent": 0.8095268199377242
+    },
+    {
+      "machine": "iZbp15n87643uk1sqjrdvdZ",
+      "suite": "unixbench",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-02.json",
+      "run_sha256": "b242033e9c7bb0fc4347317f3cb91dfc341fd3088847d3c9e896479cbaaf420b",
+      "fold": 0,
+      "n_profile_components": 12,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "context1",
+        "dhry2reg",
+        "execl"
+      ],
+      "n_omitted": 9,
+      "omitted_test_ids": [
+        "fsbuffer",
+        "fsdisk",
+        "fstime",
+        "pipe",
+        "shell1",
+        "shell8",
+        "spawn",
+        "syscall",
+        "whetstone-double"
+      ],
+      "omitted_component_mape_percent": 0.5498315925549133
+    },
+    {
+      "machine": "iZbp15n87643uk1sqjrdvdZ",
+      "suite": "unixbench",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-03.json",
+      "run_sha256": "d55b8ea554c34c5114bb6b788f0afec171d774d86febb86fbb34bf32ec92572e",
+      "fold": 2,
+      "n_profile_components": 12,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "execl",
+        "fstime",
+        "pipe"
+      ],
+      "n_omitted": 9,
+      "omitted_test_ids": [
+        "context1",
+        "dhry2reg",
+        "fsbuffer",
+        "fsdisk",
+        "shell1",
+        "shell8",
+        "spawn",
+        "syscall",
+        "whetstone-double"
+      ],
+      "omitted_component_mape_percent": 0.5400659086468054
+    },
+    {
+      "machine": "iZbp15n87643uk1sqjrdvdZ",
+      "suite": "unixbench",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-04.json",
+      "run_sha256": "0984f6447505e964a9b8603a1f2f6e7ef2a35a7f0a4b3ada17a3a711b8d72413",
+      "fold": 4,
+      "n_profile_components": 12,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "context1",
+        "fstime",
+        "shell8"
+      ],
+      "n_omitted": 9,
+      "omitted_test_ids": [
+        "dhry2reg",
+        "execl",
+        "fsbuffer",
+        "fsdisk",
+        "pipe",
+        "shell1",
+        "spawn",
+        "syscall",
+        "whetstone-double"
+      ],
+      "omitted_component_mape_percent": 0.4879421693712028
+    },
+    {
+      "machine": "iZbp15n87643uk1sqjrdvdZ",
+      "suite": "unixbench",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-05.json",
+      "run_sha256": "02ddffd834cdcb42de503d504071abd3f13ea79527e773638590740fbab38e76",
+      "fold": 1,
+      "n_profile_components": 12,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "execl",
+        "fsbuffer",
+        "shell1"
+      ],
+      "n_omitted": 9,
+      "omitted_test_ids": [
+        "context1",
+        "dhry2reg",
+        "fsdisk",
+        "fstime",
+        "pipe",
+        "shell8",
+        "spawn",
+        "syscall",
+        "whetstone-double"
+      ],
+      "omitted_component_mape_percent": 1.0343593429593276
+    },
+    {
+      "machine": "iZbp16krl0yc7euw7sb6slZ",
+      "suite": "unixbench",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-01.json",
+      "run_sha256": "26c2975e4087e73e48f3a18f6872627b04061a32b75e5c86446e6b65c15af0af",
+      "fold": 3,
+      "n_profile_components": 12,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "dhry2reg",
+        "shell1",
+        "syscall"
+      ],
+      "n_omitted": 9,
+      "omitted_test_ids": [
+        "context1",
+        "execl",
+        "fsbuffer",
+        "fsdisk",
+        "fstime",
+        "pipe",
+        "shell8",
+        "spawn",
+        "whetstone-double"
+      ],
+      "omitted_component_mape_percent": 0.5623573067260786
+    },
+    {
+      "machine": "iZbp16krl0yc7euw7sb6slZ",
+      "suite": "unixbench",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-02.json",
+      "run_sha256": "cdd62ab569038b6099d2e69ac91e166e67468361600ebb711e92b6857b3ef68e",
+      "fold": 0,
+      "n_profile_components": 12,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "context1",
+        "dhry2reg",
+        "execl"
+      ],
+      "n_omitted": 9,
+      "omitted_test_ids": [
+        "fsbuffer",
+        "fsdisk",
+        "fstime",
+        "pipe",
+        "shell1",
+        "shell8",
+        "spawn",
+        "syscall",
+        "whetstone-double"
+      ],
+      "omitted_component_mape_percent": 0.31671737409083517
+    },
+    {
+      "machine": "iZbp16krl0yc7euw7sb6slZ",
+      "suite": "unixbench",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-03.json",
+      "run_sha256": "1c5ed1f821614d12b5aec0ffc50e8cdc855d636447d309d110c8844eb7b78b2a",
+      "fold": 2,
+      "n_profile_components": 12,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "fstime",
+        "pipe",
+        "spawn"
+      ],
+      "n_omitted": 9,
+      "omitted_test_ids": [
+        "context1",
+        "dhry2reg",
+        "execl",
+        "fsbuffer",
+        "fsdisk",
+        "shell1",
+        "shell8",
+        "syscall",
+        "whetstone-double"
+      ],
+      "omitted_component_mape_percent": 0.446344270810231
+    },
+    {
+      "machine": "iZbp16krl0yc7euw7sb6slZ",
+      "suite": "unixbench",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-04.json",
+      "run_sha256": "b35353fe998450807a21e327a259ec0023e93f1ad6691aaa8484ee7dd1279175",
+      "fold": 4,
+      "n_profile_components": 12,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "context1",
+        "execl",
+        "fstime"
+      ],
+      "n_omitted": 9,
+      "omitted_test_ids": [
+        "dhry2reg",
+        "fsbuffer",
+        "fsdisk",
+        "pipe",
+        "shell1",
+        "shell8",
+        "spawn",
+        "syscall",
+        "whetstone-double"
+      ],
+      "omitted_component_mape_percent": 0.44003064897147703
+    },
+    {
+      "machine": "iZbp16krl0yc7euw7sb6slZ",
+      "suite": "unixbench",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_20260524T103905Z/run-05.json",
+      "run_sha256": "577da0c31ec5b9fc46f38c3edaff42cbd1e1fed308c4290b9ac20f87adaed50c",
+      "fold": 1,
+      "n_profile_components": 12,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "execl",
+        "fsbuffer",
+        "shell1"
+      ],
+      "n_omitted": 9,
+      "omitted_test_ids": [
+        "context1",
+        "dhry2reg",
+        "fsdisk",
+        "fstime",
+        "pipe",
+        "shell8",
+        "spawn",
+        "syscall",
+        "whetstone-double"
+      ],
+      "omitted_component_mape_percent": 0.4821671305006805
+    },
+    {
+      "machine": "iZbp1acaw5wdllhz47922rZ",
+      "suite": "unixbench",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-01.json",
+      "run_sha256": "313f8a5cece5e46df93fa3c89c9731be3ca0d7cea9f07f7a767a6a27bd368026",
+      "fold": 3,
+      "n_profile_components": 12,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "dhry2reg",
+        "shell1",
+        "syscall"
+      ],
+      "n_omitted": 9,
+      "omitted_test_ids": [
+        "context1",
+        "execl",
+        "fsbuffer",
+        "fsdisk",
+        "fstime",
+        "pipe",
+        "shell8",
+        "spawn",
+        "whetstone-double"
+      ],
+      "omitted_component_mape_percent": 0.6624172163900877
+    },
+    {
+      "machine": "iZbp1acaw5wdllhz47922rZ",
+      "suite": "unixbench",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-02.json",
+      "run_sha256": "05687c657e5697368a3364155c6acdd25eb8803c1e9200de1a6c69962b9a1d6c",
+      "fold": 0,
+      "n_profile_components": 12,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "context1",
+        "dhry2reg",
+        "execl"
+      ],
+      "n_omitted": 9,
+      "omitted_test_ids": [
+        "fsbuffer",
+        "fsdisk",
+        "fstime",
+        "pipe",
+        "shell1",
+        "shell8",
+        "spawn",
+        "syscall",
+        "whetstone-double"
+      ],
+      "omitted_component_mape_percent": 0.5669538540086462
+    },
+    {
+      "machine": "iZbp1acaw5wdllhz47922rZ",
+      "suite": "unixbench",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-03.json",
+      "run_sha256": "7247131141033079f5e6ed383c8c90b703bac85b6d52151d2fc8e7250c7a8f99",
+      "fold": 2,
+      "n_profile_components": 12,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "fstime",
+        "shell8",
+        "whetstone-double"
+      ],
+      "n_omitted": 9,
+      "omitted_test_ids": [
+        "context1",
+        "dhry2reg",
+        "execl",
+        "fsbuffer",
+        "fsdisk",
+        "pipe",
+        "shell1",
+        "spawn",
+        "syscall"
+      ],
+      "omitted_component_mape_percent": 4.476247721722983
+    },
+    {
+      "machine": "iZbp1acaw5wdllhz47922rZ",
+      "suite": "unixbench",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-04.json",
+      "run_sha256": "8c2fa8d0e905aad7820e86693b87330bc3386a6d10b1fdcf6cdee89c8e5bcd51",
+      "fold": 4,
+      "n_profile_components": 12,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "context1",
+        "execl",
+        "fstime"
+      ],
+      "n_omitted": 9,
+      "omitted_test_ids": [
+        "dhry2reg",
+        "fsbuffer",
+        "fsdisk",
+        "pipe",
+        "shell1",
+        "shell8",
+        "spawn",
+        "syscall",
+        "whetstone-double"
+      ],
+      "omitted_component_mape_percent": 0.33412877981619005
+    },
+    {
+      "machine": "iZbp1acaw5wdllhz47922rZ",
+      "suite": "unixbench",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_20260524T103902Z/run-05.json",
+      "run_sha256": "190a9d0d4174fce433586f9d2f081c83d77d0eabc445d863ad01f9a374cdfe05",
+      "fold": 1,
+      "n_profile_components": 12,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "fsbuffer",
+        "shell1",
+        "spawn"
+      ],
+      "n_omitted": 9,
+      "omitted_test_ids": [
+        "context1",
+        "dhry2reg",
+        "execl",
+        "fsdisk",
+        "fstime",
+        "pipe",
+        "shell8",
+        "syscall",
+        "whetstone-double"
+      ],
+      "omitted_component_mape_percent": 4.96336226829332
+    },
+    {
+      "machine": "iZbp1glgt48i9a8d49embxZ",
+      "suite": "unixbench",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-01.json",
+      "run_sha256": "e2f64512d8efc1df0f22dea8d50a40635a22ed87c7f23bd9788f1b47b7a0703f",
+      "fold": 3,
+      "n_profile_components": 12,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "dhry2reg",
+        "fstime",
+        "shell1"
+      ],
+      "n_omitted": 9,
+      "omitted_test_ids": [
+        "context1",
+        "execl",
+        "fsbuffer",
+        "fsdisk",
+        "pipe",
+        "shell8",
+        "spawn",
+        "syscall",
+        "whetstone-double"
+      ],
+      "omitted_component_mape_percent": 0.48718709864447224
+    },
+    {
+      "machine": "iZbp1glgt48i9a8d49embxZ",
+      "suite": "unixbench",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-02.json",
+      "run_sha256": "e806cb758ce3bffe4fc7565699673f196f98302fbb01aab85505bcb56cb34fc1",
+      "fold": 0,
+      "n_profile_components": 12,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "context1",
+        "dhry2reg",
+        "execl"
+      ],
+      "n_omitted": 9,
+      "omitted_test_ids": [
+        "fsbuffer",
+        "fsdisk",
+        "fstime",
+        "pipe",
+        "shell1",
+        "shell8",
+        "spawn",
+        "syscall",
+        "whetstone-double"
+      ],
+      "omitted_component_mape_percent": 0.4501719825961739
+    },
+    {
+      "machine": "iZbp1glgt48i9a8d49embxZ",
+      "suite": "unixbench",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-03.json",
+      "run_sha256": "5861c17c310a5b1a6128d7713c57215d2d4a652604016bc73296731c8e1ccde6",
+      "fold": 2,
+      "n_profile_components": 12,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "context1",
+        "fstime",
+        "whetstone-double"
+      ],
+      "n_omitted": 9,
+      "omitted_test_ids": [
+        "dhry2reg",
+        "execl",
+        "fsbuffer",
+        "fsdisk",
+        "pipe",
+        "shell1",
+        "shell8",
+        "spawn",
+        "syscall"
+      ],
+      "omitted_component_mape_percent": 0.40653788570295113
+    },
+    {
+      "machine": "iZbp1glgt48i9a8d49embxZ",
+      "suite": "unixbench",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-04.json",
+      "run_sha256": "10cbdf72c1cef38e1c30a01d9b3eb261935173ac2d8c39ec6728e37baa286037",
+      "fold": 4,
+      "n_profile_components": 12,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "context1",
+        "fstime",
+        "spawn"
+      ],
+      "n_omitted": 9,
+      "omitted_test_ids": [
+        "dhry2reg",
+        "execl",
+        "fsbuffer",
+        "fsdisk",
+        "pipe",
+        "shell1",
+        "shell8",
+        "syscall",
+        "whetstone-double"
+      ],
+      "omitted_component_mape_percent": 0.6838962932810578
+    },
+    {
+      "machine": "iZbp1glgt48i9a8d49embxZ",
+      "suite": "unixbench",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-05.json",
+      "run_sha256": "d4bdfde99db1338da91fe06d40f21ecdff23e8c29a80d55a56241ce886c854de",
+      "fold": 1,
+      "n_profile_components": 12,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "context1",
+        "execl",
+        "fsbuffer"
+      ],
+      "n_omitted": 9,
+      "omitted_test_ids": [
+        "dhry2reg",
+        "fsdisk",
+        "fstime",
+        "pipe",
+        "shell1",
+        "shell8",
+        "spawn",
+        "syscall",
+        "whetstone-double"
+      ],
+      "omitted_component_mape_percent": 0.524692862857318
+    },
+    {
+      "machine": "aces-System-Product-Name",
+      "suite": "pts-cpu",
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-01.json",
+      "run_sha256": "5d9cd721480b6c4bec212051914bf7a5c7852a3c15d87565fae39a37ebcf99b6",
+      "fold": 3,
+      "n_profile_components": 13,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/build-gcc-1.5.0",
+        "pts/namd-1.4.0",
+        "pts/stockfish-1.7.0"
+      ],
+      "n_omitted": 10,
+      "omitted_test_ids": [
+        "pts/asmfish-1.1.2",
+        "pts/ctx-clock-1.0.0",
+        "pts/kvazaar-1.2.0",
+        "pts/openssl-4.0.0",
+        "pts/povray-1.2.1",
+        "pts/radiance-1.0.0",
+        "pts/rodinia-1.3.2",
+        "pts/sysbench-1.1.0",
+        "pts/x264-2.7.0",
+        "pts/x265-1.5.0"
+      ],
+      "omitted_component_mape_percent": 9.314295875089943
+    },
+    {
+      "machine": "aces-System-Product-Name",
+      "suite": "pts-cpu",
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-02.json",
+      "run_sha256": "715304b974b3325651a8dafaeec9a3ba8dac30fdd1dc4e638ac552098df2e9d0",
+      "fold": 0,
+      "n_profile_components": 13,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/kvazaar-1.2.0",
+        "pts/radiance-1.0.0",
+        "pts/rodinia-1.3.2"
+      ],
+      "n_omitted": 10,
+      "omitted_test_ids": [
+        "pts/asmfish-1.1.2",
+        "pts/build-gcc-1.5.0",
+        "pts/ctx-clock-1.0.0",
+        "pts/namd-1.4.0",
+        "pts/openssl-4.0.0",
+        "pts/povray-1.2.1",
+        "pts/stockfish-1.7.0",
+        "pts/sysbench-1.1.0",
+        "pts/x264-2.7.0",
+        "pts/x265-1.5.0"
+      ],
+      "omitted_component_mape_percent": 8.05863948022575
+    },
+    {
+      "machine": "aces-System-Product-Name",
+      "suite": "pts-cpu",
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-03.json",
+      "run_sha256": "d0fd1e3e8c5f410a5cbf34d66bef0f238066bcfdbe542377505cf31dfb325276",
+      "fold": 2,
+      "n_profile_components": 13,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/kvazaar-1.2.0",
+        "pts/namd-1.4.0",
+        "pts/x265-1.5.0"
+      ],
+      "n_omitted": 10,
+      "omitted_test_ids": [
+        "pts/asmfish-1.1.2",
+        "pts/build-gcc-1.5.0",
+        "pts/ctx-clock-1.0.0",
+        "pts/openssl-4.0.0",
+        "pts/povray-1.2.1",
+        "pts/radiance-1.0.0",
+        "pts/rodinia-1.3.2",
+        "pts/stockfish-1.7.0",
+        "pts/sysbench-1.1.0",
+        "pts/x264-2.7.0"
+      ],
+      "omitted_component_mape_percent": 11.302299054966369
+    },
+    {
+      "machine": "aces-System-Product-Name",
+      "suite": "pts-cpu",
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-04.json",
+      "run_sha256": "0cb43f74d7b8aad62ac6cf946c28cdf867d2e0b4872ed0304fd3d8d1b729bcd0",
+      "fold": 4,
+      "n_profile_components": 13,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/build-gcc-1.5.0",
+        "pts/kvazaar-1.2.0",
+        "pts/namd-1.4.0"
+      ],
+      "n_omitted": 10,
+      "omitted_test_ids": [
+        "pts/asmfish-1.1.2",
+        "pts/ctx-clock-1.0.0",
+        "pts/openssl-4.0.0",
+        "pts/povray-1.2.1",
+        "pts/radiance-1.0.0",
+        "pts/rodinia-1.3.2",
+        "pts/stockfish-1.7.0",
+        "pts/sysbench-1.1.0",
+        "pts/x264-2.7.0",
+        "pts/x265-1.5.0"
+      ],
+      "omitted_component_mape_percent": 5.17373753234109
+    },
+    {
+      "machine": "aces-System-Product-Name",
+      "suite": "pts-cpu",
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-05.json",
+      "run_sha256": "5fa3ff2a724d9eef1e547d0b8100256590853489adfc40eedb9b02f6758aa949",
+      "fold": 1,
+      "n_profile_components": 13,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/build-gcc-1.5.0",
+        "pts/openssl-4.0.0",
+        "pts/radiance-1.0.0"
+      ],
+      "n_omitted": 10,
+      "omitted_test_ids": [
+        "pts/asmfish-1.1.2",
+        "pts/ctx-clock-1.0.0",
+        "pts/kvazaar-1.2.0",
+        "pts/namd-1.4.0",
+        "pts/povray-1.2.1",
+        "pts/rodinia-1.3.2",
+        "pts/stockfish-1.7.0",
+        "pts/sysbench-1.1.0",
+        "pts/x264-2.7.0",
+        "pts/x265-1.5.0"
+      ],
+      "omitted_component_mape_percent": 7.489777536947456
+    },
+    {
+      "machine": "iZbp15n87643uk1sqjrdvdZ",
+      "suite": "pts-cpu",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_cpu_20260526T174649Z/run-01.json",
+      "run_sha256": "5225f6412c5d60b2fbf64213e17e5c4f4a731836b0c6818569f84da73e956100",
+      "fold": 3,
+      "n_profile_components": 11,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/asmfish-1.1.2",
+        "pts/rodinia-1.3.2",
+        "pts/sysbench-1.1.0"
+      ],
+      "n_omitted": 8,
+      "omitted_test_ids": [
+        "pts/build-linux-kernel-1.18.0",
+        "pts/compress-7zip-1.13.0",
+        "pts/ctx-clock-1.0.0",
+        "pts/namd-1.4.0",
+        "pts/radiance-1.0.0",
+        "pts/stockfish-1.7.0",
+        "pts/x264-2.7.0",
+        "pts/x265-1.5.0"
+      ],
+      "omitted_component_mape_percent": 1.0565990411399573
+    },
+    {
+      "machine": "iZbp15n87643uk1sqjrdvdZ",
+      "suite": "pts-cpu",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_cpu_20260526T174649Z/run-02.json",
+      "run_sha256": "9072db95cc7487c63dff60e6e27d195f431143bbefebfa870e4ea89a072788be",
+      "fold": 0,
+      "n_profile_components": 11,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/asmfish-1.1.2",
+        "pts/namd-1.4.0",
+        "pts/sysbench-1.1.0"
+      ],
+      "n_omitted": 8,
+      "omitted_test_ids": [
+        "pts/build-linux-kernel-1.18.0",
+        "pts/compress-7zip-1.13.0",
+        "pts/ctx-clock-1.0.0",
+        "pts/radiance-1.0.0",
+        "pts/rodinia-1.3.2",
+        "pts/stockfish-1.7.0",
+        "pts/x264-2.7.0",
+        "pts/x265-1.5.0"
+      ],
+      "omitted_component_mape_percent": 0.4407234212887499
+    },
+    {
+      "machine": "iZbp15n87643uk1sqjrdvdZ",
+      "suite": "pts-cpu",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_cpu_20260526T174649Z/run-03.json",
+      "run_sha256": "daf2c5bcd5c75da46a3496b582251e44693f1d0ff28bd81aed67f87f7b5b5bc3",
+      "fold": 2,
+      "n_profile_components": 11,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/asmfish-1.1.2",
+        "pts/namd-1.4.0",
+        "pts/radiance-1.0.0"
+      ],
+      "n_omitted": 8,
+      "omitted_test_ids": [
+        "pts/build-linux-kernel-1.18.0",
+        "pts/compress-7zip-1.13.0",
+        "pts/ctx-clock-1.0.0",
+        "pts/rodinia-1.3.2",
+        "pts/stockfish-1.7.0",
+        "pts/sysbench-1.1.0",
+        "pts/x264-2.7.0",
+        "pts/x265-1.5.0"
+      ],
+      "omitted_component_mape_percent": 0.8256231404243564
+    },
+    {
+      "machine": "iZbp15n87643uk1sqjrdvdZ",
+      "suite": "pts-cpu",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_cpu_20260526T174649Z/run-04.json",
+      "run_sha256": "b5b214e28bd92f23f3945220e9862a1a7844b3633781bc828eafc85070888997",
+      "fold": 4,
+      "n_profile_components": 11,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/ctx-clock-1.0.0",
+        "pts/stockfish-1.7.0",
+        "pts/x264-2.7.0"
+      ],
+      "n_omitted": 8,
+      "omitted_test_ids": [
+        "pts/asmfish-1.1.2",
+        "pts/build-linux-kernel-1.18.0",
+        "pts/compress-7zip-1.13.0",
+        "pts/namd-1.4.0",
+        "pts/radiance-1.0.0",
+        "pts/rodinia-1.3.2",
+        "pts/sysbench-1.1.0",
+        "pts/x265-1.5.0"
+      ],
+      "omitted_component_mape_percent": 0.6140446730561003
+    },
+    {
+      "machine": "iZbp15n87643uk1sqjrdvdZ",
+      "suite": "pts-cpu",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_cpu_20260526T174649Z/run-05.json",
+      "run_sha256": "530cd045abc110e15e8a58930e123a224e56c58e61d043652a0e6ce59877434e",
+      "fold": 1,
+      "n_profile_components": 11,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/compress-7zip-1.13.0",
+        "pts/ctx-clock-1.0.0",
+        "pts/x265-1.5.0"
+      ],
+      "n_omitted": 8,
+      "omitted_test_ids": [
+        "pts/asmfish-1.1.2",
+        "pts/build-linux-kernel-1.18.0",
+        "pts/namd-1.4.0",
+        "pts/radiance-1.0.0",
+        "pts/rodinia-1.3.2",
+        "pts/stockfish-1.7.0",
+        "pts/sysbench-1.1.0",
+        "pts/x264-2.7.0"
+      ],
+      "omitted_component_mape_percent": 0.497437813753792
+    },
+    {
+      "machine": "iZbp16krl0yc7euw7sb6slZ",
+      "suite": "pts-cpu",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_cpu_20260525T045459Z/run-01.json",
+      "run_sha256": "3b3b52f81df765409b2acbb7d49ffde07d3f79908f0c01212f5eae6d68450226",
+      "fold": 3,
+      "n_profile_components": 10,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/build-linux-kernel-1.18.0",
+        "pts/compress-7zip-1.13.0",
+        "pts/ctx-clock-1.0.0"
+      ],
+      "n_omitted": 7,
+      "omitted_test_ids": [
+        "pts/asmfish-1.1.2",
+        "pts/namd-1.4.0",
+        "pts/openssl-4.0.0",
+        "pts/radiance-1.0.0",
+        "pts/rodinia-1.3.2",
+        "pts/stockfish-1.7.0",
+        "pts/sysbench-1.1.0"
+      ],
+      "omitted_component_mape_percent": 1.8415084502910566
+    },
+    {
+      "machine": "iZbp16krl0yc7euw7sb6slZ",
+      "suite": "pts-cpu",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_cpu_20260525T045459Z/run-02.json",
+      "run_sha256": "21bc972eef10df1afaa6c288e421b7038ed6063d9b3bd4b3d131eba2014a87d5",
+      "fold": 0,
+      "n_profile_components": 10,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/compress-7zip-1.13.0",
+        "pts/rodinia-1.3.2",
+        "pts/sysbench-1.1.0"
+      ],
+      "n_omitted": 7,
+      "omitted_test_ids": [
+        "pts/asmfish-1.1.2",
+        "pts/build-linux-kernel-1.18.0",
+        "pts/ctx-clock-1.0.0",
+        "pts/namd-1.4.0",
+        "pts/openssl-4.0.0",
+        "pts/radiance-1.0.0",
+        "pts/stockfish-1.7.0"
+      ],
+      "omitted_component_mape_percent": 1.4497610794056544
+    },
+    {
+      "machine": "iZbp16krl0yc7euw7sb6slZ",
+      "suite": "pts-cpu",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_cpu_20260525T045459Z/run-03.json",
+      "run_sha256": "cc67881ac458108f2f7e06ff6d1017892db00d4b0c0da987faf0dd60a4601be7",
+      "fold": 2,
+      "n_profile_components": 10,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/build-linux-kernel-1.18.0",
+        "pts/compress-7zip-1.13.0",
+        "pts/openssl-4.0.0"
+      ],
+      "n_omitted": 7,
+      "omitted_test_ids": [
+        "pts/asmfish-1.1.2",
+        "pts/ctx-clock-1.0.0",
+        "pts/namd-1.4.0",
+        "pts/radiance-1.0.0",
+        "pts/rodinia-1.3.2",
+        "pts/stockfish-1.7.0",
+        "pts/sysbench-1.1.0"
+      ],
+      "omitted_component_mape_percent": 0.6639821336473053
+    },
+    {
+      "machine": "iZbp16krl0yc7euw7sb6slZ",
+      "suite": "pts-cpu",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_cpu_20260525T045459Z/run-04.json",
+      "run_sha256": "177ffb83e6552b72756ba8d3b578ea904a344c051b14a5cfa8b342bc1f846d49",
+      "fold": 4,
+      "n_profile_components": 10,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/ctx-clock-1.0.0",
+        "pts/openssl-4.0.0",
+        "pts/stockfish-1.7.0"
+      ],
+      "n_omitted": 7,
+      "omitted_test_ids": [
+        "pts/asmfish-1.1.2",
+        "pts/build-linux-kernel-1.18.0",
+        "pts/compress-7zip-1.13.0",
+        "pts/namd-1.4.0",
+        "pts/radiance-1.0.0",
+        "pts/rodinia-1.3.2",
+        "pts/sysbench-1.1.0"
+      ],
+      "omitted_component_mape_percent": 2.0481712560131418
+    },
+    {
+      "machine": "iZbp16krl0yc7euw7sb6slZ",
+      "suite": "pts-cpu",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp16krl0yc7euw7sb6slZ_cpu_20260525T045459Z/run-05.json",
+      "run_sha256": "e65a230c9f9d065e80dcf9c94c816d662e9ceb420e3a24dadf7de91facf97281",
+      "fold": 1,
+      "n_profile_components": 10,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/ctx-clock-1.0.0",
+        "pts/namd-1.4.0",
+        "pts/stockfish-1.7.0"
+      ],
+      "n_omitted": 7,
+      "omitted_test_ids": [
+        "pts/asmfish-1.1.2",
+        "pts/build-linux-kernel-1.18.0",
+        "pts/compress-7zip-1.13.0",
+        "pts/openssl-4.0.0",
+        "pts/radiance-1.0.0",
+        "pts/rodinia-1.3.2",
+        "pts/sysbench-1.1.0"
+      ],
+      "omitted_component_mape_percent": 0.8507434061450355
+    },
+    {
+      "machine": "iZbp1acaw5wdllhz47922rZ",
+      "suite": "pts-cpu",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_cpu_20260525T045422Z/run-01.json",
+      "run_sha256": "daaae41cf1c8fc3a39c1980a290ae88abbe2714952d1ade9893d822f646ff03b",
+      "fold": 3,
+      "n_profile_components": 4,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/namd-1.4.0",
+        "pts/rodinia-1.3.2",
+        "pts/stockfish-1.7.0"
+      ],
+      "n_omitted": 1,
+      "omitted_test_ids": [
+        "pts/x264-2.7.0"
+      ],
+      "omitted_component_mape_percent": 1.8771105384690439
+    },
+    {
+      "machine": "iZbp1acaw5wdllhz47922rZ",
+      "suite": "pts-cpu",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_cpu_20260525T045422Z/run-02.json",
+      "run_sha256": "c8c520b0de74ea92a30c014a57e4bc9f23c3f229b42710caf7f7f0d980a1f791",
+      "fold": 0,
+      "n_profile_components": 4,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/namd-1.4.0",
+        "pts/rodinia-1.3.2",
+        "pts/x264-2.7.0"
+      ],
+      "n_omitted": 1,
+      "omitted_test_ids": [
+        "pts/stockfish-1.7.0"
+      ],
+      "omitted_component_mape_percent": 0.06294116240954983
+    },
+    {
+      "machine": "iZbp1acaw5wdllhz47922rZ",
+      "suite": "pts-cpu",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_cpu_20260525T045422Z/run-03.json",
+      "run_sha256": "81c0983ecefa5ec4d00d8f7df750146d66d59ae80384dbe8805f6c558dde0cfb",
+      "fold": 2,
+      "n_profile_components": 4,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/rodinia-1.3.2",
+        "pts/stockfish-1.7.0",
+        "pts/x264-2.7.0"
+      ],
+      "n_omitted": 1,
+      "omitted_test_ids": [
+        "pts/namd-1.4.0"
+      ],
+      "omitted_component_mape_percent": 0.04673745964702847
+    },
+    {
+      "machine": "iZbp1acaw5wdllhz47922rZ",
+      "suite": "pts-cpu",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_cpu_20260525T045422Z/run-04.json",
+      "run_sha256": "e949453ae843c29796f78e7e17c87ae42f2f3660dbff787f1c959c7e3628330f",
+      "fold": 4,
+      "n_profile_components": 4,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/namd-1.4.0",
+        "pts/rodinia-1.3.2",
+        "pts/x264-2.7.0"
+      ],
+      "n_omitted": 1,
+      "omitted_test_ids": [
+        "pts/stockfish-1.7.0"
+      ],
+      "omitted_component_mape_percent": 0.5636802368423286
+    },
+    {
+      "machine": "iZbp1acaw5wdllhz47922rZ",
+      "suite": "pts-cpu",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1acaw5wdllhz47922rZ_cpu_20260525T045422Z/run-05.json",
+      "run_sha256": "bbb835822837f495c38c081f93edb62c0b5d6ed446a79ac32fa9138eb66cc84c",
+      "fold": 1,
+      "n_profile_components": 4,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/namd-1.4.0",
+        "pts/rodinia-1.3.2",
+        "pts/stockfish-1.7.0"
+      ],
+      "n_omitted": 1,
+      "omitted_test_ids": [
+        "pts/x264-2.7.0"
+      ],
+      "omitted_component_mape_percent": 0.8286981401821236
+    },
+    {
+      "machine": "iZbp1glgt48i9a8d49embxZ",
+      "suite": "pts-cpu",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-01.json",
+      "run_sha256": "5c1acd1c477296b1a14b5cac99754f75db9b3a73a44744a7184b177a8fc7749d",
+      "fold": 3,
+      "n_profile_components": 5,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/asmfish-1.1.2",
+        "pts/ctx-clock-1.0.0",
+        "pts/rodinia-1.3.2"
+      ],
+      "n_omitted": 2,
+      "omitted_test_ids": [
+        "pts/namd-1.4.0",
+        "pts/radiance-1.0.0"
+      ],
+      "omitted_component_mape_percent": 0.3560873752296251
+    },
+    {
+      "machine": "iZbp1glgt48i9a8d49embxZ",
+      "suite": "pts-cpu",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-02.json",
+      "run_sha256": "947fbe79a7504192ed0006647f78c2a168b7e0e79fcc528229c5cbd8f15fb2c1",
+      "fold": 0,
+      "n_profile_components": 5,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/ctx-clock-1.0.0",
+        "pts/namd-1.4.0",
+        "pts/radiance-1.0.0"
+      ],
+      "n_omitted": 2,
+      "omitted_test_ids": [
+        "pts/asmfish-1.1.2",
+        "pts/rodinia-1.3.2"
+      ],
+      "omitted_component_mape_percent": 1.3551944175786543
+    },
+    {
+      "machine": "iZbp1glgt48i9a8d49embxZ",
+      "suite": "pts-cpu",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-03.json",
+      "run_sha256": "979b2e7bc20089bf8e304207f08fb559f34d912092bd2b074bd0fa1ced974387",
+      "fold": 2,
+      "n_profile_components": 5,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/ctx-clock-1.0.0",
+        "pts/namd-1.4.0",
+        "pts/radiance-1.0.0"
+      ],
+      "n_omitted": 2,
+      "omitted_test_ids": [
+        "pts/asmfish-1.1.2",
+        "pts/rodinia-1.3.2"
+      ],
+      "omitted_component_mape_percent": 0.10715802447465461
+    },
+    {
+      "machine": "iZbp1glgt48i9a8d49embxZ",
+      "suite": "pts-cpu",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-04.json",
+      "run_sha256": "8f1fe367d76b7849b832772280fb030f1319263c371835500881f9b9ea40431a",
+      "fold": 4,
+      "n_profile_components": 5,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/asmfish-1.1.2",
+        "pts/ctx-clock-1.0.0",
+        "pts/namd-1.4.0"
+      ],
+      "n_omitted": 2,
+      "omitted_test_ids": [
+        "pts/radiance-1.0.0",
+        "pts/rodinia-1.3.2"
+      ],
+      "omitted_component_mape_percent": 0.09671361748061069
+    },
+    {
+      "machine": "iZbp1glgt48i9a8d49embxZ",
+      "suite": "pts-cpu",
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-05.json",
+      "run_sha256": "633277cc87e31a17f96780833146fe9348ad32cdd5f1eed194e0fec299f2331e",
+      "fold": 1,
+      "n_profile_components": 5,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/asmfish-1.1.2",
+        "pts/radiance-1.0.0",
+        "pts/rodinia-1.3.2"
+      ],
+      "n_omitted": 2,
+      "omitted_test_ids": [
+        "pts/ctx-clock-1.0.0",
+        "pts/namd-1.4.0"
+      ],
+      "omitted_component_mape_percent": 0.40589867748714653
+    },
+    {
+      "machine": "aces-System-Product-Name",
+      "suite": "pts-pts/nvidia-gpu-compute",
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-01.json",
+      "run_sha256": "5c5564b6e3badb5b854e86ede134a695b72109073d2198f3550d81b80918920f",
+      "fold": 3,
+      "n_profile_components": 10,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/clpeak-1.1.0",
+        "pts/fahbench-1.0.2",
+        "pts/viennacl-1.1.0"
+      ],
+      "n_omitted": 7,
+      "omitted_test_ids": [
+        "pts/blender-5.1.0",
+        "pts/cl-mem-1.0.1",
+        "pts/financebench-1.1.1",
+        "pts/hashcat-1.3.1",
+        "pts/luxcorerender-1.4.0",
+        "pts/ncnn-1.6.0",
+        "pts/rodinia-1.3.2"
+      ],
+      "omitted_component_mape_percent": 0.9063343406154168
+    },
+    {
+      "machine": "aces-System-Product-Name",
+      "suite": "pts-pts/nvidia-gpu-compute",
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-02.json",
+      "run_sha256": "0da0a1de636a28d83e0929dd1097f078e8e55485a6e3376bd21c5ce53b2a033d",
+      "fold": 0,
+      "n_profile_components": 10,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/cl-mem-1.0.1",
+        "pts/clpeak-1.1.0",
+        "pts/viennacl-1.1.0"
+      ],
+      "n_omitted": 7,
+      "omitted_test_ids": [
+        "pts/blender-5.1.0",
+        "pts/fahbench-1.0.2",
+        "pts/financebench-1.1.1",
+        "pts/hashcat-1.3.1",
+        "pts/luxcorerender-1.4.0",
+        "pts/ncnn-1.6.0",
+        "pts/rodinia-1.3.2"
+      ],
+      "omitted_component_mape_percent": 4.705252877048582
+    },
+    {
+      "machine": "aces-System-Product-Name",
+      "suite": "pts-pts/nvidia-gpu-compute",
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-03.json",
+      "run_sha256": "e98a333faa61e9809ebf2ef76a517a2e14b3478ab918dbff8d0795262ab504eb",
+      "fold": 2,
+      "n_profile_components": 10,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/cl-mem-1.0.1",
+        "pts/clpeak-1.1.0",
+        "pts/fahbench-1.0.2"
+      ],
+      "n_omitted": 7,
+      "omitted_test_ids": [
+        "pts/blender-5.1.0",
+        "pts/financebench-1.1.1",
+        "pts/hashcat-1.3.1",
+        "pts/luxcorerender-1.4.0",
+        "pts/ncnn-1.6.0",
+        "pts/rodinia-1.3.2",
+        "pts/viennacl-1.1.0"
+      ],
+      "omitted_component_mape_percent": 0.8358846907505579
+    },
+    {
+      "machine": "aces-System-Product-Name",
+      "suite": "pts-pts/nvidia-gpu-compute",
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-04.json",
+      "run_sha256": "f76d82f03074ea564a138f02946936d296f751871e802b224831f6dfd6c4ad7c",
+      "fold": 4,
+      "n_profile_components": 10,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/fahbench-1.0.2",
+        "pts/financebench-1.1.1",
+        "pts/rodinia-1.3.2"
+      ],
+      "n_omitted": 7,
+      "omitted_test_ids": [
+        "pts/blender-5.1.0",
+        "pts/cl-mem-1.0.1",
+        "pts/clpeak-1.1.0",
+        "pts/hashcat-1.3.1",
+        "pts/luxcorerender-1.4.0",
+        "pts/ncnn-1.6.0",
+        "pts/viennacl-1.1.0"
+      ],
+      "omitted_component_mape_percent": 4.0109977144437865
+    },
+    {
+      "machine": "aces-System-Product-Name",
+      "suite": "pts-pts/nvidia-gpu-compute",
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_pts_nvidia-gpu-compute_20260522T041557Z/run-05.json",
+      "run_sha256": "0de357c30160691b6968c22c78a2a70900153077373bfc2de8445c13e408af5a",
+      "fold": 1,
+      "n_profile_components": 10,
+      "n_selected": 3,
+      "selected_test_ids": [
+        "pts/blender-5.1.0",
+        "pts/fahbench-1.0.2",
+        "pts/financebench-1.1.1"
+      ],
+      "n_omitted": 7,
+      "omitted_test_ids": [
+        "pts/cl-mem-1.0.1",
+        "pts/clpeak-1.1.0",
+        "pts/hashcat-1.3.1",
+        "pts/luxcorerender-1.4.0",
+        "pts/ncnn-1.6.0",
+        "pts/rodinia-1.3.2",
+        "pts/viennacl-1.1.0"
+      ],
+      "omitted_component_mape_percent": 1.957671556359398
+    }
+  ]
+}

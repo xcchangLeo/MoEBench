@@ -1,0 +1,452 @@
+{
+  "schema": "moebench.hybrid.run_level_oof.v1",
+  "generated_at_utc": "2026-10-12T10:58:01.128734+00:00",
+  "protocol": "randomly shuffled run-level folds; router, probe, and reconstructor fit only on training runs",
+  "machine": "iZbp1glgt48i9a8d49embxZ",
+  "benchmark": "phoronix",
+  "pts_suite": "cpu",
+  "pts_suite_target": "logmean",
+  "folds": 5,
+  "seed": 42,
+  "top_k": 3,
+  "probe_duration_s": 4.0,
+  "xi_overhead_s": 3.0,
+  "reconstructor": "lightgbm",
+  "reconstructor_estimators": 30,
+  "probe_model": "lightgbm",
+  "router_model": "fold-local MLP",
+  "input_artifacts": {
+    "probe_dataset": "/home/zyf/code/MoEBench/dataset/models/iZbp1glgt48i9a8d49embxZ/probe_dataset_pts_cpu.json",
+    "probe_dataset_sha256": "017679f0840be7bcecb6c36f06be6dee4b75957c906fc821b0fdb419034e0365",
+    "runs": [
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-01.json",
+        "sha256": "5c1acd1c477296b1a14b5cac99754f75db9b3a73a44744a7184b177a8fc7749d"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-02.json",
+        "sha256": "947fbe79a7504192ed0006647f78c2a168b7e0e79fcc528229c5cbd8f15fb2c1"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-03.json",
+        "sha256": "979b2e7bc20089bf8e304207f08fb559f34d912092bd2b074bd0fa1ced974387"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-04.json",
+        "sha256": "8f1fe367d76b7849b832772280fb030f1319263c371835500881f9b9ea40431a"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-05.json",
+        "sha256": "633277cc87e31a17f96780833146fe9348ad32cdd5f1eed194e0fec299f2331e"
+      }
+    ]
+  },
+  "fold_manifest": [
+    {
+      "fold": 0,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-05.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-02.json"
+      ],
+      "probe_training_samples": 20,
+      "router_fit_scope": "training_fold_only",
+      "router_fit_runs": 4
+    },
+    {
+      "fold": 1,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-04.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-05.json"
+      ],
+      "probe_training_samples": 20,
+      "router_fit_scope": "training_fold_only",
+      "router_fit_runs": 4
+    },
+    {
+      "fold": 2,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-05.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-03.json"
+      ],
+      "probe_training_samples": 20,
+      "router_fit_scope": "training_fold_only",
+      "router_fit_runs": 4
+    },
+    {
+      "fold": 3,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-05.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-01.json"
+      ],
+      "probe_training_samples": 20,
+      "router_fit_scope": "training_fold_only",
+      "router_fit_runs": 4
+    },
+    {
+      "fold": 4,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-05.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-04.json"
+      ],
+      "probe_training_samples": 20,
+      "router_fit_scope": "training_fold_only",
+      "router_fit_runs": 4
+    }
+  ],
+  "summary": {
+    "n_runs": 5,
+    "mean_relative_error_percent": 0.19367359878608675,
+    "median_relative_error_percent": 0.1813726515004098,
+    "p95_relative_error_percent": 0.3156189376300899,
+    "max_relative_error_percent": 0.32853795214658643,
+    "mean_probe_wall_s": 15.052507138999953,
+    "mean_hybrid_wall_estimate_s": 18.052507138999953
+  },
+  "per_run": [
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-01.json",
+      "session": "iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z",
+      "router": {
+        "top_k": 3,
+        "selected_experts": [
+          "e_005",
+          "e_001",
+          "e_002"
+        ],
+        "selected_test_ids": [
+          "pts/rodinia-1.3.2",
+          "pts/asmfish-1.1.2",
+          "pts/ctx-clock-1.0.0"
+        ],
+        "scores": {
+          "e_001": 37.81376266479492,
+          "e_002": 37.81327438354492,
+          "e_003": 37.81205368041992,
+          "e_004": 37.80839157104492,
+          "e_005": 37.82035446166992
+        },
+        "probabilities": {
+          "e_001": 0.20003755951564628,
+          "e_002": 0.19993990876849363,
+          "e_003": 0.19969599040329192,
+          "e_004": 0.19896601927754376,
+          "e_005": 0.20136052203502441
+        }
+      },
+      "probe": {
+        "predicted_subtest": {
+          "pts/rodinia-1.3.2": 104.38510260598183,
+          "pts/asmfish-1.1.2": 3356584.507290068,
+          "pts/ctx-clock-1.0.0": 269.0010839701858
+        },
+        "probe_duration_s": 4.0,
+        "probe_wall_s_selected_sum": 15.055399780000016
+      },
+      "reconstruction": {
+        "predicted_suite": 565.2667909017299,
+        "predicted_subtest": {
+          "pts/asmfish-1.1.2": 3329012.2642089822,
+          "pts/ctx-clock-1.0.0": 269.10731938146074,
+          "pts/namd-1.4.0": 0.12669950015515496,
+          "pts/radiance-1.0.0": 536.051401117444,
+          "pts/rodinia-1.3.2": 104.24038935266437
+        }
+      },
+      "ground_truth_suite": 563.4157563138651,
+      "timing_seconds": {
+        "xi_collection_estimate": 3.0,
+        "probe_selected_subtests": 15.055399780000016,
+        "hybrid_wall_estimate": 18.055399780000016,
+        "full_suite_from_dataset": 5270.87
+      },
+      "comparison": {
+        "suite_absolute_error": 1.851034587864774,
+        "suite_relative_error": 0.003285379521465864,
+        "benchmark_time_saved_seconds_vs_full": 5255.81460022,
+        "benchmark_time_ratio_full_over_hybrid_probe": 350.09830871458894,
+        "fraction_saved_vs_full": 0.9971436594376261
+      }
+    },
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-02.json",
+      "session": "iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z",
+      "router": {
+        "top_k": 3,
+        "selected_experts": [
+          "e_004",
+          "e_003",
+          "e_002"
+        ],
+        "selected_test_ids": [
+          "pts/radiance-1.0.0",
+          "pts/namd-1.4.0",
+          "pts/ctx-clock-1.0.0"
+        ],
+        "scores": {
+          "e_001": -55.133243560791016,
+          "e_002": -55.124942779541016,
+          "e_003": -55.117618560791016,
+          "e_004": -55.103946685791016,
+          "e_005": -55.143009185791016
+        },
+        "probabilities": {
+          "e_001": 0.19825161146574705,
+          "e_002": 0.1999041037249068,
+          "e_003": 0.2013736200699505,
+          "e_004": 0.2041456814910848,
+          "e_005": 0.19632498324831088
+        }
+      },
+      "probe": {
+        "predicted_subtest": {
+          "pts/radiance-1.0.0": 537.7190531980985,
+          "pts/namd-1.4.0": 0.1266881955438059,
+          "pts/ctx-clock-1.0.0": 269.9984453467933
+        },
+        "probe_duration_s": 4.0,
+        "probe_wall_s_selected_sum": 15.052358714999855
+      },
+      "reconstruction": {
+        "predicted_suite": 565.0787215173244,
+        "predicted_subtest": {
+          "pts/asmfish-1.1.2": 3387501.879931641,
+          "pts/ctx-clock-1.0.0": 269.1405803220348,
+          "pts/namd-1.4.0": 0.12619227905743183,
+          "pts/radiance-1.0.0": 536.8930725792422,
+          "pts/rodinia-1.3.2": 104.1971661809832
+        }
+      },
+      "ground_truth_suite": 566.1054820403903,
+      "timing_seconds": {
+        "xi_collection_estimate": 3.0,
+        "probe_selected_subtests": 15.052358714999855,
+        "hybrid_wall_estimate": 18.052358714999855,
+        "full_suite_from_dataset": 5266.68
+      },
+      "comparison": {
+        "suite_absolute_error": 1.0267605230658319,
+        "suite_relative_error": 0.0018137265150040978,
+        "benchmark_time_saved_seconds_vs_full": 5251.627641285,
+        "benchmark_time_ratio_full_over_hybrid_probe": 349.8906782464393,
+        "fraction_saved_vs_full": 0.9971419644415457
+      }
+    },
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-03.json",
+      "session": "iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z",
+      "router": {
+        "top_k": 3,
+        "selected_experts": [
+          "e_004",
+          "e_003",
+          "e_002"
+        ],
+        "selected_test_ids": [
+          "pts/radiance-1.0.0",
+          "pts/namd-1.4.0",
+          "pts/ctx-clock-1.0.0"
+        ],
+        "scores": {
+          "e_001": 35.455326080322266,
+          "e_002": 35.470951080322266,
+          "e_003": 35.472904205322266,
+          "e_004": 35.476810455322266,
+          "e_005": 35.459232330322266
+        },
+        "probabilities": {
+          "e_001": 0.1976631490334657,
+          "e_002": 0.20077589070277135,
+          "e_003": 0.20116841431335877,
+          "e_004": 0.20195576522535214,
+          "e_005": 0.198436780725052
+        }
+      },
+      "probe": {
+        "predicted_subtest": {
+          "pts/radiance-1.0.0": 545.2982412977734,
+          "pts/namd-1.4.0": 0.1267958142093601,
+          "pts/ctx-clock-1.0.0": 269.9984453467933
+        },
+        "probe_duration_s": 4.0,
+        "probe_wall_s_selected_sum": 15.047956568000018
+      },
+      "reconstruction": {
+        "predicted_suite": 564.6562979863954,
+        "predicted_subtest": {
+          "pts/asmfish-1.1.2": 3350860.8429321297,
+          "pts/ctx-clock-1.0.0": 269.2095802387223,
+          "pts/namd-1.4.0": 0.12661113347021447,
+          "pts/radiance-1.0.0": 539.0186733379961,
+          "pts/rodinia-1.3.2": 104.42970025967803
+        }
+      },
+      "ground_truth_suite": 565.1846139427333,
+      "timing_seconds": {
+        "xi_collection_estimate": 3.0,
+        "probe_selected_subtests": 15.047956568000018,
+        "hybrid_wall_estimate": 18.047956568000018,
+        "full_suite_from_dataset": 5282.71
+      },
+      "comparison": {
+        "suite_absolute_error": 0.5283159563379058,
+        "suite_relative_error": 0.0009347670536399931,
+        "benchmark_time_saved_seconds_vs_full": 5267.662043432,
+        "benchmark_time_ratio_full_over_hybrid_probe": 351.05829659515757,
+        "fraction_saved_vs_full": 0.9971514702552289
+      }
+    },
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-04.json",
+      "session": "iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z",
+      "router": {
+        "top_k": 3,
+        "selected_experts": [
+          "e_003",
+          "e_002",
+          "e_001"
+        ],
+        "selected_test_ids": [
+          "pts/namd-1.4.0",
+          "pts/ctx-clock-1.0.0",
+          "pts/asmfish-1.1.2"
+        ],
+        "scores": {
+          "e_001": 7.641211032867432,
+          "e_002": 7.643164157867432,
+          "e_003": 7.649023532867432,
+          "e_004": 7.633398532867432,
+          "e_005": 7.633398532867432
+        },
+        "probabilities": {
+          "e_001": 0.20023090598772958,
+          "e_002": 0.2006223641348925,
+          "e_003": 0.2018013364471265,
+          "e_004": 0.19867269671512572,
+          "e_005": 0.19867269671512572
+        }
+      },
+      "probe": {
+        "predicted_subtest": {
+          "pts/namd-1.4.0": 0.12600749435365563,
+          "pts/ctx-clock-1.0.0": 269.0010839701858,
+          "pts/asmfish-1.1.2": 3307580.7593090376
+        },
+        "probe_duration_s": 4.0,
+        "probe_wall_s_selected_sum": 15.049231898000016
+      },
+      "reconstruction": {
+        "predicted_suite": 565.157993498817,
+        "predicted_subtest": {
+          "pts/asmfish-1.1.2": 3382404.503808592,
+          "pts/ctx-clock-1.0.0": 269.7105409476905,
+          "pts/namd-1.4.0": 0.12667345199697588,
+          "pts/radiance-1.0.0": 537.3760219966622,
+          "pts/rodinia-1.3.2": 104.25005787909029
+        }
+      },
+      "ground_truth_suite": 564.5875466323901,
+      "timing_seconds": {
+        "xi_collection_estimate": 3.0,
+        "probe_selected_subtests": 15.049231898000016,
+        "hybrid_wall_estimate": 18.049231898000016,
+        "full_suite_from_dataset": 5261.36
+      },
+      "comparison": {
+        "suite_absolute_error": 0.5704468664268916,
+        "suite_relative_error": 0.0010103780535533431,
+        "benchmark_time_saved_seconds_vs_full": 5246.310768101999,
+        "benchmark_time_ratio_full_over_hybrid_probe": 349.6098695043176,
+        "fraction_saved_vs_full": 0.9971396688502592
+      }
+    },
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z/run-05.json",
+      "session": "iZbp1glgt48i9a8d49embxZ_cpu_20260525T050416Z",
+      "router": {
+        "top_k": 3,
+        "selected_experts": [
+          "e_005",
+          "e_004",
+          "e_001"
+        ],
+        "selected_test_ids": [
+          "pts/rodinia-1.3.2",
+          "pts/radiance-1.0.0",
+          "pts/asmfish-1.1.2"
+        ],
+        "scores": {
+          "e_001": 48.82072067260742,
+          "e_002": 48.82023239135742,
+          "e_003": 48.81730270385742,
+          "e_004": 48.82316207885742,
+          "e_005": 48.82511520385742
+        },
+        "probabilities": {
+          "e_001": 0.19988213773583516,
+          "e_002": 0.19978456285969873,
+          "e_003": 0.19920011306885002,
+          "e_004": 0.20037072741643164,
+          "e_005": 0.20076245891918443
+        }
+      },
+      "probe": {
+        "predicted_subtest": {
+          "pts/rodinia-1.3.2": 104.38558885353522,
+          "pts/radiance-1.0.0": 543.9129555508454,
+          "pts/asmfish-1.1.2": 3333050.3448590385
+        },
+        "probe_duration_s": 4.0,
+        "probe_wall_s_selected_sum": 15.057588733999864
+      },
+      "reconstruction": {
+        "predicted_suite": 563.7178921848536,
+        "predicted_subtest": {
+          "pts/asmfish-1.1.2": 3324195.233813477,
+          "pts/ctx-clock-1.0.0": 269.10731938146074,
+          "pts/namd-1.4.0": 0.1258644961519167,
+          "pts/radiance-1.0.0": 544.0548367023468,
+          "pts/rodinia-1.3.2": 104.89187796711921
+        }
+      },
+      "ground_truth_suite": 565.2097230033248,
+      "timing_seconds": {
+        "xi_collection_estimate": 3.0,
+        "probe_selected_subtests": 15.057588733999864,
+        "hybrid_wall_estimate": 18.057588733999864,
+        "full_suite_from_dataset": 5211.49
+      },
+      "comparison": {
+        "suite_absolute_error": 1.4918308184712714,
+        "suite_relative_error": 0.00263942879564104,
+        "benchmark_time_saved_seconds_vs_full": 5196.432411266,
+        "benchmark_time_ratio_full_over_hybrid_probe": 346.1038876850524,
+        "fraction_saved_vs_full": 0.9971106941135837
+      }
+    }
+  ]
+}

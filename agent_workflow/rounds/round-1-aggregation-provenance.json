@@ -1,0 +1,989 @@
+{
+  "schema": "moebench.paper_aggregation_provenance.v1",
+  "generated_at_utc": "2026-10-12T07:08:42.419388+00:00",
+  "repository_revision": "c20de26871b317c292d820892d273473317fb456",
+  "script": "scripts/paper_aggregate_tables.py",
+  "script_sha256": "5010dc8492c31217f741cd8de693e623464ba110fa2447103e7f54ce795083e5",
+  "inputs": [
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_aces-System-Product-Name_20260610T115239Z/exp_gnn_expert__lightgbm__probe_lgbm.json",
+      "sha256": "e59db3dd39e51728ae969556c4fc4f06b9fe24bbae627b1bb50985e5c1c07c6a"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_aces-System-Product-Name_20260610T115239Z/exp_gnn_expert__lightgbm__probe_xgb.json",
+      "sha256": "f49daff72498cf7d5817d1f40d1017def95e3ae7cca4ba8fa223231c831833c9"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_aces-System-Product-Name_20260610T115239Z/exp_gnn_expert__mlp__probe_lgbm.json",
+      "sha256": "d34ff50b577a2c63a5dbca4bc66394a90b8a9acb4adf1f63a8039ba5ec9224e1"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_aces-System-Product-Name_20260610T115239Z/exp_gnn_expert__mlp__probe_xgb.json",
+      "sha256": "29c14d8e879cf615c21e74ee79da56452a1ffad63fd04b9609e6227f66a891b9"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_aces-System-Product-Name_20260610T115239Z/exp_gnn_expert__xgboost__probe_lgbm.json",
+      "sha256": "61985713b29db8be2834e198759d8cc4b886b1b2fafbeb37c2a4c09ed10a3fd8"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_aces-System-Product-Name_20260610T115239Z/exp_gnn_expert__xgboost__probe_xgb.json",
+      "sha256": "f6a8e1306f520c6f9bcd899cf9b8ea32053b70daab5c4a0342fb18ad98bb5b0b"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_aces-System-Product-Name_20260610T115239Z/exp_lightgbm__lightgbm__probe_lgbm.json",
+      "sha256": "2dc2d1f28326b3de2ed75689ee1e80cca909ec9e9b53c642f12e0b9b097ee03d"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_aces-System-Product-Name_20260610T115239Z/exp_lightgbm__lightgbm__probe_xgb.json",
+      "sha256": "15e2f3d644f28f2e0669f74c4e9f4d97dcdfc2d87009c2aacf27ba54ab973bd1"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_aces-System-Product-Name_20260610T115239Z/exp_lightgbm__mlp__probe_lgbm.json",
+      "sha256": "993490d08bf0bcffad6d165eddae00c96777666441478a29ab1a7e9d88b7cff7"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_aces-System-Product-Name_20260610T115239Z/exp_lightgbm__mlp__probe_xgb.json",
+      "sha256": "81e78bed4488089c5b2432d205061bfa68e75f3d95f114d79a12e2986f2485f7"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_aces-System-Product-Name_20260610T115239Z/exp_lightgbm__xgboost__probe_lgbm.json",
+      "sha256": "62da4f9c67f0ebb7a73d84091a0479de34ed31e2a9ec36d87b5448fcb5bb8bf0"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_aces-System-Product-Name_20260610T115239Z/exp_lightgbm__xgboost__probe_xgb.json",
+      "sha256": "748f1a62d3c67e32e30801c0f4abb0bf16f92c070b18acd4207d7e6ecb0060df"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_aces-System-Product-Name_20260610T115239Z/exp_mlp__lightgbm__probe_lgbm.json",
+      "sha256": "996c4cbcecbc5e4dcdc9b9a54f9ea4fa91e340f0f8d806fabf196989588e7d64"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_aces-System-Product-Name_20260610T115239Z/exp_mlp__lightgbm__probe_xgb.json",
+      "sha256": "9bb0c3371c74b99301932e03d9da625fa66f2cfad9bf6b062b2ea9d7e9d97494"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_aces-System-Product-Name_20260610T115239Z/exp_mlp__mlp__probe_lgbm.json",
+      "sha256": "f80b06adf19aaedd26a697482dd33b14859272cf88734699e2124dac78b02472"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_aces-System-Product-Name_20260610T115239Z/exp_mlp__mlp__probe_xgb.json",
+      "sha256": "2d2d3af6fe2cad2f6502e28687121d48db51a787073f4bf38e34e6e5540f3fa2"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_aces-System-Product-Name_20260610T115239Z/exp_mlp__xgboost__probe_lgbm.json",
+      "sha256": "2108720e4281cae0ff429bbd8567af9719d53688feec3437dd225639eb3d76db"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_aces-System-Product-Name_20260610T115239Z/exp_mlp__xgboost__probe_xgb.json",
+      "sha256": "8707c7d51eed545e5c2757e67173c025d94db80af9deb643fd92ef1abf964a05"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_aces-System-Product-Name_20260610T115239Z/grid_summary.json",
+      "sha256": "e83bbe98160193f5cde8d4503168c306ad1bccfcefba66be5b461a0ab56cfc51"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp15n87643uk1sqjrdvdZ_20260603T062708Z/exp_gnn_expert__lightgbm__probe_lgbm.json",
+      "sha256": "7bde692c35490cc55873dff9bad537bd9f6eaa2aa6deaaee9b3be18b25cdc6d3"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp15n87643uk1sqjrdvdZ_20260603T062708Z/exp_gnn_expert__lightgbm__probe_xgb.json",
+      "sha256": "1242ebec246a43037a0167cf25d66d8be5ab94376e6922e8ac359f705b3a4d1f"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp15n87643uk1sqjrdvdZ_20260603T062708Z/exp_gnn_expert__mlp__probe_lgbm.json",
+      "sha256": "0bd4948ceaf82a523faba7e5fc7e53d56207b60a913be7e00733f42543ca0ac4"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp15n87643uk1sqjrdvdZ_20260603T062708Z/exp_gnn_expert__mlp__probe_xgb.json",
+      "sha256": "91dffa73f6554326d2bbfa56349476f108f29f84542e736ccfc6f8dd376877c2"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp15n87643uk1sqjrdvdZ_20260603T062708Z/exp_gnn_expert__xgboost__probe_lgbm.json",
+      "sha256": "c390c03951d03bec58e9e497cbbde0308f9d445f05caa2a0df0b9e06785a00eb"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp15n87643uk1sqjrdvdZ_20260603T062708Z/exp_gnn_expert__xgboost__probe_xgb.json",
+      "sha256": "7657d36fa653485e112a3dcb611a5109b463ea313f6288581b535e07443f930c"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp15n87643uk1sqjrdvdZ_20260603T062708Z/exp_lightgbm__lightgbm__probe_lgbm.json",
+      "sha256": "a67446360e86ffbb3a3506ad7faf3cd69979df5139cf20951dbda8aba1c44807"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp15n87643uk1sqjrdvdZ_20260603T062708Z/exp_lightgbm__lightgbm__probe_xgb.json",
+      "sha256": "4c82d42d817011ba730c1fa50c714cdf8fdd3085566a07de44c32b8bd77530f4"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp15n87643uk1sqjrdvdZ_20260603T062708Z/exp_lightgbm__mlp__probe_lgbm.json",
+      "sha256": "f255e33b31e9bc33d43a749d73b4eb494599c3194cb7064c999bf355f89d33ea"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp15n87643uk1sqjrdvdZ_20260603T062708Z/exp_lightgbm__mlp__probe_xgb.json",
+      "sha256": "bc46592ae5dedf1b46317547556872ed1307d4813b225bae129ff34803b68ff5"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp15n87643uk1sqjrdvdZ_20260603T062708Z/exp_lightgbm__xgboost__probe_lgbm.json",
+      "sha256": "ea4898dce2440f0339db0749c99b5a4e1caee2d0727834d4f64d5507b6965e83"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp15n87643uk1sqjrdvdZ_20260603T062708Z/exp_lightgbm__xgboost__probe_xgb.json",
+      "sha256": "5ed45fe69b57b7fdf2397c58e7e5738fa0999e2dbd64a7bdcc6c4ddc2ba33957"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp15n87643uk1sqjrdvdZ_20260603T062708Z/exp_mlp__lightgbm__probe_lgbm.json",
+      "sha256": "e100f2d283f03e5716321724c56337b7b9c6c774d273a496e83f792c0e7ce96d"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp15n87643uk1sqjrdvdZ_20260603T062708Z/exp_mlp__lightgbm__probe_xgb.json",
+      "sha256": "d29ac9e7475605bc0bbfbe0b0e4cd40e3b1f3f09041b34f6aecb5d849af103e0"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp15n87643uk1sqjrdvdZ_20260603T062708Z/exp_mlp__mlp__probe_lgbm.json",
+      "sha256": "0d83155c52371f92f9946bfb936f366332b073eac5860f7319acac1b057cb7ec"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp15n87643uk1sqjrdvdZ_20260603T062708Z/exp_mlp__mlp__probe_xgb.json",
+      "sha256": "a7b99c6b0f4acde51634e17c6bbf7faad072d46b51e56a6efecbf31f76bf3308"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp15n87643uk1sqjrdvdZ_20260603T062708Z/exp_mlp__xgboost__probe_lgbm.json",
+      "sha256": "81928005a3e6f125612b2ac528af2ae610d3f32df78e3bb67eacf569acad64ee"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp15n87643uk1sqjrdvdZ_20260603T062708Z/exp_mlp__xgboost__probe_xgb.json",
+      "sha256": "aade328ccf9dc961658dfa01c9d2a9981afffe59448fb60f7aa0dae27c4ed5eb"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp15n87643uk1sqjrdvdZ_20260603T062708Z/grid_summary.json",
+      "sha256": "186b16a1889f1820acb1a18b15df9d21e8ebfca0e34efa2a3ef62e77e03dbc7b"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_gnn_expert__lightgbm__probe_lgbm.json",
+      "sha256": "2006957107149526f66382bab7a896eb880c0ff67f25e9e26d947b13818f650f"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_gnn_expert__lightgbm__probe_xgb.json",
+      "sha256": "b7258752cdcb298d4e55faa29d3d5a191def8b3e782a59bbb4128a2a0ed5992c"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_gnn_expert__mlp__probe_lgbm.json",
+      "sha256": "8b0baa47dee448ae989853f4a171a2766ff18f844ab500ac20ade19076bcfbe0"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_gnn_expert__mlp__probe_xgb.json",
+      "sha256": "b1068b7cd124e70c9b3cdf615b3a5229ac77bf72a6ca2e7dcb8258cc23e8bd6b"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_gnn_expert__xgboost__probe_lgbm.json",
+      "sha256": "398ad48d6f47eea289bbade700095dd0c9382a681b6d453d5365ef6a74519397"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_gnn_expert__xgboost__probe_xgb.json",
+      "sha256": "844a14d4694119e44b7c1165f66a885097f7fa2dfb205d716f734eda4d656594"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_lightgbm__lightgbm__probe_lgbm.json",
+      "sha256": "860f5f549f3e859e4598fb59d3e2a652c1940a84d1e06ea92afd01d2d2d5bd3d"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_lightgbm__lightgbm__probe_xgb.json",
+      "sha256": "664c241cfbb3f477dd8afd7357d107b542e267026dfd13081bafd0f23844c0b4"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_lightgbm__mlp__probe_lgbm.json",
+      "sha256": "86f455b5278b91d5c3d5608d5ea28ca50f7625d629723552b7d12466f7af5694"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_lightgbm__mlp__probe_xgb.json",
+      "sha256": "787829934175cec89b2026107a42127074dcb5ba443eca7ebd9ba4e6590fbbf1"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_lightgbm__xgboost__probe_lgbm.json",
+      "sha256": "383986708687fcd241aa23b306641fed15d169e3f8812a12bb94f5b0c0f31a08"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_lightgbm__xgboost__probe_xgb.json",
+      "sha256": "bb637aa93ff8cd67eaf990af0ff1076bdffef43d30129a89127c1bc391b94395"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_mlp__lightgbm__probe_lgbm.json",
+      "sha256": "b83d3f7e0ff6be9cf5d1098fd1fa73a1e5e7abffca4097aef81a3d4a457cb4fc"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_mlp__lightgbm__probe_xgb.json",
+      "sha256": "befe5746259ae5e43e34a1f4dc6fc3714f3dba40a82bde00d56e11086330ee18"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_mlp__mlp__probe_lgbm.json",
+      "sha256": "1e84e4fc7bd71c0835011998aab61967ce3061c277764427173be58bde2edafe"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_mlp__mlp__probe_xgb.json",
+      "sha256": "2dfc95962a9392a5c0aab67891ce75e807fa6bc1c863b9c6c1e97b8bacace2bb"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_mlp__xgboost__probe_lgbm.json",
+      "sha256": "92659e34a7e777c3122091afa8cb401482a300adb1af92c07424fc6633b89167"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_mlp__xgboost__probe_xgb.json",
+      "sha256": "2b617b48356e643724571589b9daace9ea364d1316d221ae816915ffcaf8cf34"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/grid_summary.json",
+      "sha256": "6a4b1fcffff9ca96e31cfc7c42bd92325eaf0136312ae2018afa815e5a741aa9"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1acaw5wdllhz47922rZ_20260603T062708Z/exp_gnn_expert__lightgbm__probe_lgbm.json",
+      "sha256": "950fc13129494946e930d14f3a49718a194fc58594691b83a926231d52562218"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1acaw5wdllhz47922rZ_20260603T062708Z/exp_gnn_expert__lightgbm__probe_xgb.json",
+      "sha256": "a9cfcfb4d8c75a847e7f51c46f015fb9cf5b262339c98cc2aadfb81cfb5a5065"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1acaw5wdllhz47922rZ_20260603T062708Z/exp_gnn_expert__mlp__probe_lgbm.json",
+      "sha256": "a6139252bda39c5d4911ee0c6c429d87cb4f306d1a7bf40128f0bd735a22e3c0"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1acaw5wdllhz47922rZ_20260603T062708Z/exp_gnn_expert__mlp__probe_xgb.json",
+      "sha256": "fe0835ff78d5e498f03b58507e0bdd18e63efd67a68acd3274ec71968cbf635a"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1acaw5wdllhz47922rZ_20260603T062708Z/exp_gnn_expert__xgboost__probe_lgbm.json",
+      "sha256": "fa9f4b907617b4a1dba32263479cea0388f03bb2949ede1a01ee77282c5df102"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1acaw5wdllhz47922rZ_20260603T062708Z/exp_gnn_expert__xgboost__probe_xgb.json",
+      "sha256": "1decba0509080588b08541b3ef8bde434d22c48a595fb310a61f56274640f09f"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1acaw5wdllhz47922rZ_20260603T062708Z/exp_lightgbm__lightgbm__probe_lgbm.json",
+      "sha256": "bf5b30687060b5fd6101b0b0eabebd9bf071fa8865712ab17f1b9196b3cddd72"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1acaw5wdllhz47922rZ_20260603T062708Z/exp_lightgbm__lightgbm__probe_xgb.json",
+      "sha256": "db593b474343e4c092ca699193a4bf7e8f0a042299ca3f6ccf3b3451cc51fe19"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1acaw5wdllhz47922rZ_20260603T062708Z/exp_lightgbm__mlp__probe_lgbm.json",
+      "sha256": "d718799205dbcb9883ee563d386b142ad41e226da1d6a28f0c8f98a70c3c7a47"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1acaw5wdllhz47922rZ_20260603T062708Z/exp_lightgbm__mlp__probe_xgb.json",
+      "sha256": "9f5e94bfdc5add04bb0c525ed2549d50fdabbe6b6d442b8bec815325a194d9d2"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1acaw5wdllhz47922rZ_20260603T062708Z/exp_lightgbm__xgboost__probe_lgbm.json",
+      "sha256": "fec83d11d37667f18f43e3bcfa56fee5ac9b3ed193a797f634e3c012c5f43c7f"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1acaw5wdllhz47922rZ_20260603T062708Z/exp_lightgbm__xgboost__probe_xgb.json",
+      "sha256": "18ee48d608eeb5e99a7bec22a872590d0f0c2463eac4a80a8175a6136829c8bf"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1acaw5wdllhz47922rZ_20260603T062708Z/exp_mlp__lightgbm__probe_lgbm.json",
+      "sha256": "24af8829e2f79e99d9dcfbfe53d517fac1504403485e433cc48c4e0712b78c86"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1acaw5wdllhz47922rZ_20260603T062708Z/exp_mlp__lightgbm__probe_xgb.json",
+      "sha256": "2ef7ae798ca3e3fd4fc3d3039e62257e716f2a1dee8c397b186e8713920d4c3f"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1acaw5wdllhz47922rZ_20260603T062708Z/exp_mlp__mlp__probe_lgbm.json",
+      "sha256": "2a11239e42166fa76053fa5b2ed6ffb7e93e677e6c3cdc8b11d8a46db242ceb0"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1acaw5wdllhz47922rZ_20260603T062708Z/exp_mlp__mlp__probe_xgb.json",
+      "sha256": "fb8958d3d1aa6f886a3dcae831e493cfc06d9e4ae6a877fe150e3dfde58a360d"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1acaw5wdllhz47922rZ_20260603T062708Z/exp_mlp__xgboost__probe_lgbm.json",
+      "sha256": "62e059cf9bac16454dbbf4c1f54223f7d3022336f3a502bf191a915ad0d8d4c5"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1acaw5wdllhz47922rZ_20260603T062708Z/exp_mlp__xgboost__probe_xgb.json",
+      "sha256": "189053097e951e6e0bd9ec96e2f82a35148690596739ddfaec99b83750991dde"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1acaw5wdllhz47922rZ_20260603T062708Z/grid_summary.json",
+      "sha256": "9b1da4fda5905bc811d3b26047f5823058eaeebda3b55d0b4561c26902989069"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_gnn_expert__lightgbm__probe_lgbm.json",
+      "sha256": "d19972520a84ca04fd01d9ec28fb9eefae46a67ed87aa0433f0b4019acae3e1d"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_gnn_expert__lightgbm__probe_xgb.json",
+      "sha256": "71b446cec5a3e3bb12c4a5637a5830f668a0399ddd503fd169f99cef97831dd3"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_gnn_expert__mlp__probe_lgbm.json",
+      "sha256": "358502d8b92012e066a25a96e1bf41e8ba0bb2e98a1e149a8ff4a858126dd636"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_gnn_expert__mlp__probe_xgb.json",
+      "sha256": "344e3ed09fbf1d2277874e211fd292f0038a060bc953cdb5612bf70434dc423b"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_gnn_expert__xgboost__probe_lgbm.json",
+      "sha256": "91512a31a6e86d8c1ab8435892779a1fb614a227da2d60580e0d4c9e22ca54fe"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_gnn_expert__xgboost__probe_xgb.json",
+      "sha256": "063fc13fe5a095b92c859f4f4b7b41ef28b0f219035ec7708f2da6b87b478a14"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_lightgbm__lightgbm__probe_lgbm.json",
+      "sha256": "e2db37fb77a39c01eb9c5bd5a7e9b5988099184fd61fd02eacf966b11a2d2c20"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_lightgbm__lightgbm__probe_xgb.json",
+      "sha256": "75e4fa5b45f375e8a2d405d7e2b48a3faf45a443ba5d53cccce1d5e77c2575ac"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_lightgbm__mlp__probe_lgbm.json",
+      "sha256": "f012a838348c806fa62e8317864605c625cb6f37e013353a2803592615343797"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_lightgbm__mlp__probe_xgb.json",
+      "sha256": "89094e28cb03ace78407db9cf7510eb623f58af8e9b3b74f34a21e0a8031e6dd"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_lightgbm__xgboost__probe_lgbm.json",
+      "sha256": "327996a45cf3b220cc85278f58b8ca2f5527b7b24afb4df7648c679e58559f49"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_lightgbm__xgboost__probe_xgb.json",
+      "sha256": "a84788d122a7484e3dd3020c88cb8643a5df9a1b25c004acb20c8322d796b970"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_mlp__lightgbm__probe_lgbm.json",
+      "sha256": "d9e8e6ceb1f862b778ba10d2b193356e2db99aa3a29d388d6646d8e0f12d5e14"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_mlp__lightgbm__probe_xgb.json",
+      "sha256": "ddc2797ad7fb2f549418c3f2fa1533a39b1210e6c27ec0bd1f218e53cfb14a48"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_mlp__mlp__probe_lgbm.json",
+      "sha256": "956bbcfafa28e60c8a56760d41ccbf22fe366448c9d23617e4349b326cc7d98a"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_mlp__mlp__probe_xgb.json",
+      "sha256": "cdfee91a13b2b33d985801b0986c3f5baca15346e30fc4357f1ec83d95e1050a"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_mlp__xgboost__probe_lgbm.json",
+      "sha256": "36d8982068584a3868e9ad21a480717b1c7c3c1b6bee2f810ce358b93b62c1de"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_mlp__xgboost__probe_xgb.json",
+      "sha256": "d15a89bcbd9bb8bcea0c4c51affacd07248fdf6ec1af030a9493b68d950d7d90"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_cpu_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/grid_summary.json",
+      "sha256": "7bb20fb708cacc099c8b14052adc5af83b7449643330866e90b30e0918b99639"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_pts_nvidia-gpu-compute_aces-System-Product-Name_20260610T115239Z/exp_gnn_expert__lightgbm__probe_lgbm.json",
+      "sha256": "b7b38699ac8ae19fd335804306c6cad967101d68f32417c0cdfa7626e04ab312"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_pts_nvidia-gpu-compute_aces-System-Product-Name_20260610T115239Z/exp_gnn_expert__lightgbm__probe_xgb.json",
+      "sha256": "f2440e4650106cb65488c8f5efdcdc3d8e37db1c427b56e98921a7dcb2a5f5f6"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_pts_nvidia-gpu-compute_aces-System-Product-Name_20260610T115239Z/exp_gnn_expert__mlp__probe_lgbm.json",
+      "sha256": "bdee71879a1d2f4c39164cea63692590883afdd4bc820f45dcbf732dd23a1519"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_pts_nvidia-gpu-compute_aces-System-Product-Name_20260610T115239Z/exp_gnn_expert__mlp__probe_xgb.json",
+      "sha256": "4dea23fbb481072362b9da6aedcfcc73af994ad8964c79c72a9b95af06cfa40e"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_pts_nvidia-gpu-compute_aces-System-Product-Name_20260610T115239Z/exp_gnn_expert__xgboost__probe_lgbm.json",
+      "sha256": "c1ca6e5ca70fd3ae703c86f93f1f9b72da5b01dbc80ef4a0d1aa4f040ad0b38e"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_pts_nvidia-gpu-compute_aces-System-Product-Name_20260610T115239Z/exp_gnn_expert__xgboost__probe_xgb.json",
+      "sha256": "739effc31820800593afb932f4e8220e55500388b80669a9a33923d5e85b3d75"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_pts_nvidia-gpu-compute_aces-System-Product-Name_20260610T115239Z/exp_lightgbm__lightgbm__probe_lgbm.json",
+      "sha256": "f7025aaed5a31d6beb6dd8cc5b0b0d3a9206180d020e0b2737f96719d894184b"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_pts_nvidia-gpu-compute_aces-System-Product-Name_20260610T115239Z/exp_lightgbm__lightgbm__probe_xgb.json",
+      "sha256": "f331e008872dbbf4f1d81e4b6739f229fd8168f6fd0f6164b01777a635cc477c"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_pts_nvidia-gpu-compute_aces-System-Product-Name_20260610T115239Z/exp_lightgbm__mlp__probe_lgbm.json",
+      "sha256": "e8d60993a9f28fac6abb2156c3b84d9c9144c5bed34c1545781c8c97dcce0821"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_pts_nvidia-gpu-compute_aces-System-Product-Name_20260610T115239Z/exp_lightgbm__mlp__probe_xgb.json",
+      "sha256": "6d061049eee1bb9fbde27b1de9d61ad98a7b6e27ada97fa8d0c025c245710ae8"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_pts_nvidia-gpu-compute_aces-System-Product-Name_20260610T115239Z/exp_lightgbm__xgboost__probe_lgbm.json",
+      "sha256": "491005a114d071041bbd8885d57398a389be4fe5c738c61b88465b2202571a79"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_pts_nvidia-gpu-compute_aces-System-Product-Name_20260610T115239Z/exp_lightgbm__xgboost__probe_xgb.json",
+      "sha256": "f2e0f520320576437cd9f0b78fb0363e571d003688272a8db8e92794505b9616"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_pts_nvidia-gpu-compute_aces-System-Product-Name_20260610T115239Z/exp_mlp__lightgbm__probe_lgbm.json",
+      "sha256": "8cd8d4f84ac9cfa9a77020423e52b4c45352283640a6db1148c974676e954f85"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_pts_nvidia-gpu-compute_aces-System-Product-Name_20260610T115239Z/exp_mlp__lightgbm__probe_xgb.json",
+      "sha256": "fcbe4443d71800898ba6fa251bb1f4e8566c013275721c84a577c10f0c5fa8f4"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_pts_nvidia-gpu-compute_aces-System-Product-Name_20260610T115239Z/exp_mlp__mlp__probe_lgbm.json",
+      "sha256": "fb5ded6ecba7cf4eb399ec080e6f31a3e3a21a3a92483494b987f8175f9420cc"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_pts_nvidia-gpu-compute_aces-System-Product-Name_20260610T115239Z/exp_mlp__mlp__probe_xgb.json",
+      "sha256": "10204059cd1e9bc2b425ff39ba05c281661385c8112dbb7c67d0eeef95fbb7aa"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_pts_nvidia-gpu-compute_aces-System-Product-Name_20260610T115239Z/exp_mlp__xgboost__probe_lgbm.json",
+      "sha256": "4f0f0e4b3ab996d4549c5efbf49247520ce19d23a117e076e15d0acae718b2ab"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_pts_nvidia-gpu-compute_aces-System-Product-Name_20260610T115239Z/exp_mlp__xgboost__probe_xgb.json",
+      "sha256": "31708e20a89895cab6c54595e5879ddf859901dced810887be10d5bb86bfb34f"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_pts_nvidia-gpu-compute_aces-System-Product-Name_20260610T115239Z/grid_summary.json",
+      "sha256": "faca1b24a9f3ca47ba8da2587734dd8bb4067586c1c2d61f248a506ef68a7af1"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_aces-System-Product-Name_20260610T115239Z/exp_gnn_expert__lightgbm__probe_lgbm.json",
+      "sha256": "ad58182adaf19407a8acc43e52705841dad40fa33d413ecc88122907a02baa40"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_aces-System-Product-Name_20260610T115239Z/exp_gnn_expert__lightgbm__probe_xgb.json",
+      "sha256": "4e957e591f3136693161634690aad76d4c14a2a3233b5587b0943a0238eea559"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_aces-System-Product-Name_20260610T115239Z/exp_gnn_expert__mlp__probe_lgbm.json",
+      "sha256": "b6641c82d7775f45cc3d0ba7095fb7adec04bd37efc29e1b8d25828bf0a6e143"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_aces-System-Product-Name_20260610T115239Z/exp_gnn_expert__mlp__probe_xgb.json",
+      "sha256": "776d040ca028617b6d5d67e6d87069fab4e6d097b38a80d96e8f0feb18d836c4"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_aces-System-Product-Name_20260610T115239Z/exp_gnn_expert__xgboost__probe_lgbm.json",
+      "sha256": "bb3e1dbde743815cc9fdcc23165ff886c3cab2a8f5c6ea568e7f8d41e5da93bb"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_aces-System-Product-Name_20260610T115239Z/exp_gnn_expert__xgboost__probe_xgb.json",
+      "sha256": "0f35dceb07aeb0c2ed8a1ea0c8850ad351fb05d451500da26a9214dd349b2420"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_aces-System-Product-Name_20260610T115239Z/exp_lightgbm__lightgbm__probe_lgbm.json",
+      "sha256": "bd8d99af9ffa4766424f0dc8163c7664765ca5a0d449f5a859d6a6bd94c0bb6d"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_aces-System-Product-Name_20260610T115239Z/exp_lightgbm__lightgbm__probe_xgb.json",
+      "sha256": "7bc4bbed242d0b25316b15e02c00384cd88d2e96db2727d1d395a98da441e92d"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_aces-System-Product-Name_20260610T115239Z/exp_lightgbm__mlp__probe_lgbm.json",
+      "sha256": "9c1345d099f45dfb8703512b71fb44358a0e614d9db847ba86a1dae953c25fec"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_aces-System-Product-Name_20260610T115239Z/exp_lightgbm__mlp__probe_xgb.json",
+      "sha256": "20629a178dd4c9029ca7e318b227654b75db3ae3231c4a9557fdc246404230b2"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_aces-System-Product-Name_20260610T115239Z/exp_lightgbm__xgboost__probe_lgbm.json",
+      "sha256": "7ca0c170ad71c26fdd600212d040fc70322968d51e3628552ba5dfb348d1a7ab"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_aces-System-Product-Name_20260610T115239Z/exp_lightgbm__xgboost__probe_xgb.json",
+      "sha256": "b640aae50b0665b9f5dbc2a57db028fc205eebc1b5536f8d2f0f858f74596710"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_aces-System-Product-Name_20260610T115239Z/exp_mlp__lightgbm__probe_lgbm.json",
+      "sha256": "87fdadd7fc99286bcd167556cf4b55760debd8d3bf9806fd2a7a9d3ca3b47b56"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_aces-System-Product-Name_20260610T115239Z/exp_mlp__lightgbm__probe_xgb.json",
+      "sha256": "bc90cc58598fd8e1477a3fefb1743160f81362580ac0493bb26f6adfa41f282a"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_aces-System-Product-Name_20260610T115239Z/exp_mlp__mlp__probe_lgbm.json",
+      "sha256": "c83b1667da9b4ec08b1ff0e78f85de68afbd9ad64d51158a572577da46b26fbb"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_aces-System-Product-Name_20260610T115239Z/exp_mlp__mlp__probe_xgb.json",
+      "sha256": "0551b8bb19e5a89feca02efade2c2c30351dedb97bb48078395ba82a75369243"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_aces-System-Product-Name_20260610T115239Z/exp_mlp__xgboost__probe_lgbm.json",
+      "sha256": "8095bba2a05253e2b821f72900e7c39d5c30c447eb3d2be4da8e1fa9678b7065"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_aces-System-Product-Name_20260610T115239Z/exp_mlp__xgboost__probe_xgb.json",
+      "sha256": "dd7269218c0ba226c2cdb1f41f631d7cd66af6c747765acc0e03634754a9cdc6"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_aces-System-Product-Name_20260610T115239Z/grid_summary.json",
+      "sha256": "eda57cb90ad4d8adbc48b073d7d3861d5944cb56664bdf79e22789875e2b82fc"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp15n87643uk1sqjrdvdZ_20260603T061622Z/exp_gnn_expert__lightgbm__probe_lgbm.json",
+      "sha256": "6177f03eac816841261185b12977447b7f2c315fd2276638327b4d3883ab76ea"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp15n87643uk1sqjrdvdZ_20260603T061622Z/exp_gnn_expert__lightgbm__probe_xgb.json",
+      "sha256": "89863d35d32b0e09249b4a5cd6f66ddbde0a4deea543d093c03ab36ac3b83063"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp15n87643uk1sqjrdvdZ_20260603T061622Z/exp_gnn_expert__mlp__probe_lgbm.json",
+      "sha256": "ab983bb8e1bff4be4959dea2ba87922de4d0edbe680b2af0e2bcf738c891cca1"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp15n87643uk1sqjrdvdZ_20260603T061622Z/exp_gnn_expert__mlp__probe_xgb.json",
+      "sha256": "00ac4034ba60f4e337ba9d4118cc463cfd9c14b83da3186344e844ef0a6ed141"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp15n87643uk1sqjrdvdZ_20260603T061622Z/exp_gnn_expert__xgboost__probe_lgbm.json",
+      "sha256": "3ffe04dc146aa794ffdcd037b7867fd7101b2b17bd5cbc72ccac5757b772fa9f"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp15n87643uk1sqjrdvdZ_20260603T061622Z/exp_gnn_expert__xgboost__probe_xgb.json",
+      "sha256": "6c8e9cae57fa8da7f24c17eddc3cfb0b00911e23d6f1c5fd7871eca014f006be"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp15n87643uk1sqjrdvdZ_20260603T061622Z/exp_lightgbm__lightgbm__probe_lgbm.json",
+      "sha256": "bc9099ba47ff515348fe8482b5ef3e7f0f10de21e7ddfb68d36a139f9fc8c9f8"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp15n87643uk1sqjrdvdZ_20260603T061622Z/exp_lightgbm__lightgbm__probe_xgb.json",
+      "sha256": "a28a5cc7da4137a6ecc189811b166d6f0f2d5471703e3e8acc2b1c7ff03c30a5"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp15n87643uk1sqjrdvdZ_20260603T061622Z/exp_lightgbm__mlp__probe_lgbm.json",
+      "sha256": "458797734d1354b0c808246d2513beaec67e45f01ebee5cd99ee04df12d2a993"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp15n87643uk1sqjrdvdZ_20260603T061622Z/exp_lightgbm__mlp__probe_xgb.json",
+      "sha256": "b5af9628b2d657e2b4d72cad480120d0c754fab5af2f4e5c2d1bb3aca6642c24"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp15n87643uk1sqjrdvdZ_20260603T061622Z/exp_lightgbm__xgboost__probe_lgbm.json",
+      "sha256": "137a01140d96e19d0ee4d5a51c96f328fa4ec4dab938435811d862cdad78be6c"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp15n87643uk1sqjrdvdZ_20260603T061622Z/exp_lightgbm__xgboost__probe_xgb.json",
+      "sha256": "5abf7531321617aa718e0d2c83e7af680709982f75ce59b5fa3368a6705c51bb"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp15n87643uk1sqjrdvdZ_20260603T061622Z/exp_mlp__lightgbm__probe_lgbm.json",
+      "sha256": "0b814d67ab3bc27f05bdf585748e98968fb7e4899f9f05b73b43b50195851cdd"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp15n87643uk1sqjrdvdZ_20260603T061622Z/exp_mlp__lightgbm__probe_xgb.json",
+      "sha256": "d1c8cd6bcfa922f6194975ff11a6ca43d5731a77a85f69d2075f1bea81c287a8"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp15n87643uk1sqjrdvdZ_20260603T061622Z/exp_mlp__mlp__probe_lgbm.json",
+      "sha256": "a55777ea03b0fdd25dd7952b513c66d955a0433313f4526437a82d53b045417d"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp15n87643uk1sqjrdvdZ_20260603T061622Z/exp_mlp__mlp__probe_xgb.json",
+      "sha256": "3790f31b543dd6735f3e1c9b24b4e41d21758cd9e573e0f7048fc0b77cd6eed5"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp15n87643uk1sqjrdvdZ_20260603T061622Z/exp_mlp__xgboost__probe_lgbm.json",
+      "sha256": "01cc36fd97c7e489198fe207c9c54b285a32fb2a9ddf5ae84bf60e73e2794d8e"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp15n87643uk1sqjrdvdZ_20260603T061622Z/exp_mlp__xgboost__probe_xgb.json",
+      "sha256": "a6a54c56e7e9a64ee535a9c63938147429d9af9b855cb2468ee343fdb4ec8b65"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp15n87643uk1sqjrdvdZ_20260603T061622Z/grid_summary.json",
+      "sha256": "22c4aa8fc7ef128cf476ca164b3b60e3c227e436c13d70ee27ac929f8b72110d"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_gnn_expert__lightgbm__probe_lgbm.json",
+      "sha256": "58362ac138bb456ef5ae0c0a2933d0a92b81d7b34ff4e2cddacd6432b8e15861"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_gnn_expert__lightgbm__probe_xgb.json",
+      "sha256": "c29496d0a6d5aaf1957e6a944fc7a5573b3765d2b1e918de04240d6fbef9d91b"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_gnn_expert__mlp__probe_lgbm.json",
+      "sha256": "ca1a16f31e8e8c69e998d354d3d4593d489a6041c0c459a7e8d7dac669015244"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_gnn_expert__mlp__probe_xgb.json",
+      "sha256": "65484d9d0c1d8aca775501baf2fd993828ec897173bf143d9a63ccb188c08d71"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_gnn_expert__xgboost__probe_lgbm.json",
+      "sha256": "4601917e764888c6e569ba45c8e1f3ffd03598b2d56ff47eb397eb98c80e601b"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_gnn_expert__xgboost__probe_xgb.json",
+      "sha256": "708cf26f7f137ab2d5a2511a2b0799b0a9e4d4de4180263a5dd0d1bac4b78f4a"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_lightgbm__lightgbm__probe_lgbm.json",
+      "sha256": "9d22c244c32c00d0f507c6005ca4e9967c6ee3838632b103323b9bb704a915d9"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_lightgbm__lightgbm__probe_xgb.json",
+      "sha256": "18944a39cec9cc03b6abc00ab906f0ee0959c4a930c16f14332aba703df2f643"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_lightgbm__mlp__probe_lgbm.json",
+      "sha256": "7170e426623d5d7ab782b23d2a1f83a4a9a8e5ffaa16db0c4b186321c9029ce1"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_lightgbm__mlp__probe_xgb.json",
+      "sha256": "e975a7aa80a457b71c7d3221c712d98df0e0f00cc3376e1d1e980e647a3ce80d"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_lightgbm__xgboost__probe_lgbm.json",
+      "sha256": "084540b97a9ac499b30b38f2ab0e53e853aab798e9e08b379a46c567c3373519"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_lightgbm__xgboost__probe_xgb.json",
+      "sha256": "3baebddc3402f8ad339d7d61b7abe5fe59b6b74fd3f86ad799ea2e5c5c1fc149"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_mlp__lightgbm__probe_lgbm.json",
+      "sha256": "769ad1e01d7b660e8c3bd9bcec50b8be30d677964c1178ffa5b644bc26d70711"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_mlp__lightgbm__probe_xgb.json",
+      "sha256": "65f86c983a520b4b26015ead64dccd52e478115fb053b71a39d54f30ac82a8b8"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_mlp__mlp__probe_lgbm.json",
+      "sha256": "b3d45e496f82cfbc3dcec05ce421975617189dea6576ecb727c4fce1c4b50010"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_mlp__mlp__probe_xgb.json",
+      "sha256": "15a2f21aa3a59d41efb412d62f2ad9940969260747dd2626e1a0c261c62de035"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_mlp__xgboost__probe_lgbm.json",
+      "sha256": "c9f8ebdcccf4688206b956d6be5e0df34080149a9338369d3463d1f7ff44df7a"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/exp_mlp__xgboost__probe_xgb.json",
+      "sha256": "8806a5c0949cdade724f278993cecf950594dd06cdb23144a987c7d24f1094f4"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp16krl0yc7euw7sb6slZ_20260610T125621Z/grid_summary.json",
+      "sha256": "c91655a26f6eede2afa6005a94e8a2b0d2458d165e238d0a26363ec74919058b"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1acaw5wdllhz47922rZ_20260603T061622Z/exp_gnn_expert__lightgbm__probe_lgbm.json",
+      "sha256": "41311aec3544f23e4814aa6bf7678d7bc1031d46ad278f23b367eab8d3deba64"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1acaw5wdllhz47922rZ_20260603T061622Z/exp_gnn_expert__lightgbm__probe_xgb.json",
+      "sha256": "6a6eb33ce7802b047f90cd1d88f696b782d77b93835998ff5b82102a9585a190"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1acaw5wdllhz47922rZ_20260603T061622Z/exp_gnn_expert__mlp__probe_lgbm.json",
+      "sha256": "be39a9a48e5cbed383bfdadcfab89dccd2e4f63d2bb2413f378d4b443107dbbb"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1acaw5wdllhz47922rZ_20260603T061622Z/exp_gnn_expert__mlp__probe_xgb.json",
+      "sha256": "ac12299bcc5e6d3ec0e1a7b957148b5ed751edc5bcebae71f2da73b74da93a42"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1acaw5wdllhz47922rZ_20260603T061622Z/exp_gnn_expert__xgboost__probe_lgbm.json",
+      "sha256": "cfd5d12b65c33857ca934a6dab1e6c690ce9190a60a4d4e148617dcef0dfce91"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1acaw5wdllhz47922rZ_20260603T061622Z/exp_gnn_expert__xgboost__probe_xgb.json",
+      "sha256": "df65532de232ecd38335e5911b72296fe98296fb1c58c7019a3decfbb2f54c99"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1acaw5wdllhz47922rZ_20260603T061622Z/exp_lightgbm__lightgbm__probe_lgbm.json",
+      "sha256": "5d89eda9107959cb192d47081457980b9191578ae4957f398b4fa2c9166d4cfa"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1acaw5wdllhz47922rZ_20260603T061622Z/exp_lightgbm__lightgbm__probe_xgb.json",
+      "sha256": "e7d9bf68d6c4274d9da4579eaa896d7b9c587251cb9377f8ebd540a944e5b3f4"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1acaw5wdllhz47922rZ_20260603T061622Z/exp_lightgbm__mlp__probe_lgbm.json",
+      "sha256": "c573879b4b919780d620fd40d8e05f6db1895fa9121d253f31e3038b4b060ef5"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1acaw5wdllhz47922rZ_20260603T061622Z/exp_lightgbm__mlp__probe_xgb.json",
+      "sha256": "5286ea67e9aa6601eb57a19719103be0b101423f9e9de5b3189e64503e8cd478"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1acaw5wdllhz47922rZ_20260603T061622Z/exp_lightgbm__xgboost__probe_lgbm.json",
+      "sha256": "d2d6bf70f04cd026d7c22208397e85296a19f30ddecb39af4bcbb9aff4a4b72e"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1acaw5wdllhz47922rZ_20260603T061622Z/exp_lightgbm__xgboost__probe_xgb.json",
+      "sha256": "ff46debd8c90a54765c6862a4e2f389345f1b5344e1db91995c0d7a4114aade3"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1acaw5wdllhz47922rZ_20260603T061622Z/exp_mlp__lightgbm__probe_lgbm.json",
+      "sha256": "dda9c5e2da4532d0b795dbcc6375b7f2c86997cc611d09852a52c3f6f8eeeec6"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1acaw5wdllhz47922rZ_20260603T061622Z/exp_mlp__lightgbm__probe_xgb.json",
+      "sha256": "a8cdf2af9c0f9d6c0f01e86cee00188e31ba20ef26b11eb1273ce8599c05ab55"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1acaw5wdllhz47922rZ_20260603T061622Z/exp_mlp__mlp__probe_lgbm.json",
+      "sha256": "3b08db5acf61cb7bba3ca6c2d4a1279b601bf5d5b72b96a328e07a45ea579239"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1acaw5wdllhz47922rZ_20260603T061622Z/exp_mlp__mlp__probe_xgb.json",
+      "sha256": "67745133267162b810ebfc03c927440ddbb177978ccd12db5e85eeeb961e3d35"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1acaw5wdllhz47922rZ_20260603T061622Z/exp_mlp__xgboost__probe_lgbm.json",
+      "sha256": "6301d2e3641846ae503eac643c9e2f3786fb0b818e8ddfbd997ab00dcce0fbb7"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1acaw5wdllhz47922rZ_20260603T061622Z/exp_mlp__xgboost__probe_xgb.json",
+      "sha256": "9b049da0a9957749be3cbbe94bdc1b7e6b2eda3520a6e610b2ac2b380ccc1017"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1acaw5wdllhz47922rZ_20260603T061622Z/grid_summary.json",
+      "sha256": "13a5d62c0e2251ef29a6eee2fa9c5fb2b16283b71a48c67d31baead88345c258"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_gnn_expert__lightgbm__probe_lgbm.json",
+      "sha256": "61f58cc9e6b30b6c649f6d41b00ee73a9f4efd2fcde1e96bcb32a26f669567b1"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_gnn_expert__lightgbm__probe_xgb.json",
+      "sha256": "89e01edf20e8aaa0261b42a1c908f4aa73b6e20b7f0317e38bccc61debaeaa61"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_gnn_expert__mlp__probe_lgbm.json",
+      "sha256": "d28cf012507ac360d2a4500fd3efcdf89762b3fddcfba67143f72949035e61f1"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_gnn_expert__mlp__probe_xgb.json",
+      "sha256": "6c1b4abda0eaa311e1bcb4df660201fa4976726dee42cb0aaeb7059386d8fdca"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_gnn_expert__xgboost__probe_lgbm.json",
+      "sha256": "0589b4787d44d27749a4671e6b9264dd725debdc09b51814e1036fd652248435"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_gnn_expert__xgboost__probe_xgb.json",
+      "sha256": "712db67272eed6d7e713cabd103e48d04ba51c7192d5977deefa075db1bc003b"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_lightgbm__lightgbm__probe_lgbm.json",
+      "sha256": "bcfdf0103e904eb507d53eff8d0fc1b8f086a3ac65fe552538bd8e52a7b6e32d"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_lightgbm__lightgbm__probe_xgb.json",
+      "sha256": "eab875af2a8030290abfffd4cf1d0ad31bfdcfa7e1a36100067881a6c93fa936"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_lightgbm__mlp__probe_lgbm.json",
+      "sha256": "a0926b98df2eb7d7ece3b1c2891fb6435099a5f79ecc38a86aee6b478c7cbb6c"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_lightgbm__mlp__probe_xgb.json",
+      "sha256": "10dbb2bd77570b0f94e0f968a50997cdc70c2d684a482eed3d81f3db488de386"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_lightgbm__xgboost__probe_lgbm.json",
+      "sha256": "b11197db1e92ca6e403b40d02d293bab1906623b7b86b3d50e5fdd1ce6fa423d"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_lightgbm__xgboost__probe_xgb.json",
+      "sha256": "b993d7c14cb051cd8c0b56ab838638a9c374654032fd2852682ce5022093748e"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_mlp__lightgbm__probe_lgbm.json",
+      "sha256": "e4c27f2c06d5978e350dec353bb36276250891aa1ff9d66eaab5d1edcea1c5ea"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_mlp__lightgbm__probe_xgb.json",
+      "sha256": "818c8e7f76bfac9eee4ba3d7c53b72d3b153dd81c7a06798faa9173826609b8c"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_mlp__mlp__probe_lgbm.json",
+      "sha256": "cb8fd140b339520cd3f9c6c1da88b1e09b1dc99240f3f95fc8feb8cfb21b9bb4"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_mlp__mlp__probe_xgb.json",
+      "sha256": "4712dcb2538d8c7864c687d860dd9c265ab05d50833e1b16b28418f9b9d70976"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_mlp__xgboost__probe_lgbm.json",
+      "sha256": "bba288b2cc5daa1d58579ca5e671b081bbc61dd0766f6a92e6d27680349c6ba1"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/exp_mlp__xgboost__probe_xgb.json",
+      "sha256": "bff0a39ec2f337b2543d5fece27123a5310c704ea15e8c43202162b44a751bc4"
+    },
+    {
+      "path": "dataset/experiments/hybrid_grid_unixbench_iZbp1glgt48i9a8d49embxZ_20260610T130826Z/grid_summary.json",
+      "sha256": "0cd87d5309f8a7021bc58f6a057863ab1c7aa1fa5c478affb87df92fb0d89daf"
+    },
+    {
+      "path": "dataset/experiments/iZbp15n87643uk1sqjrdvdZ/probe_pts_cpu_lgbm.json",
+      "sha256": "eb7b64f961cde358da121b2c3db474634e2023e3e7e24a9c29901df05c229e79"
+    },
+    {
+      "path": "dataset/experiments/iZbp15n87643uk1sqjrdvdZ/probe_pts_cpu_xgb.json",
+      "sha256": "5f8739fc16f88dbbfe9162efb7b22cbdc6671e1f74d87c0bd0f2debdf94f9289"
+    },
+    {
+      "path": "dataset/experiments/iZbp15n87643uk1sqjrdvdZ/probe_unixbench_lgbm.json",
+      "sha256": "83dee46950fec78bf903cd7b6e0b147d55824622333cf3aabee5209bff9af107"
+    },
+    {
+      "path": "dataset/experiments/iZbp15n87643uk1sqjrdvdZ/probe_unixbench_xgb.json",
+      "sha256": "3852b1e1e8157d1427b9be7df64639621b0f851b47d6c7a1b1e54d9074ea5c59"
+    },
+    {
+      "path": "dataset/experiments/iZbp16krl0yc7euw7sb6slZ/probe_pts_cpu_lgbm.json",
+      "sha256": "d68aa26cde5aa00f32d6d74c49b415e5d29970ece97b7090fa9ef097414aaf4d"
+    },
+    {
+      "path": "dataset/experiments/iZbp16krl0yc7euw7sb6slZ/probe_pts_cpu_xgb.json",
+      "sha256": "95e37b0ef390dea3cfc7604903c206e54c4ee76e9cdc80a4d99e464bd27b7422"
+    },
+    {
+      "path": "dataset/experiments/iZbp16krl0yc7euw7sb6slZ/probe_unixbench_lgbm.json",
+      "sha256": "269cc443046576d2eae206644a04df26238e389597a5f299705a4723e92bb799"
+    },
+    {
+      "path": "dataset/experiments/iZbp16krl0yc7euw7sb6slZ/probe_unixbench_xgb.json",
+      "sha256": "68524eb0e12505b72ef8946c989f5a0950400fc6cca94262158a461eea08117a"
+    },
+    {
+      "path": "dataset/experiments/iZbp1acaw5wdllhz47922rZ/probe_pts_cpu_lgbm.json",
+      "sha256": "7d1eb9afbada41bb6770b49dc697ed174372317b8fd8fd92d9e0f72fc56d5554"
+    },
+    {
+      "path": "dataset/experiments/iZbp1acaw5wdllhz47922rZ/probe_pts_cpu_xgb.json",
+      "sha256": "70682aeb5bdf571a9d7bd731de7a8e1b66a991b759d25243c52128f74575b78c"
+    },
+    {
+      "path": "dataset/experiments/iZbp1acaw5wdllhz47922rZ/probe_unixbench_lgbm.json",
+      "sha256": "fc406dc5d045b233aa1d2533e940ead932549a80f60c152b964f4dde63219022"
+    },
+    {
+      "path": "dataset/experiments/iZbp1acaw5wdllhz47922rZ/probe_unixbench_xgb.json",
+      "sha256": "8091ab83bfba68fa5a2c73840be65b32057c3d29eb423ae1f9c129c6ae13a0eb"
+    },
+    {
+      "path": "dataset/experiments/iZbp1glgt48i9a8d49embxZ/probe_pts_cpu_lgbm.json",
+      "sha256": "074a041e681c93885553ff6ff8292cbf040516856542e9f37a32b4b34c674e91"
+    },
+    {
+      "path": "dataset/experiments/iZbp1glgt48i9a8d49embxZ/probe_pts_cpu_xgb.json",
+      "sha256": "3a5043261b27a15150afdd8bef4f0cf1f77ba2b5d6b1676da832ddfd257c0cea"
+    },
+    {
+      "path": "dataset/experiments/iZbp1glgt48i9a8d49embxZ/probe_unixbench_lgbm.json",
+      "sha256": "95ee5e7f7f9084612498bb73d07b0afe06da90abbf387e1ae883bbfc55cb1a21"
+    },
+    {
+      "path": "dataset/experiments/iZbp1glgt48i9a8d49embxZ/probe_unixbench_xgb.json",
+      "sha256": "8e95cd3ba71930089049411258b23f337483782bea959dede8ca61cc2716393e"
+    },
+    {
+      "path": "dataset/experiments/router_recon_grid_cpu_aces-System-Product-Name_20260525T053213Z/grid_summary.json",
+      "sha256": "ef8399dc3a87275026e0d415ef4330ba74ebfeeb486d53237ea0a3545a92dbc7"
+    },
+    {
+      "path": "dataset/experiments/router_recon_grid_cpu_iZbp15n87643uk1sqjrdvdZ_20260529T040002Z/grid_summary.json",
+      "sha256": "6d9ed06883ea00a8129ed6d3ef4242021efce155deaf3f00ce315b87a710f0a9"
+    },
+    {
+      "path": "dataset/experiments/router_recon_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260527T035712Z/exp_gnn_expert__lightgbm.json",
+      "sha256": "59cdcd7aa1527af62b4589629dd58c96ef460f60fe79a1d8f04da9d4f99d5faa"
+    },
+    {
+      "path": "dataset/experiments/router_recon_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260527T035712Z/exp_gnn_expert__mlp.json",
+      "sha256": "bb615b7995d042f38f2be0f4461639756fb3fd641af388340b69262ca32142b8"
+    },
+    {
+      "path": "dataset/experiments/router_recon_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260527T035712Z/exp_gnn_expert__xgboost.json",
+      "sha256": "ba42138113cc15c1c12b3ce2559ae7639ab4275a813c722180e80f38e5041d56"
+    },
+    {
+      "path": "dataset/experiments/router_recon_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260527T035712Z/exp_lightgbm__lightgbm.json",
+      "sha256": "424521a2407e84257ed241e56d4d35baabb3238a38051cdc4d616ed55d0b766e"
+    },
+    {
+      "path": "dataset/experiments/router_recon_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260527T035712Z/exp_lightgbm__mlp.json",
+      "sha256": "ab08448ba6b28d2519e67993f34709818508a17d5bc4deea78cd08c79ea45375"
+    },
+    {
+      "path": "dataset/experiments/router_recon_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260527T035712Z/exp_lightgbm__xgboost.json",
+      "sha256": "f3591cc7c1ee726974ce36f0446cb0336007718360b5f4cc8e2ab0af5c27aef7"
+    },
+    {
+      "path": "dataset/experiments/router_recon_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260527T035712Z/exp_mlp__lightgbm.json",
+      "sha256": "7bb59eb40fb5e347d3a8146d048b372227df21e02763a5ec62f5188084449358"
+    },
+    {
+      "path": "dataset/experiments/router_recon_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260527T035712Z/exp_mlp__mlp.json",
+      "sha256": "623eac201b35107c37e3584afc8130fbf156d8c378b7286aec6bf95fdc007b33"
+    },
+    {
+      "path": "dataset/experiments/router_recon_grid_cpu_iZbp16krl0yc7euw7sb6slZ_20260527T035712Z/exp_mlp__xgboost.json",
+      "sha256": "4943f187d10c9c63a1ae1ed4db52293534f3a5f383f498ecfd1ca871c8cb50e7"
+    },
+    {
+      "path": "dataset/experiments/router_recon_grid_cpu_iZbp1acaw5wdllhz47922rZ_20260525T073952Z/grid_summary.json",
+      "sha256": "aff0afb5a8ac70a61d3b411810735d0cb32f66dce50e1b37beb9b91a05506b29"
+    },
+    {
+      "path": "dataset/experiments/router_recon_grid_cpu_iZbp1glgt48i9a8d49embxZ_20260525T134507Z/grid_summary.json",
+      "sha256": "d81bb3536411ae2b5707a95ad8109b97eb65bd3a4e0194ab9de89d6ed46dab1c"
+    },
+    {
+      "path": "dataset/experiments/router_recon_grid_pts_nvidia-gpu-compute_aces-System-Product-Name_20260526T174453Z/grid_summary.json",
+      "sha256": "ec0fd7541783016a595bb23d2ce81af7b15a96c39eae3015f4ee642986132c14"
+    },
+    {
+      "path": "dataset/experiments/router_recon_grid_unixbench_aces-System-Product-Name_20260524T140119Z/grid_summary.json",
+      "sha256": "b7d3a887d8045e8f46f1276838f46cf4fc97fdb6c5b82de7354fd100806c4f96"
+    },
+    {
+      "path": "dataset/experiments/router_recon_grid_unixbench_iZbp15n87643uk1sqjrdvdZ_20260525T073914Z/grid_summary.json",
+      "sha256": "89121238647805be64f28e3c536502533c99e9908ed3917b438e290733d51d0f"
+    },
+    {
+      "path": "dataset/experiments/router_recon_grid_unixbench_iZbp16krl0yc7euw7sb6slZ_20260524T141206Z/grid_summary.json",
+      "sha256": "c790dc7cb88a7eeb88c2de06068d3a12fde5e44341cce5ee93a9afff8a085d64"
+    },
+    {
+      "path": "dataset/experiments/router_recon_grid_unixbench_iZbp1acaw5wdllhz47922rZ_20260524T141404Z/grid_summary.json",
+      "sha256": "0fc8340937f6c0b2cfa9d43414b34a47b1424c05c1412c0c323904e14c06ba23"
+    },
+    {
+      "path": "dataset/experiments/router_recon_grid_unixbench_iZbp1glgt48i9a8d49embxZ_20260524T171804Z/grid_summary.json",
+      "sha256": "65524a1350887b9f8143a85748934c403ea88a9c9add3074eaddcdae7bfe6ec5"
+    },
+    {
+      "path": "dataset/machines_registry.json",
+      "sha256": "03f7bca2eec2c04ba98e241337fcd7ca28c28d0db9592425afe9a5d04f061290"
+    }
+  ]
+}

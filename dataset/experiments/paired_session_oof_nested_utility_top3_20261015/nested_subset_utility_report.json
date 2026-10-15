@@ -1,0 +1,102 @@
+{
+  "schema": "moebench.unixbench.nested_subset_utility_holdout.v1",
+  "machine": "aces-System-Product-Name",
+  "split_protocol": "outer leave-one-session-out; subset utility optimized by inner leave-one-session-out over the outer training sessions only",
+  "selection_objective": "minimum inner-fold relative suite-index reconstruction error",
+  "top_k": 3,
+  "probe_model": "lightgbm",
+  "reconstructor": "lightgbm",
+  "suite_output_mode": "probe_plus_imputed_geomean",
+  "outer_sessions": [
+    "aces-System-Product-Name_20261015T000121Z",
+    "aces-System-Product-Name_20261015T030240Z",
+    "aces-System-Product-Name_20261015T033602Z",
+    "aces-System-Product-Name_20261015T042255Z",
+    "aces-System-Product-Name_20261015T091500Z",
+    "aces-System-Product-Name_20261015T100000Z"
+  ],
+  "num_candidate_subsets": 220,
+  "folds": {
+    "aces-System-Product-Name_20261015T000121Z": {
+      "selected_test_ids": [
+        "dhry2reg",
+        "execl",
+        "fstime"
+      ],
+      "inner_cv_mean_relative_error_percent": 7.815923532476972,
+      "outer_heldout_relative_error_percent": 21.584204880071802,
+      "outer_all_subsets_random_mean_error_percent": 21.955258780557656,
+      "outer_learned_router_error_percent": 21.39498888308523,
+      "outer_random_single_draw_error_percent": 23.85019090091808,
+      "num_inner_sessions": 5
+    },
+    "aces-System-Product-Name_20261015T030240Z": {
+      "selected_test_ids": [
+        "execl",
+        "shell1",
+        "shell8"
+      ],
+      "inner_cv_mean_relative_error_percent": 16.654020863989803,
+      "outer_heldout_relative_error_percent": 10.39180442587482,
+      "outer_all_subsets_random_mean_error_percent": 8.29121413132943,
+      "outer_learned_router_error_percent": 5.762618138307759,
+      "outer_random_single_draw_error_percent": 2.19259787614953,
+      "num_inner_sessions": 5
+    },
+    "aces-System-Product-Name_20261015T033602Z": {
+      "selected_test_ids": [
+        "dhry2reg",
+        "fsbuffer",
+        "syscall"
+      ],
+      "inner_cv_mean_relative_error_percent": 6.025222703582232,
+      "outer_heldout_relative_error_percent": 5.500602148120372,
+      "outer_all_subsets_random_mean_error_percent": 9.22219285637914,
+      "outer_learned_router_error_percent": 8.985230644765439,
+      "outer_random_single_draw_error_percent": 12.224364014335897,
+      "num_inner_sessions": 5
+    },
+    "aces-System-Product-Name_20261015T042255Z": {
+      "selected_test_ids": [
+        "fstime",
+        "fsbuffer",
+        "shell8"
+      ],
+      "inner_cv_mean_relative_error_percent": 7.532205494880414,
+      "outer_heldout_relative_error_percent": 0.424143358124489,
+      "outer_all_subsets_random_mean_error_percent": 5.508973091135786,
+      "outer_learned_router_error_percent": 14.55768638851405,
+      "outer_random_single_draw_error_percent": 2.624456967041989,
+      "num_inner_sessions": 5
+    },
+    "aces-System-Product-Name_20261015T091500Z": {
+      "selected_test_ids": [
+        "dhry2reg",
+        "fstime",
+        "shell1"
+      ],
+      "inner_cv_mean_relative_error_percent": 4.503639649021003,
+      "outer_heldout_relative_error_percent": 33.51599856336352,
+      "outer_all_subsets_random_mean_error_percent": 37.437254741943036,
+      "outer_learned_router_error_percent": 31.81771224631495,
+      "outer_random_single_draw_error_percent": 34.716147974060604,
+      "num_inner_sessions": 5
+    },
+    "aces-System-Product-Name_20261015T100000Z": {
+      "selected_test_ids": [
+        "fstime",
+        "shell1",
+        "shell8"
+      ],
+      "inner_cv_mean_relative_error_percent": 14.815983261958193,
+      "outer_heldout_relative_error_percent": 18.91808760215891,
+      "outer_all_subsets_random_mean_error_percent": 12.058493077130487,
+      "outer_learned_router_error_percent": 14.582398500004054,
+      "outer_random_single_draw_error_percent": 0.110546910018519,
+      "num_inner_sessions": 5
+    }
+  },
+  "mean_outer_relative_error_percent": 15.055806829618986,
+  "mean_outer_all_subsets_random_error_percent": 15.745564446412589,
+  "mean_outer_learned_router_error_percent": 16.18343913349858
+}

@@ -131,19 +131,22 @@ def _sklearn_base_estimator(
 ) -> Any:
     ne_l = int(n_estimators_override) if n_estimators_override is not None else int(lgbm_estimators)
     ne_x = int(n_estimators_override) if n_estimators_override is not None else int(xgb_estimators)
-    if model_name == "lightgbm":
+    if model_name in ("lightgbm", "lightgbm_small"):
         _maybe_auto_install(auto_install, ["lightgbm"])
         _ensure_import("lightgbm")
         import lightgbm as lgb
 
+        small = model_name == "lightgbm_small"
         return lgb.LGBMRegressor(
-            n_estimators=ne_l,
-            learning_rate=0.05,
-            num_leaves=31,
-            min_child_samples=8,
-            subsample=0.85,
-            colsample_bytree=0.85,
+            n_estimators=min(ne_l, 100) if small else ne_l,
+            learning_rate=0.03 if small else 0.05,
+            num_leaves=7 if small else 31,
+            max_depth=3 if small else -1,
+            min_child_samples=2 if small else 8,
+            subsample=1.0 if small else 0.85,
+            colsample_bytree=1.0 if small else 0.85,
             random_state=42,
+            n_jobs=1,
             verbosity=-1,
         )
     if model_name == "xgboost":
@@ -160,6 +163,13 @@ def _sklearn_base_estimator(
             random_state=42,
             tree_method="hist",
         )
+    if model_name == "ridge":
+        _ensure_import("sklearn")
+        from sklearn.pipeline import make_pipeline
+        from sklearn.preprocessing import StandardScaler
+        from sklearn.linear_model import Ridge
+
+        return make_pipeline(StandardScaler(), Ridge(alpha=10.0))
     raise ValueError(model_name)
 
 
@@ -419,7 +429,27 @@ def sklearn_export_bundle(
     test_ids: list[str],
     with_uncertainty: bool = True,
     benchmark: str = "unixbench",
+    suite_output_mode: str = "direct",
 ) -> dict[str, Any]:
+    if suite_output_mode not in (
+        "direct",
+        "observed_plus_imputed_geomean",
+        "observed_plus_training_geomean",
+        "observed_plus_scaled_imputed_geomean",
+        "probe_plus_imputed_geomean",
+        "reconstructed_geomean",
+        "probe_scaled_geomean",
+    ):
+        raise ValueError(f"unknown suite_output_mode: {suite_output_mode!r}")
+    if suite_output_mode in (
+        "observed_plus_imputed_geomean",
+        "observed_plus_training_geomean",
+        "observed_plus_scaled_imputed_geomean",
+        "probe_plus_imputed_geomean",
+        "reconstructed_geomean",
+        "probe_scaled_geomean",
+    ) and benchmark != "unixbench":
+        raise ValueError(f"{suite_output_mode} is currently defined for UnixBench only")
     mor = fit_sklearn_multioutput(
         model_name,
         x_train,
@@ -438,6 +468,7 @@ def sklearn_export_bundle(
         "test_ids": list(test_ids),
         "out_dim": int(y_train.shape[1]),
         "benchmark": benchmark,
+        "suite_output_mode": suite_output_mode,
     }
     if with_uncertainty:
         bundle["uncertainty_estimator"] = fit_sklearn_uncertainty_estimator(
@@ -548,6 +579,19 @@ def main() -> int:
         help="Glob under dataset-root (default: auto from benchmark + --pts-suite; see moebench.dataset_globs)",
     )
     ap.add_argument("--model-type", type=str, choices=("xgboost", "lightgbm", "mlp"), default="lightgbm")
+    ap.add_argument(
+        "--suite-output-mode",
+        choices=(
+            "direct",
+            "observed_plus_imputed_geomean",
+            "observed_plus_training_geomean",
+            "observed_plus_scaled_imputed_geomean",
+            "probe_plus_imputed_geomean",
+            "reconstructed_geomean",
+            "probe_scaled_geomean",
+        ),
+        default="direct",
+    )
     ap.add_argument("--folds", type=int, default=5)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--eval-partial-k", type=int, default=3, help="How many subtests are 'executed' at eval")
@@ -605,6 +649,9 @@ def main() -> int:
     )
     args = ap.parse_args()
     with_uncertainty = not args.no_uncertainty
+
+    if args.model_type == "mlp" and args.suite_output_mode != "direct":
+        ap.error("suite-output-mode requires a LightGBM or XGBoost reconstructor")
 
     if args.benchmark == "phoronix" and not args.pts_suite:
         print(
@@ -729,6 +776,7 @@ def main() -> int:
                 test_ids=test_ids,
                 with_uncertainty=with_uncertainty,
                 benchmark=bm,
+                suite_output_mode=args.suite_output_mode,
             )
         if args.pts_suite:
             bundle["pts_suite"] = args.pts_suite
@@ -841,6 +889,8 @@ def main() -> int:
                 log1p_partial_index=args.log1p_partial_index,
                 test_ids=test_ids,
                 with_uncertainty=with_uncertainty,
+                benchmark="unixbench",
+                suite_output_mode=args.suite_output_mode,
             )
         bundle["machine"] = machine
         save_reconstruction_bundle(outp, bundle)
@@ -1069,6 +1119,8 @@ def main() -> int:
                 log1p_partial_index=args.log1p_partial_index,
                 test_ids=test_ids,
                 with_uncertainty=with_uncertainty,
+                benchmark="unixbench",
+                suite_output_mode=args.suite_output_mode,
             )
         bundle["machine"] = machine
         save_reconstruction_bundle(outp, bundle)

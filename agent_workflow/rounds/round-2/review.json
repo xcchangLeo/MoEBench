@@ -1,0 +1,102 @@
+{
+  "round": 3,
+  "reviewer_role": "independent_read_only",
+  "recommendation": "reject",
+  "score": 2,
+  "confidence": 4,
+  "verified_fixes": [
+    "single current abstract with supported UnixBench median and mean and explicit one-session limitation",
+    "execution-free baselines relabeled as local Wang-style DNN and Tousi-style MLP proxies, not reproductions of cited methods",
+    "main results text now discloses identical learned/fixed suite predictions, fold-matched xi-only error, and an M5 suite-head sensitivity diagnostic",
+    "GPU table correctly identified as M1 NVIDIA RTX 3090 Ti and its mixed reported-cost semantics disclosed",
+    "GPU BenchScout OOF row rounds to mean error 0.95 percent and nominal estimated budget 18.0 seconds",
+    "GPU profile-time footnote identifies 27018 seconds as the maximum of five per-profile time sums and gives mean 13774.752 seconds",
+    "current source compiled to a 12-page Letter PDF; ACM reference-format warning removed"
+  ],
+  "blocking_findings": [
+    "one collection session and five runs per host-suite pair; no independent session, temporal, or cross-host holdout",
+    "model and Top-K selection reuse small random-fold samples without nested selection or locked test",
+    "all four routing-policy OOF reports have bitwise-identical suite predictions on all runs for all five hosts despite policy-varying selected tests; learned selection shows no accuracy advantage",
+    "fold-matched xi-only control averages 0.608 percent error versus 0.590 percent for the policy pipeline, with small inconsistent per-host differences and only five runs per host",
+    "representative M5 fold has a 200-tree suite-output model with 600 split nodes using only five xi features; all probe mask/index/time features have zero split count/gain/importance, and 10 percent selected-probe score/time perturbations do not change prediction",
+    "suite-head sensitivity diagnosis covers one fold, but demonstrates the headline architecture can ignore probe inputs; the learned-routing contribution remains unsupported under the reported evaluator",
+    "selected Tousi MLP proxy has 98.85 percent GPU error while available Tousi RF, decision-tree, and elastic-net proxies are about 0.26 percent; the manuscript now disclaims family-level conclusions, but baseline coverage remains weak",
+    "execution-free baselines use same-host leave-one-run-out with static features and do not test a new-host setting",
+    "CPU main-table full-suite timing cells lack per-cell run identifiers, aggregation statistics, and consistent elapsed-time provenance; OOF profile-time sums are not suite elapsed time",
+    "live runtime evidence is one trace per host, excludes context collection for BenchScout, and is not paired with held-out accuracy",
+    "submission archive lacks raw data, checkpoints, complete split manifests, and a complete runnable table-generation path",
+    "PTS target is a paper-defined log-mean proxy, not an official PTS aggregate"
+  ],
+  "gpu_table_audit": {
+    "host": "M1 / NVIDIA RTX 3090 Ti",
+    "benchscout_oof_mean_error_percent": 0.9533914658465864,
+    "benchscout_oof_median_error_percent": 0.46987509004461603,
+    "benchscout_oof_p95_error_percent": 1.9057834296871974,
+    "benchscout_oof_max_error_percent": 1.9684961600740916,
+    "benchscout_nominal_budget_seconds": 18.03498404380516,
+    "wang_dnn_error_percent": 0.2558576676023588,
+    "wang_lr_error_percent": 0.2663646282460695,
+    "tousi_mlp_error_percent": 98.85030455994904,
+    "tousi_rf_error_percent": 0.25952682818863826,
+    "tousi_dt_error_percent": 0.26636462824606677,
+    "tousi_elastic_net_error_percent": 0.2694420607435439,
+    "profile_time_sum_max_seconds": 27018.48,
+    "profile_time_sum_mean_seconds": 13774.752
+  },
+  "policy_audit": {
+    "hosts": 5,
+    "runs_per_host": 5,
+    "policies": ["learned", "fixed_cpu_mix", "fixed_io_mix", "fixed_first_k"],
+    "cross_policy_suite_predictions_identical_for_every_run": true,
+    "learned_mean_error_percent_by_host": {
+      "M1": 0.18051158000403864,
+      "M2": 0.2864653963582289,
+      "M3": 0.3438736282047168,
+      "M4": 0.194444909081319,
+      "M5": 1.946944477351755
+    },
+    "xi_only_mean_error_percent_by_host": {
+      "M1": 0.17881135303039442,
+      "M2": 0.2797218355178062,
+      "M3": 0.34184179210535265,
+      "M4": 0.19610544629595855,
+      "M5": 2.042730393246938
+    },
+    "pipeline_mean_error_percent_across_25_runs": 0.5904479982000117,
+    "xi_only_mean_error_percent_across_25_runs": 0.60784216403929,
+    "interpretation": "small and inconsistent difference versus xi-only; no demonstrated selection-policy accuracy advantage",
+    "m5_representative_fold_diagnosis": {
+      "fold": 2,
+      "heldout_run": "run-03.json",
+      "suite_head_trees": 200,
+      "suite_head_split_nodes": 600,
+      "xi_features_used": [
+        "proc_cpu_utilization_ratio",
+        "vm_page_faults_per_sec",
+        "vm_minor_faults_per_sec",
+        "loadavg_1m",
+        "loadavg_5m"
+      ],
+      "probe_feature_split_count_gain_importance": 0,
+      "selected_probe_score_and_time_perturbation_changed_output": false,
+      "scope": "one representative fold only"
+    }
+  },
+  "m6_t4_in_raw_corpus": false,
+  "timing_audit": {
+    "unixbench_oof_timing_is_suite_elapsed": false,
+    "unixbench_oof_m1_sum_seconds": 320,
+    "pts_oof_timing_is_end_to_end_elapsed": false,
+    "gpu_table_cost_is_end_to_end_wall_time": false,
+    "live_trace_replications_per_host": 1,
+    "live_trace_includes_xi_collection": false,
+    "live_trace_paired_with_accuracy": false
+  },
+  "pdf_audit": {
+    "compiled_from_latest_source": true,
+    "pages": 12,
+    "page_size": "Letter",
+    "acm_reference_format_warning": false,
+    "remaining_warning": "hyperref PDF-string token warning"
+  }
+}

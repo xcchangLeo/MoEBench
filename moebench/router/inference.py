@@ -23,6 +23,14 @@ def predict_expert_scores(router_meta: dict[str, Any], xi: dict[str, Any]) -> tu
     """
     vec = XiVectorizer()
     xi_vec = vec.transform(xi)
+    feature_mask = router_meta.get("xi_feature_mask")
+    if feature_mask is not None:
+        mask = np.asarray(feature_mask, dtype=np.float32)
+        if mask.shape != (len(xi_vec),):
+            raise ValueError(
+                f"xi_feature_mask has shape {mask.shape}, expected {(len(xi_vec),)}"
+            )
+        xi_vec = (np.asarray(xi_vec, dtype=np.float32) * mask).tolist()
     xi_dim = len(vec.feature_names)
     expert_ids = router_meta["expert_ids"]
     expert_test_ids = router_meta["expert_test_ids"]
@@ -37,6 +45,12 @@ def predict_expert_scores(router_meta: dict[str, Any], xi: dict[str, Any]) -> tu
             onehot[ei] = 1.0
             X_rows.append(list(xi_vec) + onehot)
         X_np = np.asarray(X_rows, dtype=np.float32)
+        if router_meta.get("input_mean") is not None:
+            mean = np.asarray(router_meta["input_mean"], dtype=np.float32)
+            scale = np.asarray(router_meta.get("input_scale"), dtype=np.float32)
+            if mean.shape != (X_np.shape[1],) or scale.shape != (X_np.shape[1],):
+                raise ValueError("router input normalization shape does not match feature rows")
+            X_np = (X_np - mean) / np.maximum(scale, 1e-8)
         ranker = router_meta["ranker"]
         scores = [float(x) for x in ranker.predict(X_np)]
     elif model_type == "mlp":
@@ -48,6 +62,13 @@ def predict_expert_scores(router_meta: dict[str, Any], xi: dict[str, Any]) -> tu
             onehot = [0.0] * n_experts
             onehot[ei] = 1.0
             X_rows.append(list(xi_vec) + onehot)
+        X_np = np.asarray(X_rows, dtype=np.float32)
+        if router_meta.get("input_mean") is not None:
+            mean = np.asarray(router_meta["input_mean"], dtype=np.float32)
+            scale = np.asarray(router_meta.get("input_scale"), dtype=np.float32)
+            if mean.shape != (X_np.shape[1],) or scale.shape != (X_np.shape[1],):
+                raise ValueError("router input normalization shape does not match feature rows")
+            X_np = (X_np - mean) / np.maximum(scale, 1e-8)
         in_dim = xi_dim + n_experts
         hidden = int(router_meta.get("mlp_hidden", 64))
         net = nn.Sequential(
@@ -60,7 +81,7 @@ def predict_expert_scores(router_meta: dict[str, Any], xi: dict[str, Any]) -> tu
         net.load_state_dict(router_meta["state_dict"])
         net.eval()
         with torch.no_grad():
-            x_t = torch.from_numpy(np.asarray(X_rows, dtype=np.float32))
+            x_t = torch.from_numpy(X_np)
             out = net(x_t).view(-1).tolist()
         scores = [float(v) for v in out]
     elif model_type == "subset_sel":

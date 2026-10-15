@@ -1,0 +1,224 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+ROUND_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SEEDED_IMAGE="cloudsuite/round8-db-seeded:ready"
+WEB_IMAGE="cloudsuite/web-serving:web_server"
+MEM_IMAGE="cloudsuite/web-serving:memcached_server"
+CLIENT_IMAGE="cloudsuite/web-serving:faban_client"
+RUN_ID="bsr8bpcal-$(date -u +%Y%m%dT%H%M%SZ)-$$"
+RESULT_DIR="${ROUND_DIR}/results/${RUN_ID}"
+NETWORK="${RUN_ID}-net"
+CREATED=()
+NETWORK_CREATED=0
+ORDER=(
+  "2g/fpm8" "128m/fpm4" "128m/fpm8" "2g/fpm4"
+  "128m/fpm4" "128m/fpm8" "2g/fpm8" "2g/fpm4"
+  "128m/fpm4" "2g/fpm8" "2g/fpm4" "128m/fpm8"
+)
+mkdir -p "${RESULT_DIR}"
+
+archive_container() {
+  local name="$1"
+  if ! docker inspect "${name}" >/dev/null 2>&1; then return 0; fi
+  docker logs "${name}" > "${RESULT_DIR}/${name}.container.log" 2>&1 || true
+  docker inspect "${name}" > "${RESULT_DIR}/${name}.inspect.json" 2>/dev/null || true
+  docker diff "${name}" > "${RESULT_DIR}/${name}.diff.txt" 2>/dev/null || true
+  docker rm -f "${name}" >/dev/null 2>&1 || true
+}
+
+cleanup() {
+  local status=$?
+  local name
+  for name in "${CREATED[@]}"; do archive_container "${name}"; done
+  if [[ "${NETWORK_CREATED}" == 1 ]]; then docker network rm "${NETWORK}" >/dev/null 2>&1 || true; fi
+  exit "${status}"
+}
+trap cleanup EXIT INT TERM
+
+for image in "${SEEDED_IMAGE}" "${WEB_IMAGE}" "${MEM_IMAGE}" "${CLIENT_IMAGE}"; do
+  docker image inspect "${image}" >/dev/null
+done
+docker network create "${NETWORK}" > "${RESULT_DIR}/network-id.txt"
+NETWORK_CREATED=1
+{
+  printf 'protocol=buffer_pool_slo_calibration_protocol.md\nrun_id=%s\nstarted_utc=%s\n' \
+    "${RUN_ID}" "$(date -u +%FT%TZ)"
+  printf 'host='; hostname
+  printf 'memory='; awk '/MemTotal|MemAvailable/ {printf "%s=%s%s ", $1, $2, $3} END {print ""}' /proc/meminfo
+  printf 'loadavg='; cat /proc/loadavg
+  docker version --format 'docker_server={{.Server.Version}}'
+} > "${RESULT_DIR}/run-metadata.txt"
+docker image inspect "${SEEDED_IMAGE}" "${WEB_IMAGE}" "${MEM_IMAGE}" "${CLIENT_IMAGE}" \
+  --format '{{index .RepoTags 0}} {{.Id}} {{json .RepoDigests}}' > "${RESULT_DIR}/image-digests.txt"
+sha256sum "${BASH_SOURCE[0]}" "${ROUND_DIR}/validate_faban_summary.py" \
+  "${ROUND_DIR}/buffer_pool_slo_calibration_protocol.md" > "${RESULT_DIR}/source-sha256.txt"
+printf 'cell,repeat,condition,config,scale,start_utc,end_utc,elapsed_seconds,exit_code,buffer_pool_bytes,summary_count,summary_valid,mix_valid,operation_failures,latency_slo_passed,valid\n' \
+  > "${RESULT_DIR}/cells.csv"
+printf '%s\n' "${ORDER[@]}" > "${RESULT_DIR}/frozen-order.txt"
+printf '"started_utc","elapsed_seconds","mem_available_kib","loadavg"\n' > "${RESULT_DIR}/host-samples.csv"
+
+run_one() {
+  local index="$1" condition="$2" repeat=$(( (index - 1) / 4 + 1 ))
+  local pool config children expected_pool db mem web client ready=0 cell
+  case "${condition}" in
+    128m/fpm4) pool=134217728; config=fpm4; children=4 ;;
+    128m/fpm8) pool=134217728; config=fpm8; children=8 ;;
+    2g/fpm4) pool=2147483648; config=fpm4; children=4 ;;
+    2g/fpm8) pool=2147483648; config=fpm8; children=8 ;;
+    *) printf 'invalid condition %s\n' "${condition}" >&2; return 2 ;;
+  esac
+  cell="repeat${repeat}-$(printf '%02d' "${index}")-${condition//\//-}-scale20"
+  db="${RUN_ID}-db-${cell}"
+  mem="${RUN_ID}-mem-${cell}"
+  web="${RUN_ID}-web-${cell}"
+  client="${RUN_ID}-client-${cell}"
+  local start_ns end_ns elapsed exit_code copy_code validation_code protocol_error=0
+  local output_dir="${RESULT_DIR}/${cell}-faban-output" summary_file="" summary_count=0
+  local validation_file="${RESULT_DIR}/${cell}-validation.json"
+  local started_utc
+  started_utc="$(date -u +%FT%TZ)"
+  printf '"%s",,"%s",,"%s","%s"\n' "${started_utc}" \
+    "$(awk '/MemAvailable/ {print $2}' /proc/meminfo)" "$(cat /proc/loadavg)" \
+    >> "${RESULT_DIR}/host-samples.csv"
+
+  docker run -d --name "${db}" --network "${NETWORK}" --network-alias mysql_server \
+    --entrypoint /usr/sbin/mysqld "${SEEDED_IMAGE}" \
+    --innodb-buffer-pool-size="${pool}" > "${RESULT_DIR}/${db}.container-id.txt"
+  CREATED+=("${db}")
+  for _ in $(seq 1 120); do
+    if docker exec "${db}" mysql -uroot -proot -Nse 'SELECT 1' >/dev/null 2>&1; then ready=1; break; fi
+    if [[ "$(docker inspect -f '{{.State.Running}}' "${db}" 2>/dev/null || true)" != true ]]; then break; fi
+    sleep 2
+  done
+  if [[ "${ready}" != 1 ]]; then
+    printf 'database_not_ready\n' > "${RESULT_DIR}/${cell}.status.txt"
+    return 1
+  fi
+  expected_pool="$(docker exec "${db}" mysql -uroot -proot -Nse 'SELECT @@innodb_buffer_pool_size;')"
+  docker exec "${db}" mysql -uroot -proot -e \
+    'SELECT @@version AS mariadb_version, @@innodb_buffer_pool_size AS innodb_buffer_pool_size; SHOW CREATE TABLE ELGG_DB.elgg_entities; SHOW CREATE TABLE ELGG_DB.elgg_metadata;' \
+    > "${RESULT_DIR}/${cell}.db-config-and-schema.txt"
+  docker exec "${db}" mysql -uroot -proot -Nse \
+    'SELECT COUNT(*) FROM information_schema.tables WHERE table_schema="ELGG_DB";' \
+    > "${RESULT_DIR}/${cell}.table-count.txt"
+  if [[ "${expected_pool}" != "${pool}" ]] || [[ "$(<"${RESULT_DIR}/${cell}.table-count.txt")" != 18 ]]; then
+    printf 'database_condition_or_seed_invalid pool=%s expected=%s tables=%s\n' \
+      "${expected_pool}" "${pool}" "$(<"${RESULT_DIR}/${cell}.table-count.txt")" \
+      > "${RESULT_DIR}/${cell}.status.txt"
+    return 1
+  fi
+
+  docker run -d --name "${mem}" --network "${NETWORK}" --network-alias memcache_server \
+    "${MEM_IMAGE}" -m 512 -t 2 > "${RESULT_DIR}/${mem}.container-id.txt"
+  CREATED+=("${mem}")
+  docker run -d --name "${web}" --network "${NETWORK}" \
+    --network-alias root-server --network-alias web_server "${WEB_IMAGE}" \
+    bash -lc "set -Eeuo pipefail; /etc/bootstrap.sh http root-server mysql_server memcache_server ${children} auto; exec tail -f /dev/null" \
+    > "${RESULT_DIR}/${web}.container-id.txt"
+  CREATED+=("${web}")
+  ready=0
+  for _ in $(seq 1 90); do
+    if docker exec "${web}" wget -q -O /dev/null http://127.0.0.1:8080/; then ready=1; break; fi
+    if [[ "$(docker inspect -f '{{.State.Running}}' "${web}" 2>/dev/null || true)" != true ]]; then break; fi
+    sleep 2
+  done
+  docker logs "${web}" > "${RESULT_DIR}/${web}.bootstrap.log" 2>&1 || true
+  if [[ "${ready}" != 1 ]]; then
+    printf 'web_not_ready\n' > "${RESULT_DIR}/${cell}.status.txt"
+    return 1
+  fi
+
+  start_ns="$(date +%s%N)"
+  set +e
+  timeout --signal=TERM --kill-after=10s 300s docker run --name "${client}" \
+    --network "${NETWORK}" "${CLIENT_IMAGE}" \
+    --oper=usergen\&run --ramp-up=5 --ramp-down=5 --steady=120 \
+    --min=1000 --max=1500 --type=THINKTIME --dist=fixed root-server 20 \
+    > "${RESULT_DIR}/${cell}.stdout.log" 2>&1
+  exit_code=$?
+  set -e
+  end_ns="$(date +%s%N)"
+  elapsed="$(awk -v a="${start_ns}" -v b="${end_ns}" 'BEGIN {printf "%.6f", (b-a)/1000000000}')"
+  set +e
+  docker cp "${client}:/usr/src/faban/output" "${output_dir}" >/dev/null 2>&1
+  copy_code=$?
+  set -e
+  summary_count=0
+  if [[ "${copy_code}" == 0 ]]; then
+    while IFS= read -r -d '' candidate; do summary_file="${candidate}"; summary_count=$((summary_count + 1)); done \
+      < <(find "${output_dir}" -type f -name summary.xml -print0)
+  fi
+  validation_code=1
+  if [[ "${copy_code}" == 0 && "${summary_count}" -eq 1 ]]; then
+    set +e
+    python3 "${ROUND_DIR}/validate_faban_summary.py" "${summary_file}" "${validation_file}" \
+      > "${RESULT_DIR}/${cell}.validation.stdout.txt" \
+      2> "${RESULT_DIR}/${cell}.validation.stderr.txt"
+    validation_code=$?
+    set -e
+  else
+    printf '{"valid":false,"reason":"expected_exactly_one_summary_xml","summary_xml_count":%s}\n' \
+      "${summary_count}" > "${validation_file}"
+    printf 'expected_exactly_one_summary_xml found=%s\n' "${summary_count}" \
+      > "${RESULT_DIR}/${cell}.validation.stderr.txt"
+  fi
+  if rg -q 'does not contain a hostname|FileNotFoundException: http://[^[:space:]]+/http://|Exception in thread' \
+      "${RESULT_DIR}/${cell}.stdout.log"; then protocol_error=1; fi
+  docker logs "${client}" > "${RESULT_DIR}/${client}.container.log" 2>&1 || true
+  docker inspect "${client}" > "${RESULT_DIR}/${client}.inspect.json" 2>/dev/null || true
+  local summary_valid=false mix_valid=false failures=unknown slo=false valid=false
+  if [[ -f "${validation_file}" ]]; then
+    summary_valid="$(jq -r '.summary_valid // false' "${validation_file}")"
+    mix_valid="$(jq -r '.mix_valid // false' "${validation_file}")"
+    failures="$(jq -r '.operation_failures // "unknown"' "${validation_file}")"
+    slo="$(jq -r '([.response_times[].slo_passed] | length > 0) and ([.response_times[].slo_passed] | all)' "${validation_file}")"
+  fi
+  if [[ "${exit_code}" == 0 && "${copy_code}" == 0 && "${validation_code}" == 0 && \
+        "${protocol_error}" == 0 && "${summary_valid}" == true && "${mix_valid}" == true && \
+        "${failures}" == 0 && "${expected_pool}" == "${pool}" ]]; then valid=true; fi
+  printf '%s,%s,%s,%s,20,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' \
+    "${cell}" "${repeat}" "${condition}" "${config}" "${started_utc}" \
+    "$(date -u +%FT%TZ)" "${elapsed}" "${exit_code}" "${expected_pool}" \
+    "${summary_count}" "${summary_valid}" "${mix_valid}" "${failures}" "${slo}" "${valid}" \
+    >> "${RESULT_DIR}/cells.csv"
+  printf '{"cell":"%s","repeat":%s,"condition":"%s","config":"%s","buffer_pool_bytes":%s,"scale":20,"started_utc":"%s","ended_utc":"%s","elapsed_seconds":%s,"client_exit_code":%s,"client_protocol_error":%s,"summary_xml_count":%s,"summary_validation_json":"%s","valid":%s,"latency_slo_passed":%s}\n' \
+    "${cell}" "${repeat}" "${condition}" "${config}" "${expected_pool}" \
+    "${started_utc}" "$(date -u +%FT%TZ)" "${elapsed}" "${exit_code}" \
+    "${protocol_error}" "${summary_count}" "${validation_file}" "${valid}" "${slo}" \
+    >> "${RESULT_DIR}/runs.jsonl"
+  archive_container "${web}"
+  archive_container "${mem}"
+  archive_container "${db}"
+  return 0
+}
+
+printf 'run_started\n' > "${RESULT_DIR}/status.txt"
+for index in "${!ORDER[@]}"; do
+  order_index=$((index + 1))
+  condition="${ORDER[index]}"
+  printf 'starting cell=%s condition=%s at=%s\n' "${order_index}" "${condition}" "$(date -u +%FT%TZ)" \
+    | tee -a "${RESULT_DIR}/status.txt"
+  if ! run_one "${order_index}" "${condition}"; then
+    printf 'cell_runner_error=%s\n' "${order_index}" >> "${RESULT_DIR}/status.txt"
+  fi
+done
+
+python3 - "${RESULT_DIR}" <<'PY'
+import csv, json, pathlib, sys
+root = pathlib.Path(sys.argv[1])
+rows = list(csv.DictReader((root / "cells.csv").open()))
+eligible = {}
+for row in rows:
+    key = (row["condition"], row["repeat"])
+    eligible[key] = row["valid"] == "true" and row["latency_slo_passed"] == "true"
+passing = [condition for condition in ("128m/fpm4", "128m/fpm8", "2g/fpm4", "2g/fpm8")
+           if all(eligible.get((condition, str(repeat)), False) for repeat in range(1, 4))]
+summary = {"cells_recorded": len(rows), "conditions_passing_all_three_repeats": passing,
+           "continue": bool(passing), "continuation_rule": "one fixed condition passes all native SLOs in all three valid repeats"}
+(root / "continuation-decision.json").write_text(json.dumps(summary, indent=2) + "\n")
+with (root / "status.txt").open("a") as stream:
+    stream.write("complete\n")
+PY
+printf 'completed_utc=%s\n' "$(date -u +%FT%TZ)" >> "${RESULT_DIR}/run-metadata.txt"
+printf 'Completed calibration. Evidence: %s\n' "${RESULT_DIR}"

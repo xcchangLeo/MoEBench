@@ -1,0 +1,149 @@
+{
+  "schema": "moebench.hybrid.unixbench_policy_manifest.v1",
+  "report": "/home/zyf/code/MoEBench/dataset/experiments/paired_session_oof_real_probe_3sessions_20261015/holdout_aces-System-Product-Name_20261015T051104Z/aces-System-Product-Name__learned_anchor.json",
+  "policy": "learned_anchor",
+  "machine": "aces-System-Product-Name",
+  "folds": 5,
+  "seed": 42,
+  "top_k": 3,
+  "split_protocol": "whole-session holdout; held-out session is excluded from router/probe/reconstructor fitting",
+  "selection_uses": "training-fitted router and held-out xi for learned; fixed component IDs for fixed policies; outer-training-run labels only for association policies; no held-out score labels or ti timings",
+  "input_artifacts": {
+    "probe_dataset": "/home/zyf/code/MoEBench/dataset/experiments/paired_session_oof_real_probe_3sessions_20261015/paired_probe_dataset.json",
+    "probe_dataset_sha256": "987075c0707f228c3e890865bbdb586abc44e5e1212f56587e0d794507e2d805",
+    "runs": [
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T051104Z/run-01.json",
+        "sha256": "9b9b084be76701b22f8bcf3aa8515d9910181d44cd2ebe165275d0f6ff8aad13"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T054347Z/run-01.json",
+        "sha256": "5727c06d893459aabac6d83889e197757be629fbed38a92d0cdb4cf9851ef872"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T061408Z/run-01.json",
+        "sha256": "0f80facfa5aec0550ff113394c84aeef38f6f8be742e51e204bc6a95b75c745f"
+      }
+    ]
+  },
+  "fold_manifest": [
+    {
+      "fold": 0,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T054347Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T061408Z/run-01.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T051104Z/run-01.json"
+      ],
+      "probe_training_samples": 24,
+      "router_fit_scope": "training_runs_only",
+      "router_fit_runs": 2,
+      "probe_fit_scope": "training_run_samples_only",
+      "reconstructor_probe_inputs": "inner-run-held-out probe-model predictions",
+      "probe_prediction_calibration_factor": 0.9796393441897961,
+      "probe_prediction_calibration_factors": {
+        "dhry2reg": 2.580346112978845,
+        "whetstone-double": 0.9956746468452146,
+        "execl": 0.7986558498971053,
+        "fstime": 1.4978257113045383,
+        "fsbuffer": 0.724832072551759,
+        "fsdisk": 1.6573531152092456,
+        "pipe": 1.6203341109785567,
+        "context1": 0.7134392911810763,
+        "spawn": 0.239500846450537,
+        "syscall": 0.7115064175084865,
+        "shell1": 1.0155780004631227,
+        "shell8": 1.957204397150032
+      },
+      "reconstructor_probe_fit_manifest": [
+        {
+          "inner_fold": 0,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T054347Z/run-01.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T061408Z/run-01.json"
+          ],
+          "probe_fit_samples": 12
+        },
+        {
+          "inner_fold": 1,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T061408Z/run-01.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T054347Z/run-01.json"
+          ],
+          "probe_fit_samples": 12
+        }
+      ],
+      "reconstructor_fit_scope": "training_runs_only",
+      "training_fold_selections": {
+        "train_assoc_diverse_top_k": {
+          "selected_test_ids": [
+            "dhry2reg",
+            "whetstone-double",
+            "execl"
+          ],
+          "training_fold_spearman_rho_with_suite": {
+            "dhry2reg": 0.9999999999999999,
+            "whetstone-double": 0.9999999999999999,
+            "execl": 0.9999999999999999,
+            "fstime": 0.9999999999999999,
+            "fsbuffer": 0.9999999999999999,
+            "fsdisk": 0.9999999999999999,
+            "pipe": -0.9999999999999999,
+            "context1": 0.9999999999999999,
+            "spawn": 0.9999999999999999,
+            "syscall": 0.9999999999999999,
+            "shell1": 0.9999999999999999,
+            "shell8": 0.9999999999999999
+          },
+          "mean_abs_suite_association": 0.9999999999999999,
+          "mean_abs_pairwise_redundancy": 0.9999999999999999,
+          "objective": 0.0,
+          "selection_method": "exhaustive Top-K maximizing mean absolute training-fold Spearman association with suite index minus mean absolute pairwise expert association",
+          "n_training_runs": 2
+        },
+        "train_probe_reliable_top_k": {
+          "selected_test_ids": [
+            "whetstone-double",
+            "shell1",
+            "execl"
+          ],
+          "selection_method": "lowest inner-OOF relative probe error",
+          "inner_oof_probe_error_median_relative": {
+            "dhry2reg": 0.6109291045728562,
+            "whetstone-double": 0.015532241011179627,
+            "execl": 0.25557633740233915,
+            "fstime": 0.3320588896097393,
+            "fsbuffer": 0.38863425298910004,
+            "fsdisk": 0.3313257082766998,
+            "pipe": 0.3539624368922469,
+            "context1": 0.45168572944126106,
+            "spawn": 3.987096279288686,
+            "syscall": 0.40634267284715875,
+            "shell1": 0.036244012162210404,
+            "shell8": 0.42084366139100715
+          }
+        }
+      }
+    }
+  ],
+  "summary": {
+    "n_runs": 1,
+    "mean_relative_error_percent": 10.149220761078379,
+    "xi_only_mean_relative_error_percent": 2.448319403084028,
+    "selected_probe_score_mape_percent": 115.66759290414869,
+    "mean_error_reduction_vs_xi_only_percentage_points": -7.70090135799435,
+    "median_relative_error_percent": 10.149220761078379,
+    "p95_relative_error_percent": 10.149220761078379,
+    "max_relative_error_percent": 10.149220761078379,
+    "exhaustive_random_subset_mean_error_percent": 4.501343955259285,
+    "exhaustive_random_subset_median_error_percent": 4.01038240007862,
+    "mean_selected_error_percentile_within_random_subsets": 94.54545454545455,
+    "mean_probe_wall_s": 24.009273058036342,
+    "mean_hybrid_wall_estimate_s": 33.14762105803634
+  }
+}

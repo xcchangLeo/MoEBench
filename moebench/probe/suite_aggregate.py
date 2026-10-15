@@ -15,6 +15,7 @@ def aggregate_suite_index(
     Combine subtest index predictions into one suite score.
 
     ``geomean_index``: exp(mean(log1p(index))) - 1  (robust to scale)
+    ``geomean_raw_index``: exp(mean(log(index))) for UnixBench's official index aggregation
     ``mean_index``: arithmetic mean
     """
     vals = [max(0.0, float(v)) for v in subtest_predictions.values() if v is not None]
@@ -24,6 +25,10 @@ def aggregate_suite_index(
         return float(sum(vals) / len(vals))
     if mode == "geomean_index":
         return float(math.expm1(sum(math.log1p(v) for v in vals) / len(vals)))
+    if mode == "geomean_raw_index":
+        if any(v <= 0.0 for v in vals):
+            return 0.0
+        return float(math.exp(sum(math.log(v) for v in vals) / len(vals)))
     raise ValueError(f"unknown suite aggregate mode: {mode!r}")
 
 

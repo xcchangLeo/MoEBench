@@ -1,0 +1,19 @@
+config=workers4 workers=4 session=1 connections=80 threads=4 phase=probe duration=4s
+started_utc=2026-10-13T04:44:02Z
+command=timeout 12s wrk -t 4 -c 80 -d 4s --latency --timeout 5s http://127.0.0.1:18081/
+Running 4s test @ http://127.0.0.1:18081/
+  4 threads and 80 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   198.49us  104.23us   3.15ms   96.61%
+    Req/Sec   103.87k    14.86k  133.21k    84.38%
+  Latency Distribution
+     50%  182.00us
+     75%  199.00us
+     90%  223.00us
+     99%  742.00us
+  1651961 requests in 4.02s, 746.75MB read
+Requests/sec: 411193.13
+Transfer/sec:    185.87MB
+elapsed_real_seconds=4.02
+exit_code=0
+ended_utc=2026-10-13T04:44:06Z

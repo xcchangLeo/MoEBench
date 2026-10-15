@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import math
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -93,9 +94,12 @@ def collect_probe_dataset(
     enable_ebpf: bool = True,
     probe_mode: ProbeMode = "micro",
     live_probe: bool = True,
+    unixbench_root: str | Path | None = None,
     test_ids: list[str] | None = None,
+    source_runs: list[str | Path] | None = None,
 ) -> dict[str, Any]:
     """Build probe dataset for unixbench or phoronix (PTS cpu / gpu via ``pts_suite``)."""
+    collection_started_at = datetime.now(timezone.utc).isoformat()
     m = resolve_training_machine(machine)
     glo = resolve_glob_for_machine(
         benchmark=benchmark,
@@ -109,6 +113,16 @@ def collect_probe_dataset(
     tids: list[str] = []
     if benchmark == "unixbench":
         paths = collect_unixbench_run_paths(Path(dataset_root), glob_pattern=glo)
+        if source_runs:
+            wanted = {Path(p).expanduser().resolve() for p in source_runs}
+            paths = [p for p in paths if p.expanduser().resolve() in wanted]
+            found = {p.expanduser().resolve() for p in paths}
+            missing = wanted - found
+            if missing:
+                raise FileNotFoundError(
+                    "Requested UnixBench source run(s) were not found by the configured dataset glob: "
+                    + ", ".join(str(p) for p in sorted(missing))
+                )
         tids = list(test_ids or INDEX_SUITE_TEST_IDS)
         for path in paths:
             with open(path, encoding="utf-8") as f:
@@ -125,6 +139,7 @@ def collect_probe_dataset(
                         enable_ebpf=enable_ebpf,
                         benchmark="unixbench",
                         probe_mode=probe_mode,
+                        unixbench_root=Path(unixbench_root) if unixbench_root else None,
                     )
                     if live_probe
                     else {"test_id": tid, "synthetic": True}
@@ -145,6 +160,16 @@ def collect_probe_dataset(
             glob_pattern=glo,
             pts_suite=pts_suite,
         )
+        if source_runs:
+            wanted = {Path(p).expanduser().resolve() for p in source_runs}
+            paths = [p for p in paths if p.expanduser().resolve() in wanted]
+            found = {p.expanduser().resolve() for p in paths}
+            missing = wanted - found
+            if missing:
+                raise FileNotFoundError(
+                    "Requested PTS source run(s) were not found by the configured dataset glob: "
+                    + ", ".join(str(p) for p in sorted(missing))
+                )
         tids = list(test_ids) if test_ids else list(canonical_test_ids_from_runs(paths))
         experts_title: dict[str, str] = {}
         if paths:
@@ -193,6 +218,9 @@ def collect_probe_dataset(
         "label_transform": probe_label_transform(benchmark),
         "estimator_mode": probe_estimator_mode(benchmark),
         "test_ids": tids,
+        "source_runs": [str(p.resolve()) for p in paths],
+        "collection_started_at_utc": collection_started_at,
+        "collection_finished_at_utc": datetime.now(timezone.utc).isoformat(),
         "num_samples": len(samples),
         "samples": samples,
     }

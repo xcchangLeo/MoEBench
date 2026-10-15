@@ -1,0 +1,313 @@
+{
+  "schema": "moebench.hybrid.unixbench_policy_oof.v1",
+  "generated_at_utc": "2026-10-12T11:35:15.398869+00:00",
+  "machine": "iZbp15n87643uk1sqjrdvdZ",
+  "benchmark": "unixbench",
+  "policy": "learned",
+  "split_protocol": "same seeded random run-level folds as run_hybrid_oof_unixbench.py",
+  "model_protocol": "fold-local router, probe, and reconstructor; all policies share the same models within each fold",
+  "selection_uses": "training-fitted router and held-out xi for learned; fixed component IDs for fixed policies; no held-out score labels or ti timings",
+  "folds": 5,
+  "seed": 42,
+  "top_k": 3,
+  "probe_duration_s": 4.0,
+  "xi_overhead_s": 3.0,
+  "train_aug": 20,
+  "train_k_range": [
+    2,
+    6
+  ],
+  "reconstructor": "lightgbm",
+  "probe_model": "lightgbm",
+  "router_model": "fold-local MLP",
+  "selected_test_ids_by_policy": "per-run Top-K from xi",
+  "input_artifacts": {
+    "probe_dataset": "/home/zyf/code/MoEBench/dataset/models/iZbp15n87643uk1sqjrdvdZ/probe_dataset_unixbench.json",
+    "probe_dataset_sha256": "02fc6ebcff17e35c01447119f027fc20f7cd6f091656d219e85e767ac2e8e692",
+    "runs": [
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-01.json",
+        "sha256": "c9506d08b05642e18e7889dd579de7198fc2b6348cbf2d590641dbbd1b4f58a3"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-02.json",
+        "sha256": "b242033e9c7bb0fc4347317f3cb91dfc341fd3088847d3c9e896479cbaaf420b"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-03.json",
+        "sha256": "d55b8ea554c34c5114bb6b788f0afec171d774d86febb86fbb34bf32ec92572e"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-04.json",
+        "sha256": "0984f6447505e964a9b8603a1f2f6e7ef2a35a7f0a4b3ada17a3a711b8d72413"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-05.json",
+        "sha256": "02ddffd834cdcb42de503d504071abd3f13ea79527e773638590740fbab38e76"
+      }
+    ]
+  },
+  "fold_manifest": [
+    {
+      "fold": 0,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-05.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-02.json"
+      ],
+      "probe_training_samples": 48,
+      "router_fit_scope": "training_runs_only",
+      "router_fit_runs": 4,
+      "probe_fit_scope": "training_run_samples_only",
+      "reconstructor_fit_scope": "training_runs_only"
+    },
+    {
+      "fold": 1,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-04.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-05.json"
+      ],
+      "probe_training_samples": 48,
+      "router_fit_scope": "training_runs_only",
+      "router_fit_runs": 4,
+      "probe_fit_scope": "training_run_samples_only",
+      "reconstructor_fit_scope": "training_runs_only"
+    },
+    {
+      "fold": 2,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-05.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-03.json"
+      ],
+      "probe_training_samples": 48,
+      "router_fit_scope": "training_runs_only",
+      "router_fit_runs": 4,
+      "probe_fit_scope": "training_run_samples_only",
+      "reconstructor_fit_scope": "training_runs_only"
+    },
+    {
+      "fold": 3,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-05.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-01.json"
+      ],
+      "probe_training_samples": 48,
+      "router_fit_scope": "training_runs_only",
+      "router_fit_runs": 4,
+      "probe_fit_scope": "training_run_samples_only",
+      "reconstructor_fit_scope": "training_runs_only"
+    },
+    {
+      "fold": 4,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-05.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-04.json"
+      ],
+      "probe_training_samples": 48,
+      "router_fit_scope": "training_runs_only",
+      "router_fit_runs": 4,
+      "probe_fit_scope": "training_run_samples_only",
+      "reconstructor_fit_scope": "training_runs_only"
+    }
+  ],
+  "summary": {
+    "n_runs": 5,
+    "mean_relative_error_percent": 0.3438736282047168,
+    "median_relative_error_percent": 0.4353463362716003,
+    "p95_relative_error_percent": 0.6215491583914808,
+    "max_relative_error_percent": 0.6630154306077193,
+    "mean_probe_wall_s": 15.054543862189167,
+    "mean_hybrid_wall_estimate_s": 18.054543862189167
+  },
+  "per_run": [
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-01.json",
+      "session": "iZbp15n87643uk1sqjrdvdZ_20260525T050535Z",
+      "policy": "learned",
+      "selection": {
+        "selected_test_ids": [
+          "shell1",
+          "dhry2reg",
+          "fstime"
+        ],
+        "selection_inputs": "pre-run xi only for learned; fixed test-id list for fixed policies"
+      },
+      "probe": {
+        "predicted_subtest": {
+          "shell1": 1506.9755053293768,
+          "dhry2reg": 5149.5801694190095,
+          "fstime": 2740.2564361598024
+        },
+        "probe_duration_budget_s": 4.0,
+        "historical_probe_wall_sum_s": 15.053048709989525
+      },
+      "prediction": 1899.4224819513497,
+      "ground_truth": 1912.1,
+      "comparison": {
+        "suite_absolute_error": 12.6775180486502,
+        "suite_relative_error": 0.006630154306077192
+      },
+      "timing_estimate_seconds": {
+        "xi_collection_estimate": 3.0,
+        "selected_probe_wall_sum": 15.053048709989525,
+        "hybrid_wall_estimate": 18.053048709989525
+      }
+    },
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-02.json",
+      "session": "iZbp15n87643uk1sqjrdvdZ_20260525T050535Z",
+      "policy": "learned",
+      "selection": {
+        "selected_test_ids": [
+          "dhry2reg",
+          "execl",
+          "context1"
+        ],
+        "selection_inputs": "pre-run xi only for learned; fixed test-id list for fixed policies"
+      },
+      "probe": {
+        "predicted_subtest": {
+          "dhry2reg": 5144.354832258189,
+          "execl": 1033.9813955009931,
+          "context1": 625.4561424704239
+        },
+        "probe_duration_budget_s": 4.0,
+        "historical_probe_wall_sum_s": 15.047359583084472
+      },
+      "prediction": 1900.5000797445996,
+      "ground_truth": 1909.2,
+      "comparison": {
+        "suite_absolute_error": 8.699920255400457,
+        "suite_relative_error": 0.004556840695265272
+      },
+      "timing_estimate_seconds": {
+        "xi_collection_estimate": 3.0,
+        "selected_probe_wall_sum": 15.047359583084472,
+        "hybrid_wall_estimate": 18.04735958308447
+      }
+    },
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-03.json",
+      "session": "iZbp15n87643uk1sqjrdvdZ_20260525T050535Z",
+      "policy": "learned",
+      "selection": {
+        "selected_test_ids": [
+          "fstime",
+          "pipe",
+          "execl"
+        ],
+        "selection_inputs": "pre-run xi only for learned; fixed test-id list for fixed policies"
+      },
+      "probe": {
+        "predicted_subtest": {
+          "fstime": 2705.257300395957,
+          "pipe": 2360.4129122258687,
+          "execl": 1126.6012107354472
+        },
+        "probe_duration_budget_s": 4.0,
+        "historical_probe_wall_sum_s": 15.057241138885729
+      },
+      "prediction": 1899.5002041811347,
+      "ground_truth": 1899.0,
+      "comparison": {
+        "suite_absolute_error": 0.5002041811346771,
+        "suite_relative_error": 0.00026340399217202585
+      },
+      "timing_estimate_seconds": {
+        "xi_collection_estimate": 3.0,
+        "selected_probe_wall_sum": 15.057241138885729,
+        "hybrid_wall_estimate": 18.05724113888573
+      }
+    },
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-04.json",
+      "session": "iZbp15n87643uk1sqjrdvdZ_20260525T050535Z",
+      "policy": "learned",
+      "selection": {
+        "selected_test_ids": [
+          "context1",
+          "fstime",
+          "shell8"
+        ],
+        "selection_inputs": "pre-run xi only for learned; fixed test-id list for fixed policies"
+      },
+      "probe": {
+        "predicted_subtest": {
+          "context1": 620.586178583954,
+          "fstime": 2713.36550549033,
+          "shell8": 3015.048286492319
+        },
+        "probe_duration_budget_s": 4.0,
+        "historical_probe_wall_sum_s": 15.057400839985348
+      },
+      "prediction": 1908.7737571208418,
+      "ground_truth": 1900.5,
+      "comparison": {
+        "suite_absolute_error": 8.273757120841765,
+        "suite_relative_error": 0.004353463362716003
+      },
+      "timing_estimate_seconds": {
+        "xi_collection_estimate": 3.0,
+        "selected_probe_wall_sum": 15.057400839985348,
+        "hybrid_wall_estimate": 18.05740083998535
+      }
+    },
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp15n87643uk1sqjrdvdZ_20260525T050535Z/run-05.json",
+      "session": "iZbp15n87643uk1sqjrdvdZ_20260525T050535Z",
+      "policy": "learned",
+      "selection": {
+        "selected_test_ids": [
+          "fsbuffer",
+          "execl",
+          "shell1"
+        ],
+        "selection_inputs": "pre-run xi only for learned; fixed test-id list for fixed policies"
+      },
+      "probe": {
+        "predicted_subtest": {
+          "fsbuffer": 2036.7644561616844,
+          "execl": 933.5792496852076,
+          "shell1": 1692.919241887263
+        },
+        "probe_duration_budget_s": 4.0,
+        "historical_probe_wall_sum_s": 15.057669039000757
+      },
+      "prediction": 1902.1399612930832,
+      "ground_truth": 1899.5,
+      "comparison": {
+        "suite_absolute_error": 2.639961293083161,
+        "suite_relative_error": 0.0013898190540053493
+      },
+      "timing_estimate_seconds": {
+        "xi_collection_estimate": 3.0,
+        "selected_probe_wall_sum": 15.057669039000757,
+        "hybrid_wall_estimate": 18.057669039000757
+      }
+    }
+  ]
+}

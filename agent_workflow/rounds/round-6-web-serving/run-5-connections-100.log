@@ -1,0 +1,18 @@
+run=5 connections=100 threads=4 duration=20s seed=20261017
+started_utc=2026-10-12T12:58:55Z
+command=wrk -t 4 -c 100 -d 20s --latency --timeout 5s http://127.0.0.1:18080/
+Running 20s test @ http://127.0.0.1:18080/
+  4 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   210.19us  126.68us   7.52ms   97.47%
+    Req/Sec   120.90k    16.84k  147.74k    74.38%
+  Latency Distribution
+     50%  194.00us
+     75%  210.00us
+     90%  239.00us
+     99%  583.00us
+  9620881 requests in 20.02s, 4.26GB read
+Requests/sec: 480661.56
+Transfer/sec:    218.19MB
+elapsed_real_seconds=20.01
+ended_utc=2026-10-12T12:59:15Z

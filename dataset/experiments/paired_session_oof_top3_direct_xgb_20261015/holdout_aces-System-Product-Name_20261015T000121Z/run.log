@@ -1,0 +1,70 @@
+  [mlp] epoch 20/200 loss=44.884876
+  [mlp] epoch 40/200 loss=18.049295
+  [mlp] epoch 60/200 loss=1.064917
+  [mlp] epoch 80/200 loss=0.340533
+  [mlp] epoch 100/200 loss=0.116596
+  [mlp] epoch 120/200 loss=0.057860
+  [mlp] epoch 140/200 loss=0.038912
+  [mlp] epoch 160/200 loss=0.029025
+  [mlp] epoch 180/200 loss=0.022608
+  [mlp] epoch 200/200 loss=0.018265
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0.000014 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 236
+[LightGBM] [Info] Number of data points in the train set: 48, number of used features: 22
+[LightGBM] [Info] Start training from score 2793.318722
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0.000008 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 186
+[LightGBM] [Info] Number of data points in the train set: 36, number of used features: 22
+[LightGBM] [Info] Start training from score 2680.908316
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0.000007 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 188
+[LightGBM] [Info] Number of data points in the train set: 36, number of used features: 22
+[LightGBM] [Info] Start training from score 2995.611079
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0.000007 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 185
+[LightGBM] [Info] Number of data points in the train set: 36, number of used features: 22
+[LightGBM] [Info] Start training from score 2945.130512
+[LightGBM] [Info] Auto-choosing col-wise multi-threading, the overhead of testing was 0.000006 seconds.
+You can set `force_col_wise=true` to remove the overhead.
+[LightGBM] [Info] Total Bins 188
+[LightGBM] [Info] Number of data points in the train set: 36, number of used features: 22
+[LightGBM] [Info] Start training from score 2551.624982
+Traceback (most recent call last):
+  File "/home/zyf/code/MoEBench/scripts/reconstruct_train_eval.py", line 63, in _ensure_import
+    return __import__(name)
+ModuleNotFoundError: No module named 'xgboost'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/zyf/code/MoEBench/scripts/run_hybrid_oof_unixbench_policies.py", line 1145, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/home/zyf/code/MoEBench/scripts/run_hybrid_oof_unixbench_policies.py", line 900, in main
+    recon_bundle = cv.rte.sklearn_export_bundle(
+        args.reconstructor,
+    ...<9 lines>...
+        suite_output_mode=args.suite_output_mode,
+    )
+  File "/home/zyf/code/MoEBench/scripts/reconstruct_train_eval.py", line 440, in sklearn_export_bundle
+    mor = fit_sklearn_multioutput(
+        model_name,
+    ...<5 lines>...
+        n_estimators_override=None,
+    )
+  File "/home/zyf/code/MoEBench/scripts/reconstruct_train_eval.py", line 180, in fit_sklearn_multioutput
+    base = _sklearn_base_estimator(
+        model_name,
+    ...<3 lines>...
+        n_estimators_override=n_estimators_override,
+    )
+  File "/home/zyf/code/MoEBench/scripts/reconstruct_train_eval.py", line 152, in _sklearn_base_estimator
+    _ensure_import("xgboost")
+    ~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "/home/zyf/code/MoEBench/scripts/reconstruct_train_eval.py", line 65, in _ensure_import
+    raise ImportError(f"Missing dependency: {name}") from e
+ImportError: Missing dependency: xgboost

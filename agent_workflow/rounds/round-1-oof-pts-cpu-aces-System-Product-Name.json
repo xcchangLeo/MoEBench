@@ -1,0 +1,572 @@
+{
+  "schema": "moebench.hybrid.run_level_oof.v1",
+  "generated_at_utc": "2026-10-12T10:57:48.203427+00:00",
+  "protocol": "randomly shuffled run-level folds; router, probe, and reconstructor fit only on training runs",
+  "machine": "aces-System-Product-Name",
+  "benchmark": "phoronix",
+  "pts_suite": "cpu",
+  "pts_suite_target": "logmean",
+  "folds": 5,
+  "seed": 42,
+  "top_k": 3,
+  "probe_duration_s": 4.0,
+  "xi_overhead_s": 3.0,
+  "reconstructor": "lightgbm",
+  "reconstructor_estimators": 30,
+  "probe_model": "lightgbm",
+  "router_model": "fold-local MLP",
+  "input_artifacts": {
+    "probe_dataset": "/home/zyf/code/MoEBench/dataset/models/aces-System-Product-Name/probe_dataset_pts_cpu.json",
+    "probe_dataset_sha256": "38ed90fa2b06f037e599540f4b6e0a3d64d66148a630721697caf58c18301b23",
+    "runs": [
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-01.json",
+        "sha256": "5d9cd721480b6c4bec212051914bf7a5c7852a3c15d87565fae39a37ebcf99b6"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-02.json",
+        "sha256": "715304b974b3325651a8dafaeec9a3ba8dac30fdd1dc4e638ac552098df2e9d0"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-03.json",
+        "sha256": "d0fd1e3e8c5f410a5cbf34d66bef0f238066bcfdbe542377505cf31dfb325276"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-04.json",
+        "sha256": "0cb43f74d7b8aad62ac6cf946c28cdf867d2e0b4872ed0304fd3d8d1b729bcd0"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-05.json",
+        "sha256": "5fa3ff2a724d9eef1e547d0b8100256590853489adfc40eedb9b02f6758aa949"
+      }
+    ]
+  },
+  "fold_manifest": [
+    {
+      "fold": 0,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-05.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-02.json"
+      ],
+      "probe_training_samples": 52,
+      "router_fit_scope": "training_fold_only",
+      "router_fit_runs": 4
+    },
+    {
+      "fold": 1,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-04.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-05.json"
+      ],
+      "probe_training_samples": 52,
+      "router_fit_scope": "training_fold_only",
+      "router_fit_runs": 4
+    },
+    {
+      "fold": 2,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-05.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-03.json"
+      ],
+      "probe_training_samples": 52,
+      "router_fit_scope": "training_fold_only",
+      "router_fit_runs": 4
+    },
+    {
+      "fold": 3,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-05.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-01.json"
+      ],
+      "probe_training_samples": 52,
+      "router_fit_scope": "training_fold_only",
+      "router_fit_runs": 4
+    },
+    {
+      "fold": 4,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-05.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-04.json"
+      ],
+      "probe_training_samples": 52,
+      "router_fit_scope": "training_fold_only",
+      "router_fit_runs": 4
+    }
+  ],
+  "summary": {
+    "n_runs": 5,
+    "mean_relative_error_percent": 1.7386914760390473,
+    "median_relative_error_percent": 0.8689676695609707,
+    "p95_relative_error_percent": 4.1332188663719185,
+    "max_relative_error_percent": 4.43552280107945,
+    "mean_probe_wall_s": 15.032797218597262,
+    "mean_hybrid_wall_estimate_s": 18.03279721859726
+  },
+  "per_run": [
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-01.json",
+      "session": "aces-System-Product-Name_cpu_20260520T033403Z",
+      "router": {
+        "top_k": 3,
+        "selected_experts": [
+          "e_005",
+          "e_002",
+          "e_010"
+        ],
+        "selected_test_ids": [
+          "pts/namd-1.4.0",
+          "pts/build-gcc-1.5.0",
+          "pts/stockfish-1.7.0"
+        ],
+        "scores": {
+          "e_001": -51.86913299560547,
+          "e_002": -51.85326385498047,
+          "e_003": -51.87120819091797,
+          "e_004": -51.86681365966797,
+          "e_005": -51.85253143310547,
+          "e_006": -51.86009979248047,
+          "e_007": -51.85521697998047,
+          "e_008": -51.86766815185547,
+          "e_009": -51.87120819091797,
+          "e_010": -51.85424041748047,
+          "e_011": -51.86254119873047,
+          "e_012": -51.86962127685547,
+          "e_013": -51.85497283935547
+        },
+        "probabilities": {
+          "e_001": 0.07638920186660393,
+          "e_002": 0.07761110246702908,
+          "e_003": 0.07623084372183452,
+          "e_004": 0.07656657970761634,
+          "e_005": 0.07766796735822186,
+          "e_006": 0.07708236708126785,
+          "e_007": 0.07745966621762575,
+          "e_008": 0.07650118210828066,
+          "e_009": 0.07623084372183452,
+          "e_010": 0.07753534737058979,
+          "e_011": 0.07689440724503098,
+          "e_012": 0.07635191155645052,
+          "e_013": 0.07747857957761424
+        }
+      },
+      "probe": {
+        "predicted_subtest": {
+          "pts/namd-1.4.0": 0.694612822297271,
+          "pts/build-gcc-1.5.0": 763.9923643346118,
+          "pts/stockfish-1.7.0": 18906317.649342224
+        },
+        "probe_duration_s": 4.0,
+        "probe_wall_s_selected_sum": 15.035133076016791
+      },
+      "reconstruction": {
+        "predicted_suite": 3051.0101933002475,
+        "predicted_subtest": {
+          "pts/asmfish-1.1.2": 66693463.00859377,
+          "pts/build-gcc-1.5.0": 828.3211458206176,
+          "pts/ctx-clock-1.0.0": 166.6897483855485,
+          "pts/kvazaar-1.2.0": 60.24183588847517,
+          "pts/namd-1.4.0": 0.7070003641536459,
+          "pts/openssl-4.0.0": 1534144938.2499998,
+          "pts/povray-1.2.1": 17.110611640661944,
+          "pts/radiance-1.0.0": 203.64039741456511,
+          "pts/rodinia-1.3.2": 32.20380518138409,
+          "pts/stockfish-1.7.0": 19003682.698437497,
+          "pts/sysbench-1.1.0": 99002.35967407229,
+          "pts/x264-2.7.0": 115.0645634651184,
+          "pts/x265-1.5.0": 50.39715573713183
+        }
+      },
+      "ground_truth_suite": 3142.9089492727744,
+      "timing_seconds": {
+        "xi_collection_estimate": 3.0,
+        "probe_selected_subtests": 15.035133076016791,
+        "hybrid_wall_estimate": 18.03513307601679,
+        "full_suite_from_dataset": 22738.77
+      },
+      "comparison": {
+        "suite_absolute_error": 91.89875597252694,
+        "suite_relative_error": 0.029240031275417966,
+        "benchmark_time_saved_seconds_vs_full": 22723.734866923984,
+        "benchmark_time_ratio_full_over_hybrid_probe": 1512.3757059571108,
+        "fraction_saved_vs_full": 0.999338788638259
+      }
+    },
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-02.json",
+      "session": "aces-System-Product-Name_cpu_20260520T033403Z",
+      "router": {
+        "top_k": 3,
+        "selected_experts": [
+          "e_004",
+          "e_009",
+          "e_008"
+        ],
+        "selected_test_ids": [
+          "pts/kvazaar-1.2.0",
+          "pts/rodinia-1.3.2",
+          "pts/radiance-1.0.0"
+        ],
+        "scores": {
+          "e_001": -89.78338623046875,
+          "e_002": -89.80291748046875,
+          "e_003": -89.79681396484375,
+          "e_004": -89.76239013671875,
+          "e_005": -89.79754638671875,
+          "e_006": -89.78411865234375,
+          "e_007": -89.78924560546875,
+          "e_008": -89.78045654296875,
+          "e_009": -89.77825927734375,
+          "e_010": -89.79559326171875,
+          "e_011": -89.78216552734375,
+          "e_012": -89.78216552734375,
+          "e_013": -89.78387451171875
+        },
+        "probabilities": {
+          "e_001": 0.07712598014634524,
+          "e_002": 0.07563422865348572,
+          "e_003": 0.07609727501773253,
+          "e_004": 0.07876244401320814,
+          "e_005": 0.07604156011477914,
+          "e_006": 0.0770695120731056,
+          "e_007": 0.07667539147955377,
+          "e_008": 0.07735226647857213,
+          "e_009": 0.07752241681901158,
+          "e_010": 0.0761902239191158,
+          "e_011": 0.07722018555805071,
+          "e_012": 0.07722018555805071,
+          "e_013": 0.07708833016898894
+        }
+      },
+      "probe": {
+        "predicted_subtest": {
+          "pts/kvazaar-1.2.0": 59.911834733084234,
+          "pts/rodinia-1.3.2": 28.292181054206925,
+          "pts/radiance-1.0.0": 227.88471663202128
+        },
+        "probe_duration_s": 4.0,
+        "probe_wall_s_selected_sum": 15.029682676016819
+      },
+      "reconstruction": {
+        "predicted_suite": 3058.1930468320843,
+        "predicted_subtest": {
+          "pts/asmfish-1.1.2": 67385216.90092775,
+          "pts/build-gcc-1.5.0": 812.2196452140811,
+          "pts/ctx-clock-1.0.0": 161.9620959043503,
+          "pts/kvazaar-1.2.0": 60.399455040320746,
+          "pts/namd-1.4.0": 0.7142389190150423,
+          "pts/openssl-4.0.0": 1558913125.9499998,
+          "pts/povray-1.2.1": 17.541289982199665,
+          "pts/radiance-1.0.0": 201.91874039769172,
+          "pts/rodinia-1.3.2": 31.87257036417723,
+          "pts/stockfish-1.7.0": 18952345.812719725,
+          "pts/sysbench-1.1.0": 101643.86642456056,
+          "pts/x264-2.7.0": 115.26979996860027,
+          "pts/x265-1.5.0": 50.08740228936075
+        }
+      },
+      "ground_truth_suite": 3085.0007055692085,
+      "timing_seconds": {
+        "xi_collection_estimate": 3.0,
+        "probe_selected_subtests": 15.029682676016819,
+        "hybrid_wall_estimate": 18.02968267601682,
+        "full_suite_from_dataset": 20821.010000000002
+      },
+      "comparison": {
+        "suite_absolute_error": 26.807658737124257,
+        "suite_relative_error": 0.008689676695609707,
+        "benchmark_time_saved_seconds_vs_full": 20805.980317323985,
+        "benchmark_time_ratio_full_over_hybrid_probe": 1385.3259878350277,
+        "fraction_saved_vs_full": 0.9992781482417992
+      }
+    },
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-03.json",
+      "session": "aces-System-Product-Name_cpu_20260520T033403Z",
+      "router": {
+        "top_k": 3,
+        "selected_experts": [
+          "e_004",
+          "e_005",
+          "e_013"
+        ],
+        "selected_test_ids": [
+          "pts/kvazaar-1.2.0",
+          "pts/namd-1.4.0",
+          "pts/x265-1.5.0"
+        ],
+        "scores": {
+          "e_001": 15.678714752197266,
+          "e_002": 15.669925689697266,
+          "e_003": 15.682621002197266,
+          "e_004": 15.706058502197266,
+          "e_005": 15.706058502197266,
+          "e_006": 15.669925689697266,
+          "e_007": 15.690433502197266,
+          "e_008": 15.695316314697266,
+          "e_009": 15.673831939697266,
+          "e_010": 15.686527252197266,
+          "e_011": 15.687503814697266,
+          "e_012": 15.678714752197266,
+          "e_013": 15.704105377197266
+        },
+        "probabilities": {
+          "e_001": 0.07628988062810148,
+          "e_002": 0.0756223020912843,
+          "e_003": 0.07658847077851562,
+          "e_004": 0.07840471402264777,
+          "e_005": 0.07840471402264777,
+          "e_006": 0.0756223020912843,
+          "e_007": 0.07718916159972472,
+          "e_008": 0.07756698346885674,
+          "e_009": 0.07591827941318068,
+          "e_010": 0.07688822957773599,
+          "e_011": 0.07696335241453543,
+          "e_012": 0.07628988062810148,
+          "e_013": 0.0782517292633838
+        }
+      },
+      "probe": {
+        "predicted_subtest": {
+          "pts/kvazaar-1.2.0": 57.611135661767285,
+          "pts/namd-1.4.0": 0.7230731441068479,
+          "pts/x265-1.5.0": 50.504191411691615
+        },
+        "probe_duration_s": 4.0,
+        "probe_wall_s_selected_sum": 15.032264187000692
+      },
+      "reconstruction": {
+        "predicted_suite": 3066.7617424726486,
+        "predicted_subtest": {
+          "pts/asmfish-1.1.2": 64130748.08046876,
+          "pts/build-gcc-1.5.0": 1002.2076114654543,
+          "pts/ctx-clock-1.0.0": 162.94481991678472,
+          "pts/kvazaar-1.2.0": 58.473746176064004,
+          "pts/namd-1.4.0": 0.683416154171573,
+          "pts/openssl-4.0.0": 1441522255.3,
+          "pts/povray-1.2.1": 23.905784133076672,
+          "pts/radiance-1.0.0": 223.82292673587799,
+          "pts/rodinia-1.3.2": 31.758567480742936,
+          "pts/stockfish-1.7.0": 17798963.2578125,
+          "pts/sysbench-1.1.0": 97859.74227905272,
+          "pts/x264-2.7.0": 108.92642164826397,
+          "pts/x265-1.5.0": 48.21651612520218
+        }
+      },
+      "ground_truth_suite": 3073.9235667353732,
+      "timing_seconds": {
+        "xi_collection_estimate": 3.0,
+        "probe_selected_subtests": 15.032264187000692,
+        "hybrid_wall_estimate": 18.032264187000692,
+        "full_suite_from_dataset": 13831.829999999998
+      },
+      "comparison": {
+        "suite_absolute_error": 7.161824262724622,
+        "suite_relative_error": 0.0023298641320254943,
+        "benchmark_time_saved_seconds_vs_full": 13816.797735812997,
+        "benchmark_time_ratio_full_over_hybrid_probe": 920.1428226601564,
+        "fraction_saved_vs_full": 0.9989132121933973
+      }
+    },
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-04.json",
+      "session": "aces-System-Product-Name_cpu_20260520T033403Z",
+      "router": {
+        "top_k": 3,
+        "selected_experts": [
+          "e_005",
+          "e_002",
+          "e_004"
+        ],
+        "selected_test_ids": [
+          "pts/namd-1.4.0",
+          "pts/build-gcc-1.5.0",
+          "pts/kvazaar-1.2.0"
+        ],
+        "scores": {
+          "e_001": -1.672229290008545,
+          "e_002": -1.659778118133545,
+          "e_003": -1.665393352508545,
+          "e_004": -1.661975383758545,
+          "e_005": -1.655383586883545,
+          "e_006": -1.671985149383545,
+          "e_007": -1.668567180633545,
+          "e_008": -1.675647258758545,
+          "e_009": -1.677356243133545,
+          "e_010": -1.672473430633545,
+          "e_011": -1.678088665008545,
+          "e_012": -1.669299602508545,
+          "e_013": -1.665637493133545
+        },
+        "probabilities": {
+          "e_001": 0.0766545992403863,
+          "e_002": 0.07761500551458131,
+          "e_003": 0.07718040041430467,
+          "e_004": 0.0774446519555282,
+          "e_005": 0.07795683762761663,
+          "e_006": 0.07667331602682498,
+          "e_007": 0.07693583140407162,
+          "e_008": 0.07639304346500782,
+          "e_009": 0.07626260044165975,
+          "e_010": 0.0766358870229178,
+          "e_011": 0.07620676449508229,
+          "e_012": 0.07687950254894091,
+          "e_013": 0.07716155984307776
+        }
+      },
+      "probe": {
+        "predicted_subtest": {
+          "pts/namd-1.4.0": 0.6945969955912834,
+          "pts/build-gcc-1.5.0": 819.1033557766451,
+          "pts/kvazaar-1.2.0": 59.91032644533684
+        },
+        "probe_duration_s": 4.0,
+        "probe_wall_s_selected_sum": 15.032984024990583
+      },
+      "reconstruction": {
+        "predicted_suite": 3024.7417444467537,
+        "predicted_subtest": {
+          "pts/asmfish-1.1.2": 67438697.30937499,
+          "pts/build-gcc-1.5.0": 1022.3574734687805,
+          "pts/ctx-clock-1.0.0": 165.71796771194792,
+          "pts/kvazaar-1.2.0": 58.74788220711053,
+          "pts/namd-1.4.0": 0.7177291319705547,
+          "pts/openssl-4.0.0": 1527237374.7750006,
+          "pts/povray-1.2.1": 17.52613570094109,
+          "pts/radiance-1.0.0": 226.26216814517977,
+          "pts/rodinia-1.3.2": 29.837099455296997,
+          "pts/stockfish-1.7.0": 18806356.45468751,
+          "pts/sysbench-1.1.0": 91320.57259674075,
+          "pts/x264-2.7.0": 108.29427818953991,
+          "pts/x265-1.5.0": 47.20698301047086
+        }
+      },
+      "ground_truth_suite": 3017.7412676565364,
+      "timing_seconds": {
+        "xi_collection_estimate": 3.0,
+        "probe_selected_subtests": 15.032984024990583,
+        "hybrid_wall_estimate": 18.032984024990583,
+        "full_suite_from_dataset": 10246.75
+      },
+      "comparison": {
+        "suite_absolute_error": 7.000476790217363,
+        "suite_relative_error": 0.0023197736881047024,
+        "benchmark_time_saved_seconds_vs_full": 10231.71701597501,
+        "benchmark_time_ratio_full_over_hybrid_probe": 681.6178333567024,
+        "fraction_saved_vs_full": 0.9985329022348559
+      }
+    },
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_cpu_20260520T033403Z/run-05.json",
+      "session": "aces-System-Product-Name_cpu_20260520T033403Z",
+      "router": {
+        "top_k": 3,
+        "selected_experts": [
+          "e_008",
+          "e_006",
+          "e_002"
+        ],
+        "selected_test_ids": [
+          "pts/radiance-1.0.0",
+          "pts/openssl-4.0.0",
+          "pts/build-gcc-1.5.0"
+        ],
+        "scores": {
+          "e_001": -127.01497650146484,
+          "e_002": -127.00814056396484,
+          "e_003": -127.02523040771484,
+          "e_004": -127.01399993896484,
+          "e_005": -127.03206634521484,
+          "e_006": -127.00716400146484,
+          "e_007": -127.02181243896484,
+          "e_008": -126.99300384521484,
+          "e_009": -127.02962493896484,
+          "e_010": -127.02278900146484,
+          "e_011": -127.02669525146484,
+          "e_012": -127.01497650146484,
+          "e_013": -127.03353118896484
+        },
+        "probabilities": {
+          "e_001": 0.0772106637784713,
+          "e_002": 0.07774027919693334,
+          "e_003": 0.07642299809703576,
+          "e_004": 0.07728610164621857,
+          "e_005": 0.07590235682155548,
+          "e_006": 0.07781623451986022,
+          "e_007": 0.07668465643158259,
+          "e_008": 0.07892596298107285,
+          "e_009": 0.07608789170074001,
+          "e_010": 0.07660980562597966,
+          "e_011": 0.07631113229887784,
+          "e_012": 0.0772106637784713,
+          "e_013": 0.0757912531232011
+        }
+      },
+      "probe": {
+        "predicted_subtest": {
+          "pts/radiance-1.0.0": 199.92475412577448,
+          "pts/openssl-4.0.0": 1572556792.570466,
+          "pts/build-gcc-1.5.0": 1107.6585106057717
+        },
+        "probe_duration_s": 4.0,
+        "probe_wall_s_selected_sum": 15.033922128961422
+      },
+      "reconstruction": {
+        "predicted_suite": 3121.306572008132,
+        "predicted_subtest": {
+          "pts/asmfish-1.1.2": 66696006.05078126,
+          "pts/build-gcc-1.5.0": 1010.292491531372,
+          "pts/ctx-clock-1.0.0": 165.60595126003028,
+          "pts/kvazaar-1.2.0": 58.850008874386525,
+          "pts/namd-1.4.0": 0.7437459042761478,
+          "pts/openssl-4.0.0": 1425829107.6999998,
+          "pts/povray-1.2.1": 24.640557894110678,
+          "pts/radiance-1.0.0": 224.49951691627504,
+          "pts/rodinia-1.3.2": 29.0086955010891,
+          "pts/stockfish-1.7.0": 18703470.359570302,
+          "pts/sysbench-1.1.0": 95957.62419128422,
+          "pts/x264-2.7.0": 108.68010259568692,
+          "pts/x265-1.5.0": 47.413143186271185
+        }
+      },
+      "ground_truth_suite": 2988.740313919193,
+      "timing_seconds": {
+        "xi_collection_estimate": 3.0,
+        "probe_selected_subtests": 15.033922128961422,
+        "hybrid_wall_estimate": 18.03392212896142,
+        "full_suite_from_dataset": 13017.97
+      },
+      "comparison": {
+        "suite_absolute_error": 132.56625808893932,
+        "suite_relative_error": 0.044355228010794494,
+        "benchmark_time_saved_seconds_vs_full": 13002.936077871038,
+        "benchmark_time_ratio_full_over_hybrid_probe": 865.9064406700709,
+        "fraction_saved_vs_full": 0.9988451408223432
+      }
+    }
+  ]
+}

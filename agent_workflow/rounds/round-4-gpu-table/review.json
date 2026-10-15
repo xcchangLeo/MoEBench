@@ -1,0 +1,56 @@
+{
+  "round": 5,
+  "reviewer_role": "independent_read_only",
+  "recommendation": "reject",
+  "score": 2,
+  "confidence": 5,
+  "artifact_consistency": {
+    "source_pdf_zip_content_match": true,
+    "source_sha256": "b0780177404f44d9b73924312f09a592747b43a29b0bb1aa1c5a3f603c7fa3f5",
+    "pdf_sha256": "159258b76c56fd619d870c8e9aec9ffc20abc13e73ec66a5c45dc0d15dc1d65e",
+    "pdf_pages": 12,
+    "pdf_page_size": "Letter"
+  },
+  "gpu_table_audit": {
+    "m1_hardware": "NVIDIA RTX 3090 Ti",
+    "m6_hardware": "NVIDIA T4",
+    "supplied_table_values": {
+      "m1_benchscout_error_percent": 0.18,
+      "m1_benchscout_time_seconds": 15.0,
+      "m6_benchscout_error_percent": 0.14,
+      "m6_benchscout_time_seconds": 15.0,
+      "m1_wang_proxy_error_percent": 0.26,
+      "m6_wang_proxy_error_percent": 5.13,
+      "m1_tousi_proxy_error_percent": 98.85,
+      "m6_tousi_proxy_error_percent": 67.14,
+      "m1_full_suite_time_seconds": 27018.0,
+      "m6_full_suite_time_seconds": 12951.0
+    },
+    "auditable_m1_oof": {
+      "mean_error_percent": 0.9533914658465864,
+      "nominal_budget_seconds": 18.03498404380516,
+      "n_runs": 5,
+      "n_sessions": 1,
+      "full_suite_time_semantics": "maximum of five per-profile timing sums, not end-to-end wall time"
+    },
+    "m6_repository_raw_run_present": false,
+    "m6_run_count_metadata_present": false,
+    "protocol_specified_for_supplied_table": false,
+    "source_provenance_present": false
+  },
+  "verified_fixes": [
+    "M1 and M6 GPU hardware labels are now explicit",
+    "M6 CPU and RAM are marked not reported instead of inferred",
+    "manuscript distinguishes supplied GPU values from the repository M1 OOF diagnostic",
+    "source, compiled PDF, and submission ZIP are synchronized"
+  ],
+  "blocking_findings": [
+    "supplied M1/M6 GPU values lack source identifier, raw runs, sample/session counts, split manifest, model configuration, per-run predictions, and timing logs",
+    "GPU table is titled Overall effectiveness, says available GPU measurements, and bolds supplied BenchScout values despite an unspecified protocol",
+    "supplied M1 BenchScout result 0.18 percent at 15.0 seconds materially conflicts with auditable M1 OOF result 0.9534 percent at 18.035 seconds without protocol reconciliation",
+    "GPU Time column does not define whether values are probe-only, context-inclusive budget, end-to-end wall time, or profile-time sums",
+    "M6 static-feature proxy rows cannot be audited because M6 features, training data, target, and split are absent",
+    "one-session run-level CPU evaluation, routing-null result, weak baseline coverage, timing provenance, and artifact reproducibility remain unresolved"
+  ],
+  "overclaim_assessment": "正文 caveat is appropriately cautious, but the table caption, Overall effectiveness framing, available-measurements wording, and bold best values still imply a validated comparison that the supplied protocol cannot support"
+}

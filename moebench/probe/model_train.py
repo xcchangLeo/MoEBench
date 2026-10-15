@@ -17,6 +17,12 @@ from moebench.probe.vectorizer import ProbeVectorizer
 
 
 def _regressor_base(model_type: str, *, n_rows: int):
+    if model_type == "ridge":
+        from sklearn.linear_model import Ridge
+        from sklearn.pipeline import make_pipeline
+        from sklearn.preprocessing import StandardScaler
+
+        return make_pipeline(StandardScaler(), Ridge(alpha=10.0))
     # Small UnixBench probe sets (~60 rows, ~5 per test_id one-hot) need min_child=1
     # or LightGBM cannot split on test_onehot_* features.
     min_child = 1 if n_rows < 120 else max(2, min(8, n_rows // 8))
@@ -30,6 +36,7 @@ def _regressor_base(model_type: str, *, n_rows: int):
             num_leaves=8 if n_rows < 120 else 31,
             min_child_samples=min_child,
             min_data_in_bin=1 if n_rows < 120 else 3,
+            n_jobs=1,
         )
     import xgboost as xgb
 

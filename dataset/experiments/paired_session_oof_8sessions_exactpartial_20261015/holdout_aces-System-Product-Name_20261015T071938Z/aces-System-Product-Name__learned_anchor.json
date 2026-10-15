@@ -1,0 +1,677 @@
+{
+  "schema": "moebench.hybrid.unixbench_policy_oof.v1",
+  "generated_at_utc": "2026-10-15T08:05:20.551507+00:00",
+  "machine": "aces-System-Product-Name",
+  "benchmark": "unixbench",
+  "policy": "learned_anchor",
+  "split_protocol": "whole-session holdout; held-out session is excluded from router/probe/reconstructor fitting",
+  "model_protocol": "fold-local router, probe, and reconstructor; all policies share the same models within each fold",
+  "selection_uses": "training-fitted router and held-out xi for learned; fixed component IDs for fixed policies; outer-training-run labels only for association policies; no held-out score labels or ti timings",
+  "folds": 5,
+  "seed": 50,
+  "top_k": 3,
+  "probe_duration_s": 4.0,
+  "partial_source": "heldout_observed",
+  "xi_overhead_s": 3.0,
+  "train_aug": 20,
+  "train_k_range": [
+    2,
+    6
+  ],
+  "reconstructor": "lightgbm",
+  "probe_model": "lightgbm",
+  "router_model": "fold-local MLP with suite-representative anchor target and inner-OOF probe reliability",
+  "suite_output_mode": "probe_plus_imputed_geomean",
+  "log1p_partial_index": false,
+  "selected_test_ids_by_policy": "per-run Top-K from a fold-local predictor of component-to-suite log closeness, weighted by inner-OOF probe reliability",
+  "input_artifacts": {
+    "probe_dataset": "/home/zyf/code/MoEBench/dataset/experiments/paired_session_oof_8sessions_exactpartial_20261015/paired_probe_dataset.json",
+    "probe_dataset_sha256": "9ad227454558b905aea05da76c8934ac5c16369f526cbaaa2f3872bc73cd9a89",
+    "runs": [
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T000121Z/run-01.json",
+        "sha256": "5980f64e45d5845bdea132cded3e9cd7f6874817da559b48d81d792a2e6a1a22"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T030240Z/run-01.json",
+        "sha256": "9f74203dfb0617d3e5beb97a70c0342d24f8c1220e439cdc7f5746b3bb142c1b"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T033602Z/run-01.json",
+        "sha256": "1d85c9682a1ecf154664df84b7431f78c655a1917f489c5b313f4be63a51ce8e"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T042255Z/run-01.json",
+        "sha256": "975202e7d8d6a2861572dc1977de001c05d01a204048f52143309fe16d6ff31b"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T051104Z/run-01.json",
+        "sha256": "9b9b084be76701b22f8bcf3aa8515d9910181d44cd2ebe165275d0f6ff8aad13"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T054347Z/run-01.json",
+        "sha256": "5727c06d893459aabac6d83889e197757be629fbed38a92d0cdb4cf9851ef872"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T061408Z/run-01.json",
+        "sha256": "0f80facfa5aec0550ff113394c84aeef38f6f8be742e51e204bc6a95b75c745f"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T064752Z/run-01.json",
+        "sha256": "cd38a40e9cd249b4d98fe35e9634480863450a0ea8df254f5e476f1055189060"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T071938Z/run-01.json",
+        "sha256": "b505f24c67fddd28fbc9d35824fbc900f77e39314115eee336a891461879de62"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T091500Z/run-01.json",
+        "sha256": "ca72b18ea4ff43a8531b2f38348191a08e56b9a0540a093e34ae1f4393037340"
+      },
+      {
+        "path": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T100000Z/run-01.json",
+        "sha256": "f3de6bec02f38f58a42ad1a97c1c5fb1adba4d35b7a1e86a095c112b9c8b3ca0"
+      }
+    ]
+  },
+  "fold_manifest": [
+    {
+      "fold": 0,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T000121Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T030240Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T033602Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T042255Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T051104Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T054347Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T061408Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T064752Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T091500Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T100000Z/run-01.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T071938Z/run-01.json"
+      ],
+      "probe_training_samples": 120,
+      "router_fit_scope": "training_runs_only",
+      "router_fit_runs": 10,
+      "probe_fit_scope": "training_run_samples_only",
+      "reconstructor_probe_inputs": "inner-run-held-out probe-model predictions",
+      "probe_prediction_calibration_factor": 0.8721403653360332,
+      "probe_prediction_calibration_factors": {
+        "dhry2reg": 1.0867245815518531,
+        "whetstone-double": 0.9225211027498905,
+        "execl": 0.8276171924106223,
+        "fstime": 0.9925211972646009,
+        "fsbuffer": 0.8598890007480428,
+        "fsdisk": 1.0163924665277968,
+        "pipe": 0.9854803096319339,
+        "context1": 0.8721403653360332,
+        "spawn": 0.28728182377447115,
+        "syscall": 0.7021529443899315,
+        "shell1": 0.639938700131008,
+        "shell8": 0.7378373715402538
+      },
+      "reconstructor_probe_fit_manifest": [
+        {
+          "inner_fold": 0,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T091500Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T061408Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T033602Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T051104Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T030240Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T054347Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T042255Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T100000Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T000121Z/run-01.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T064752Z/run-01.json"
+          ],
+          "probe_fit_samples": 108
+        },
+        {
+          "inner_fold": 1,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T064752Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T061408Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T033602Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T051104Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T030240Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T054347Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T042255Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T100000Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T000121Z/run-01.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T091500Z/run-01.json"
+          ],
+          "probe_fit_samples": 108
+        },
+        {
+          "inner_fold": 2,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T064752Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T091500Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T033602Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T051104Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T030240Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T054347Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T042255Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T100000Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T000121Z/run-01.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T061408Z/run-01.json"
+          ],
+          "probe_fit_samples": 108
+        },
+        {
+          "inner_fold": 3,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T064752Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T091500Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T061408Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T051104Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T030240Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T054347Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T042255Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T100000Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T000121Z/run-01.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T033602Z/run-01.json"
+          ],
+          "probe_fit_samples": 108
+        },
+        {
+          "inner_fold": 4,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T064752Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T091500Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T061408Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T033602Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T030240Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T054347Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T042255Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T100000Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T000121Z/run-01.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T051104Z/run-01.json"
+          ],
+          "probe_fit_samples": 108
+        },
+        {
+          "inner_fold": 5,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T064752Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T091500Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T061408Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T033602Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T051104Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T054347Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T042255Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T100000Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T000121Z/run-01.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T030240Z/run-01.json"
+          ],
+          "probe_fit_samples": 108
+        },
+        {
+          "inner_fold": 6,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T064752Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T091500Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T061408Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T033602Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T051104Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T030240Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T042255Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T100000Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T000121Z/run-01.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T054347Z/run-01.json"
+          ],
+          "probe_fit_samples": 108
+        },
+        {
+          "inner_fold": 7,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T064752Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T091500Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T061408Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T033602Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T051104Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T030240Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T054347Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T100000Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T000121Z/run-01.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T042255Z/run-01.json"
+          ],
+          "probe_fit_samples": 108
+        },
+        {
+          "inner_fold": 8,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T064752Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T091500Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T061408Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T033602Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T051104Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T030240Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T054347Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T042255Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T000121Z/run-01.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T100000Z/run-01.json"
+          ],
+          "probe_fit_samples": 108
+        },
+        {
+          "inner_fold": 9,
+          "probe_fit_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T064752Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T091500Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T061408Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T033602Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T051104Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T030240Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T054347Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T042255Z/run-01.json",
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T100000Z/run-01.json"
+          ],
+          "probe_prediction_runs": [
+            "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T000121Z/run-01.json"
+          ],
+          "probe_fit_samples": 108
+        }
+      ],
+      "reconstructor_fit_scope": "training_runs_only",
+      "training_fold_selections": {
+        "train_assoc_top_k": {
+          "selected_test_ids": [
+            "spawn",
+            "syscall",
+            "shell1"
+          ],
+          "training_fold_spearman_rho": {
+            "dhry2reg": -0.309090909090909,
+            "whetstone-double": 0.5030303030303029,
+            "execl": 0.38181818181818183,
+            "fstime": 0.41818181818181815,
+            "fsbuffer": 0.5878787878787878,
+            "fsdisk": 0.43030303030303024,
+            "pipe": 0.5757575757575757,
+            "context1": 0.5757575757575757,
+            "spawn": 0.9393939393939393,
+            "syscall": 0.7212121212121211,
+            "shell1": 0.7212121212121211,
+            "shell8": 0.309090909090909
+          },
+          "selection_method": "absolute Spearman correlation between each component index and official suite index across outer-training runs; descending absolute value, test-id order breaks ties",
+          "n_training_runs": 10
+        },
+        "train_assoc_diverse_top_k": {
+          "selected_test_ids": [
+            "fsbuffer",
+            "fsdisk",
+            "shell1"
+          ],
+          "training_fold_spearman_rho_with_suite": {
+            "dhry2reg": -0.309090909090909,
+            "whetstone-double": 0.5030303030303029,
+            "execl": 0.38181818181818183,
+            "fstime": 0.41818181818181815,
+            "fsbuffer": 0.5878787878787878,
+            "fsdisk": 0.43030303030303024,
+            "pipe": 0.5757575757575757,
+            "context1": 0.5757575757575757,
+            "spawn": 0.9393939393939393,
+            "syscall": 0.7212121212121211,
+            "shell1": 0.7212121212121211,
+            "shell8": 0.309090909090909
+          },
+          "mean_abs_suite_association": 0.5797979797979798,
+          "mean_abs_pairwise_redundancy": 0.1313131313131313,
+          "objective": 0.4484848484848485,
+          "selection_method": "exhaustive Top-K maximizing mean absolute training-fold Spearman association with suite index minus mean absolute pairwise expert association",
+          "n_training_runs": 10
+        },
+        "train_probe_reliable_top_k": {
+          "selected_test_ids": [
+            "whetstone-double",
+            "dhry2reg",
+            "execl"
+          ],
+          "selection_method": "lowest inner-OOF relative probe error",
+          "inner_oof_probe_error_median_relative": {
+            "dhry2reg": 0.12766791082593826,
+            "whetstone-double": 0.0908441069460463,
+            "execl": 0.2085541562359299,
+            "fstime": 0.2651164491425353,
+            "fsbuffer": 0.22362289477526576,
+            "fsdisk": 0.45602322862409816,
+            "pipe": 0.272234420054403,
+            "context1": 0.22976040811496373,
+            "spawn": 2.4836671154514223,
+            "syscall": 0.45589122692284856,
+            "shell1": 0.6242052265481348,
+            "shell8": 0.7733691601696269
+          }
+        }
+      }
+    }
+  ],
+  "summary": {
+    "n_runs": 1,
+    "mean_relative_error_percent": 12.756338065589848,
+    "xi_only_mean_relative_error_percent": 22.264292242328168,
+    "selected_probe_score_mape_percent": 0.0,
+    "mean_error_reduction_vs_xi_only_percentage_points": 9.50795417673832,
+    "median_relative_error_percent": 12.756338065589848,
+    "p95_relative_error_percent": 12.756338065589848,
+    "max_relative_error_percent": 12.756338065589848,
+    "exhaustive_random_subset_mean_error_percent": 9.66194838408513,
+    "exhaustive_random_subset_median_error_percent": 9.479496845909269,
+    "mean_selected_error_percentile_within_random_subsets": 82.72727272727273,
+    "mean_probe_wall_s": 130.0,
+    "mean_hybrid_wall_estimate_s": 138.903857
+  },
+  "per_run": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/aces-System-Product-Name_20261015T071938Z/run-01.json",
+      "session": "aces-System-Product-Name_20261015T071938Z",
+      "policy": "learned_anchor",
+      "selection": {
+        "selected_test_ids": [
+          "shell8",
+          "shell1",
+          "pipe"
+        ],
+        "selection_inputs": "fixed test-id list"
+      },
+      "probe": {
+        "predicted_subtest": {
+          "shell8": 5541.4,
+          "shell1": 772.1,
+          "pipe": 1692.6
+        },
+        "heldout_actual_subtest": {
+          "shell8": 5541.4,
+          "shell1": 772.1,
+          "pipe": 1692.6
+        },
+        "heldout_component_relative_error": {
+          "shell8": 0.0,
+          "shell1": 0.0,
+          "pipe": 0.0
+        },
+        "probe_duration_budget_s": 4.0,
+        "historical_probe_wall_sum_s": 130.0,
+        "selection_probe_wall_sum_s": 130.0,
+        "all_subtest_probe_count": 3,
+        "partial_source": "heldout_observed"
+      },
+      "prediction": 1542.7322174134003,
+      "ground_truth": 1368.2,
+      "comparison": {
+        "suite_absolute_error": 174.5322174134003,
+        "suite_relative_error": 0.12756338065589848
+      },
+      "xi_only_prediction": 1672.820046459534,
+      "xi_only_comparison": {
+        "suite_absolute_error": 304.620046459534,
+        "suite_relative_error": 0.22264292242328168
+      },
+      "all_top_k_subset_relative_errors": [
+        0.13194726516285957,
+        0.13757092842735535,
+        0.1581217682065577,
+        0.12104526226568008,
+        0.14386917469891602,
+        0.1539208190126541,
+        0.11330609048123455,
+        0.1388206502500066,
+        0.14240428925959064,
+        0.19268508414854937,
+        0.09325211082186262,
+        0.11300247827403335,
+        0.0773571543579056,
+        0.09930485166609207,
+        0.10896486797631484,
+        0.06993248329187383,
+        0.09445321493574138,
+        0.09789612278621952,
+        0.14621486034001624,
+        0.11853234530336342,
+        0.08272286989305182,
+        0.1047669521507831,
+        0.11447498930931535,
+        0.07524864171231214,
+        0.09989100734005223,
+        0.10335169804681722,
+        0.15191349504963697,
+        0.10228276071959848,
+        0.12472517512047954,
+        0.13460851870028948,
+        0.09467360015926665,
+        0.11976136301858785,
+        0.12328445919341335,
+        0.17271702825086027,
+        0.08871744065508172,
+        0.09828442129563168,
+        0.05962790509669,
+        0.08391267964370504,
+        0.08732106099654413,
+        0.13516509722662953,
+        0.12064536319173147,
+        0.0812018359962305,
+        0.10598063591880094,
+        0.1094604868763696,
+        0.1582911500102729,
+        0.0907027968814879,
+        0.11569952859112555,
+        0.1192097680356861,
+        0.16846954121822327,
+        0.07642989701753,
+        0.07981674095224071,
+        0.12734272447428047,
+        0.10456382888783315,
+        0.15317886402566264,
+        0.15680516577176704,
+        0.09725885595206933,
+        0.11708163958319026,
+        0.08130543973304347,
+        0.10333377768258475,
+        0.11302919958739965,
+        0.07385376027992574,
+        0.09846435687598375,
+        0.10191988849844717,
+        0.15041571008950014,
+        0.12263138118285849,
+        0.08669081239845147,
+        0.1088155041018522,
+        0.11855907803409227,
+        0.07918902024909603,
+        0.10392168784324278,
+        0.1073955144997814,
+        0.15613528921619266,
+        0.10632242436261811,
+        0.12884690558875778,
+        0.1387664260957921,
+        0.0986852019536597,
+        0.12386490282447213,
+        0.12740136430417615,
+        0.17701510911068397,
+        0.09270735214442918,
+        0.102309395525877,
+        0.06351120979550755,
+        0.08788497981853961,
+        0.09130585955685258,
+        0.13932522892670568,
+        0.12475206165585524,
+        0.0851640286848931,
+        0.11003363049051085,
+        0.11352668821435304,
+        0.1625363162614625,
+        0.09469976831244549,
+        0.11978809963022008,
+        0.12331165918991192,
+        0.17275201255646658,
+        0.08037459947240491,
+        0.08377429719574223,
+        0.1314744639658842,
+        0.10861208787117899,
+        0.15740529035287965,
+        0.16104488896104763,
+        0.07889467235538086,
+        0.04434153915581028,
+        0.0656167705784798,
+        0.07498075851085965,
+        0.03714451533115925,
+        0.06091380890035334,
+        0.06425121601176068,
+        0.1110891477651333,
+        0.06320848696910934,
+        0.08486791679789431,
+        0.09440107018553018,
+        0.05588128943857122,
+        0.08008002616429302,
+        0.08347774870737962,
+        0.1311558187945586,
+        0.050123608472556015,
+        0.05935145197947092,
+        0.0220652648577182,
+        0.045489134705451226,
+        0.04877673714281813,
+        0.09492449737008615,
+        0.080932338608863,
+        0.042886616859402905,
+        0.06678750799737142,
+        0.07014339109774785,
+        0.11724071962114926,
+        0.05205086611367154,
+        0.07616178365359745,
+        0.07954715439108176,
+        0.12705834631728,
+        0.03828397177231822,
+        0.04155016117479552,
+        0.08738912209891614,
+        0.06542046038684092,
+        0.11230991879435849,
+        0.11580785166451454,
+        0.0685033322707188,
+        0.09025817825645173,
+        0.09983860790021362,
+        0.061127528302289916,
+        0.08544648126702924,
+        0.08886161280153405,
+        0.13677920648841493,
+        0.05535368201936444,
+        0.06462748421135252,
+        0.027155595616606038,
+        0.05069616014929349,
+        0.05400009889050051,
+        0.10037794932546369,
+        0.08630330768520438,
+        0.04806856011061582,
+        0.07208801437524381,
+        0.0754612332158205,
+        0.12279536097150948,
+        0.05727832806912702,
+        0.08150903475093511,
+        0.08491170895539096,
+        0.1326618367527662,
+        0.04344285372486824,
+        0.04672591553135541,
+        0.09279534878034502,
+        0.07071463647760046,
+        0.11783973764367354,
+        0.12135491970575076,
+        0.07441917308082921,
+        0.08386050932186091,
+        0.04571167417170473,
+        0.06967754061764157,
+        0.0730411959104233,
+        0.12025083727754192,
+        0.10592793857859718,
+        0.06700253247595186,
+        0.09145612896501534,
+        0.09489016860573989,
+        0.1430730612839258,
+        0.07637860769926061,
+        0.10104708536521992,
+        0.10451130095681743,
+        0.15311774167064776,
+        0.062293470920159424,
+        0.0656357279501282,
+        0.11253124844261765,
+        0.09005802899909832,
+        0.13802825771212238,
+        0.14160666743360342,
+        0.07052186879649713,
+        0.03284251446769379,
+        0.0565134129836448,
+        0.059835644097024576,
+        0.10647026886289654,
+        0.04191850229797567,
+        0.06579740618149552,
+        0.06914882923635712,
+        0.11619325143888178,
+        0.02828433962884196,
+        0.0315178037614652,
+        0.07690639395057425,
+        0.0551583508197925,
+        0.10158712223841801,
+        0.10505112518325942,
+        0.06313202636540817,
+        0.0874968881156182,
+        0.09091839948780131,
+        0.13893290132265307,
+        0.04921995091201378,
+        0.0525211877133688,
+        0.09884568964246883,
+        0.07664272391250952,
+        0.1240287385847207,
+        0.12756338065589848,
+        0.05844001717847549,
+        0.06177008078609484,
+        0.10850170957364247,
+        0.08610376717412424,
+        0.13390633722781997,
+        0.13747175403862996,
+        0.047875837902416396,
+        0.09399577173018887,
+        0.09743594234833693,
+        0.12258672220979044
+      ],
+      "timing_estimate_seconds": {
+        "xi_collection_estimate": 8.903857,
+        "selected_probe_wall_sum": 130.0,
+        "selected_partial_execution_wall_s": 130.0,
+        "selection_probe_wall_s": 130.0,
+        "hybrid_wall_estimate": 138.903857,
+        "full_suite_wall_from_run": 320.5,
+        "cost_basis": "measured xi and selected partial wall time where available; xi fallback is configured estimate"
+      }
+    },
+    null,
+    null
+  ]
+}

@@ -53,6 +53,10 @@ def train_pointwise_mlp(
     q, n, feat = Xg.shape
     if feat != xi_dim + n_experts:
         raise RuntimeError("Feature dim mismatch")
+    feature_mean = Xg.reshape(-1, feat).mean(axis=0)
+    feature_scale = Xg.reshape(-1, feat).std(axis=0)
+    feature_scale[feature_scale < 1e-8] = 1.0
+    Xg = (Xg - feature_mean.reshape(1, 1, -1)) / feature_scale.reshape(1, 1, -1)
     x_t = torch.from_numpy(Xg.reshape(q * n, feat)).to(dev)
     y_t = torch.from_numpy(yg.reshape(q * n)).to(dev).view(-1, 1)
 
@@ -85,6 +89,8 @@ def train_pointwise_mlp(
         "mlp_hidden": hidden,
         "xi_feature_dim": xi_dim,
         "label_transform": label_transform,
+        "input_mean": feature_mean.astype(np.float32).tolist(),
+        "input_scale": feature_scale.astype(np.float32).tolist(),
     }
 
 

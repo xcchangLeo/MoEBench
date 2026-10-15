@@ -64,6 +64,7 @@ def _train_reconstruct_v2(
     dataset_root: Path,
     machine: str,
     model_type: str,
+    suite_output_mode: str,
     export_path: Path,
     auto_install: bool,
 ) -> None:
@@ -88,6 +89,8 @@ def _train_reconstruct_v2(
         "--train-k-max",
         "6",
         "--log1p-partial-index",
+        "--suite-output-mode",
+        suite_output_mode,
     ]
     if auto_install:
         cmd.append("--auto-install")
@@ -151,8 +154,15 @@ def main() -> int:
         default=1.0,
         help="Stop when suite_confidence >= value; default 1.0 disables",
     )
-    ap.add_argument("--probe-duration-s", type=float, default=None)
-    ap.add_argument("--probe-mode", type=str, choices=("micro", "real"), default="micro")
+    ap.add_argument("--probe-duration-s", type=float, default=None,
+                    help="Probe budget in seconds; exact subtests default to a 180s timeout")
+    ap.add_argument("--probe-mode", type=str, choices=("micro", "real", "exact"), default="micro")
+    ap.add_argument(
+        "--unixbench-root",
+        type=str,
+        default="",
+        help="UnixBench directory for exact probes (auto-detected when omitted)",
+    )
     ap.add_argument("--top-k", type=int, default=None, dest="initial_top_k_legacy", help=argparse.SUPPRESS)
     ap.add_argument(
         "--fixed-k-compare",
@@ -176,6 +186,27 @@ def main() -> int:
     offline = bool(args.offline and not args.online)
     online = not offline
 
+    unixbench_root: Path | None = None
+    if args.probe_mode == "exact":
+        candidates = (
+            [Path(args.unixbench_root).expanduser().resolve()]
+            if args.unixbench_root.strip()
+            else [
+                REPO_ROOT / "byte-unixbench" / "UnixBench",
+                REPO_ROOT.parent / "byte-unixbench" / "UnixBench",
+            ]
+        )
+        unixbench_root = next(
+            (candidate for candidate in candidates if (candidate / "Run").is_file()),
+            None,
+        )
+        if unixbench_root is None:
+            print(
+                "Could not find UnixBench/Run; pass --unixbench-root.",
+                file=sys.stderr,
+            )
+            return 2
+
     machine = resolve_training_machine(args.machine or None)
     ds_root = Path(args.dataset_root).resolve()
     defaults = _default_paths(ds_root, machine, args.reconstruct_model_type)
@@ -187,10 +218,16 @@ def main() -> int:
 
     if args.train_reconstruct_v2 or not recon_fp.is_file():
         recon_fp.parent.mkdir(parents=True, exist_ok=True)
+        suite_output_mode = (
+            "observed_plus_scaled_imputed_geomean"
+            if args.probe_mode == "exact"
+            else "direct"
+        )
         _train_reconstruct_v2(
             dataset_root=ds_root,
             machine=machine,
             model_type=args.reconstruct_model_type,
+            suite_output_mode=suite_output_mode,
             export_path=recon_fp,
             auto_install=args.auto_install,
         )
@@ -259,6 +296,7 @@ def main() -> int:
         online=online,
         probe_dataset=probe_dataset,
         fixed_k_compare=fixed_k_compare or None,
+        unixbench_root=unixbench_root,
     )
 
     if report.get("skipped"):
@@ -290,6 +328,7 @@ def main() -> int:
                 session=gt_path.parent.name if offline else None,
                 run_name=gt_path.name if offline else None,
                 online=online,
+                unixbench_root=unixbench_root,
             )
             if not row.get("skipped"):
                 report.setdefault("fixed_k_baselines", {})[f"fixed_k{final_k}"] = row
@@ -308,6 +347,8 @@ def main() -> int:
     report["router_model"] = str(router_fp)
     report["reconstruct_model"] = str(recon_fp)
     report["probe_model"] = str(probe_fp)
+    if unixbench_root is not None:
+        report["unixbench_root"] = str(unixbench_root)
     if offline:
         report["probe_dataset"] = str(probe_ds_fp)
 

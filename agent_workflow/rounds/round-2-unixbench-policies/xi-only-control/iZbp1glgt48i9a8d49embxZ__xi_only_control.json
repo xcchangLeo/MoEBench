@@ -1,0 +1,169 @@
+{
+  "schema": "moebench.hybrid.unixbench_xi_only_control.v1",
+  "generated_at_utc": "2026-10-12T11:42:18.120609+00:00",
+  "machine": "iZbp1glgt48i9a8d49embxZ",
+  "benchmark": "unixbench",
+  "purpose": "fold-matched xi-only control for the four policy OOF reports",
+  "split_protocol": "same seeded random run-level folds as policy OOF",
+  "model_protocol": "same labels, augmentation, reconstructor type, and training parameters; all probe mask/index/time input columns zeroed for train and evaluation",
+  "folds": 5,
+  "seed": 42,
+  "top_k": 3,
+  "train_aug": 20,
+  "train_k_range": [
+    2,
+    6
+  ],
+  "reconstructor": "lightgbm",
+  "xi_feature_count": 64,
+  "probe_feature_count": 36,
+  "source_policy_reports": {
+    "learned": {
+      "path": "/home/zyf/code/MoEBench/agent_workflow/rounds/round-2-unixbench-policies/iZbp1glgt48i9a8d49embxZ__learned.json",
+      "sha256": "fa8d9f387951a783fe2c38434517e3480fc5c1bf5180bf261c4e6dd9b6aac8c3"
+    },
+    "fixed_cpu_mix": {
+      "path": "/home/zyf/code/MoEBench/agent_workflow/rounds/round-2-unixbench-policies/iZbp1glgt48i9a8d49embxZ__fixed_cpu_mix.json",
+      "sha256": "98504dcaf9ed0fbfc108ec033c8c51e25f4a579ff86a1b0e32243de979f29c51"
+    },
+    "fixed_io_mix": {
+      "path": "/home/zyf/code/MoEBench/agent_workflow/rounds/round-2-unixbench-policies/iZbp1glgt48i9a8d49embxZ__fixed_io_mix.json",
+      "sha256": "67258e952ebeec3e9ee5bdd4b8c66c91a8650da13fd0b5c4f90a8455e99d1987"
+    },
+    "fixed_first_k": {
+      "path": "/home/zyf/code/MoEBench/agent_workflow/rounds/round-2-unixbench-policies/iZbp1glgt48i9a8d49embxZ__fixed_first_k.json",
+      "sha256": "aa23bef1acf9472ed26144e99ee6f22e4acf92a75854e64201c1efd2e1b0810d"
+    }
+  },
+  "fold_manifest": [
+    {
+      "fold": 0,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-05.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-02.json"
+      ],
+      "train_augmented_rows": 80,
+      "xi_feature_count": 64,
+      "probe_feature_count_zeroed": 36,
+      "train_input_treatment": "random-subset feature rows generated as in policy OOF, then all probe mask/index/time columns zeroed",
+      "heldout_input_treatment": "all probe mask/index/time columns zeroed"
+    },
+    {
+      "fold": 1,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-04.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-05.json"
+      ],
+      "train_augmented_rows": 80,
+      "xi_feature_count": 64,
+      "probe_feature_count_zeroed": 36,
+      "train_input_treatment": "random-subset feature rows generated as in policy OOF, then all probe mask/index/time columns zeroed",
+      "heldout_input_treatment": "all probe mask/index/time columns zeroed"
+    },
+    {
+      "fold": 2,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-05.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-03.json"
+      ],
+      "train_augmented_rows": 80,
+      "xi_feature_count": 64,
+      "probe_feature_count_zeroed": 36,
+      "train_input_treatment": "random-subset feature rows generated as in policy OOF, then all probe mask/index/time columns zeroed",
+      "heldout_input_treatment": "all probe mask/index/time columns zeroed"
+    },
+    {
+      "fold": 3,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-04.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-05.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-01.json"
+      ],
+      "train_augmented_rows": 80,
+      "xi_feature_count": 64,
+      "probe_feature_count_zeroed": 36,
+      "train_input_treatment": "random-subset feature rows generated as in policy OOF, then all probe mask/index/time columns zeroed",
+      "heldout_input_treatment": "all probe mask/index/time columns zeroed"
+    },
+    {
+      "fold": 4,
+      "train_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-01.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-02.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-03.json",
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-05.json"
+      ],
+      "heldout_runs": [
+        "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-04.json"
+      ],
+      "train_augmented_rows": 80,
+      "xi_feature_count": 64,
+      "probe_feature_count_zeroed": 36,
+      "train_input_treatment": "random-subset feature rows generated as in policy OOF, then all probe mask/index/time columns zeroed",
+      "heldout_input_treatment": "all probe mask/index/time columns zeroed"
+    }
+  ],
+  "summary": {
+    "n_runs": 5,
+    "mean_relative_error_percent": 0.2797218355178062,
+    "median_relative_error_percent": 0.2882966111611535,
+    "p95_relative_error_percent": 0.4265378973107528,
+    "max_relative_error_percent": 0.45474790103409546
+  },
+  "per_run": [
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-01.json",
+      "session": "iZbp1glgt48i9a8d49embxZ_20260524T141144Z",
+      "prediction": 1598.240282303627,
+      "ground_truth": 1596.0,
+      "suite_relative_error": 0.0014036856539016633
+    },
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-02.json",
+      "session": "iZbp1glgt48i9a8d49embxZ_20260524T141144Z",
+      "prediction": 1596.0774390061433,
+      "ground_truth": 1599.3,
+      "suite_relative_error": 0.002014982175862335
+    },
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-03.json",
+      "session": "iZbp1glgt48i9a8d49embxZ_20260524T141144Z",
+      "prediction": 1594.2904254841444,
+      "ground_truth": 1598.9,
+      "suite_relative_error": 0.002882966111611535
+    },
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-04.json",
+      "session": "iZbp1glgt48i9a8d49embxZ_20260524T141144Z",
+      "prediction": 1594.8144838775327,
+      "ground_truth": 1602.1,
+      "suite_relative_error": 0.004547479010340955
+    },
+    {
+      "run_json": "/home/zyf/code/MoEBench/dataset/iZbp1glgt48i9a8d49embxZ_20260524T141144Z/run-05.json",
+      "session": "iZbp1glgt48i9a8d49embxZ_20260524T141144Z",
+      "prediction": 1598.9000305478507,
+      "ground_truth": 1593.9,
+      "suite_relative_error": 0.0031369788241738224
+    }
+  ]
+}
